@@ -12,3 +12,163 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum Role {
+  employee
+  admin
+
+  @@map("role")
+}
+
+enum OrgType {
+  school
+  supplier
+
+  @@map("org_type")
+}
+
+enum OrderStatus {
+  new
+  paid
+  in_progress
+  completed
+  cancelled
+
+  @@map("order_status")
+}
+
+model Organization {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  name         String   @unique @map("name") @db.VarChar(255)
+  type         OrgType  @map("type")
+  contactEmail String?  @unique @map("contact_email") @db.VarChar(255)
+  contactPhone String?  @unique @map("contact_phone") @db.VarChar(50)
+  users        User[]   @relation("OrganizationUsers")
+  carts        Cart[]   @relation("OrganizationCarts")
+  orders       Order[]  @relation("OrganizationOrders")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("organizations")
+}
+
+model User {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  organization   Organization @relation("OrganizationUsers", fields: [organizationId], references: [id], onDelete: Cascade)
+  email          String       @unique @map("email") @db.VarChar(255)
+  passwordHash   String       @map("password_hash") @db.VarChar(255)
+  firstName      String?      @map("first_name") @db.VarChar(255)
+  lastName       String?      @map("last_name") @db.VarChar(255)
+  role           Role         @map("role")
+  createdOrders  Order[]      @relation("OrderCreatedBy")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  @@index([organizationId])
+  @@map("users")
+}
+
+model Category {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  name        String     @unique @map("name") @db.VarChar(255)
+  description String?    @map("description") @db.Text
+  menuItems   MenuItem[] @relation("CategoryMenuItems")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  @@map("categories")
+}
+
+model MenuItem {
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  categoryId  String?     @map("category_id") @db.Uuid
+  category    Category?   @relation("CategoryMenuItems", fields: [categoryId], references: [id], onDelete: SetNull)
+  name        String      @unique @map("name") @db.VarChar(255)
+  description String?     @map("description") @db.Text
+  price       Decimal     @map("price") @db.Decimal(10, 2)
+  isAvailable Boolean     @default(true) @map("is_available")
+  images      MenuImage[] @relation("MenuItemImages")
+  cartItems   CartItem[]  @relation("CartItemMenuItems")
+  orderItems  OrderItem[] @relation("OrderItemMenuItems")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  @@index([categoryId])
+  @@map("menu_items")
+}
+
+model MenuImage {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  menuItemId String   @map("menu_item_id") @db.Uuid
+  menuItem   MenuItem @relation("MenuItemImages", fields: [menuItemId], references: [id], onDelete: Cascade)
+  imageUrl   String   @map("image_url") @db.Text
+  isPrimary  Boolean  @default(false) @map("is_primary")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@unique([menuItemId, isPrimary], map: "unique_primary_image_per_item")
+  @@map("menu_images")
+}
+
+model Cart {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  organization   Organization @relation("OrganizationCarts", fields: [organizationId], references: [id], onDelete: Cascade)
+  cartItems      CartItem[]   @relation("CartItems")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  @@index([organizationId])
+  @@map("carts")
+}
+
+model CartItem {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cartId     String   @map("cart_id") @db.Uuid
+  cart       Cart     @relation("CartItems", fields: [cartId], references: [id], onDelete: Cascade)
+  menuItemId String   @map("menu_item_id") @db.Uuid
+  menuItem   MenuItem @relation("CartItemMenuItems", fields: [menuItemId], references: [id], onDelete: Cascade)
+  quantity   Int      @map("quantity")
+  addedAt    DateTime @default(now()) @map("added_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@unique([cartId, menuItemId])
+  @@index([cartId])
+  @@map("cart_items")
+}
+
+model Order {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  organization   Organization @relation("OrganizationOrders", fields: [organizationId], references: [id], onDelete: Cascade)
+  createdById    String?      @map("created_by") @db.Uuid
+  createdBy      User?        @relation("OrderCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  deliveryDate   DateTime     @map("delivery_date") @db.Date
+  status         OrderStatus  @default(new) @map("status")
+  totalPrice     Decimal      @map("total_price") @db.Decimal(10, 2)
+  comment        String?      @map("comment") @db.Text
+  orderItems     OrderItem[]  @relation("OrderOrderItems")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([organizationId])
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  orderId    String    @map("order_id") @db.Uuid
+  order      Order     @relation("OrderOrderItems", fields: [orderId], references: [id], onDelete: Cascade)
+  menuItemId String?   @map("menu_item_id") @db.Uuid
+  menuItem   MenuItem? @relation("OrderItemMenuItems", fields: [menuItemId], references: [id], onDelete: SetNull)
+  quantity   Int       @map("quantity")
+  price      Decimal   @map("price") @db.Decimal(10, 2)
+  addedAt    DateTime  @default(now()) @map("added_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  @@index([orderId])
+  @@index([menuItemId])
+  @@map("order_items")
+}
