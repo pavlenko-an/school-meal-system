@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import { organizations } from "./seeds/organizations";
 import { users } from "./seeds/users";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/shared/db/prisma";
 
 async function main() {
   console.log("Seeding database...");

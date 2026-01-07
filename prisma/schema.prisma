@@ -53,17 +53,17 @@ model Organization {
 }
 
 model User {
-  id             String       @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
-  organizationId String       @map("organization_id") @db.Uuid
-  organization   Organization @relation("OrganizationUsers", fields: [organizationId], references: [id], onDelete: Cascade)
-  email          String       @unique @map("email") @db.VarChar(255)
-  passwordHash   String       @map("password_hash") @db.VarChar(255)
-  firstName      String?      @map("first_name") @db.VarChar(255)
-  lastName       String?      @map("last_name") @db.VarChar(255)
-  role           Role         @map("role")
-  createdOrders  Order[]      @relation("OrderCreatedBy")
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @updatedAt @map("updated_at")
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  organizationId String?       @map("organization_id") @db.Uuid
+  organization   Organization? @relation("OrganizationUsers", fields: [organizationId], references: [id], onDelete: SetNull)
+  email          String        @unique @map("email") @db.VarChar(255)
+  passwordHash   String        @map("password_hash") @db.VarChar(255)
+  firstName      String?       @map("first_name") @db.VarChar(255)
+  lastName       String?       @map("last_name") @db.VarChar(255)
+  role           Role          @map("role")
+  createdOrders  Order[]       @relation("OrderCreatedBy")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
 
   @@index([organizationId])
   @@map("users")

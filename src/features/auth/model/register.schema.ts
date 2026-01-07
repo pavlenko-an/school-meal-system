@@ -11,4 +11,5 @@ export const registerSchema = z.object({
     .regex(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/),
   firstName: z.string().trim().min(1).optional(),
   lastName: z.string().trim().min(1).optional(),
+  organizationId: z.string().uuid(),
 });

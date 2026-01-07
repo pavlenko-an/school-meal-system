@@ -1,20 +1,21 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/shared/db/prisma";
 import bcrypt from "bcryptjs";
 import { registerSchema } from "../model/register.schema";
+import { RegisterInput } from "../model/auth.types";
 
-export async function registerUser(input: unknown) {
+export async function registerUser(input: RegisterInput) {
   const data = registerSchema.parse(input);
-
   const existingUser = await prisma.user.findUnique({
     where: { email: data.email.toLowerCase() },
   });
-
   if (existingUser) throw new Error("User with this email already exists");
 
+  const organization = await prisma.organization.findUnique({
+    where: { id: data.organizationId },
+  });
+  if (!organization) throw new Error("Organization not found");
+
   const passwordHash = await bcrypt.hash(data.password, 10);
-
-  const defaultOrganizationId = "00000000-0000-0000-0000-000000000000";
-
   const user = await prisma.user.create({
     data: {
       email: data.email.toLowerCase(),
@@ -22,7 +23,7 @@ export async function registerUser(input: unknown) {
       firstName: data.firstName || null,
       lastName: data.lastName || null,
       role: "employee",
-      organizationId: defaultOrganizationId,
+      organizationId: organization.id,
     },
   });
 
