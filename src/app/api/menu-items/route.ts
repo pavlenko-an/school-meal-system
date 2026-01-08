@@ -1,18 +1,22 @@
-import { authOptions } from "@/features/auth/lib/auth";
+import { authOptions } from "@/features/auth";
 import {
-  createOrganization,
-  getAllOrganizations,
-} from "@/features/organization/lib/organization";
+  createMenuItem,
+  getAllMenuItems,
+} from "@/features/menu-item/lib/menu-item";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session)
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
   const url = new URL(req.url);
   const query = Object.fromEntries(url.searchParams.entries());
 
   try {
-    const organizations = await getAllOrganizations({ ...query });
-    return NextResponse.json(organizations);
+    const menuItems = await getAllMenuItems({ ...query });
+    return NextResponse.json(menuItems);
   } catch (e) {
     return NextResponse.json(
       { message: (e as Error).message },
@@ -37,8 +41,8 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   try {
-    const organization = await createOrganization({ ...body }, currentUser);
-    return NextResponse.json(organization);
+    const menuItem = await createMenuItem({ ...body }, currentUser);
+    return NextResponse.json(menuItem);
   } catch (e) {
     return NextResponse.json(
       { message: (e as Error).message },

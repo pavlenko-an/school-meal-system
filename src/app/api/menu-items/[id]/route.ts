@@ -1,9 +1,9 @@
 import { authOptions } from "@/features/auth";
 import {
-  deleteOrganization,
-  getOrganizationById,
-  updateOrganization,
-} from "@/features/organization/lib/organization";
+  deleteMenuItem,
+  getMenuItemById,
+  updateMenuItem,
+} from "@/features/menu-item/lib/menu-item";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -12,10 +12,14 @@ interface Params {
 }
 
 export async function GET(req: NextRequest, context: { params: Params }) {
+  const { id } = await context.params;
+  const session = await getServerSession(authOptions);
+  if (!session)
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
   try {
-    const { id } = await context.params;
-    const organization = await getOrganizationById({ id });
-    return NextResponse.json(organization);
+    const menuItem = await getMenuItemById({ id });
+    return NextResponse.json(menuItem);
   } catch (e) {
     return NextResponse.json(
       { message: (e as Error).message },
@@ -29,7 +33,7 @@ export async function PATCH(req: NextRequest, context: { params: Params }) {
   const session = await getServerSession(authOptions);
   if (!session)
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  if (session.user.role !== "admin" && session.user.organizationId !== id) {
+  if (session.user.role !== "admin") {
     return NextResponse.json({ message: "Access Denied" }, { status: 403 });
   }
 
@@ -38,11 +42,11 @@ export async function PATCH(req: NextRequest, context: { params: Params }) {
     role: session.user.role,
     organizationId: session.user.organizationId,
   };
-  const body = await req.json();
 
+  const body = await req.json();
   try {
-    const organization = await updateOrganization({ ...body, id }, currentUser);
-    return NextResponse.json(organization);
+    const menuItem = await updateMenuItem({ ...body, id }, currentUser);
+    return NextResponse.json(menuItem);
   } catch (e) {
     return NextResponse.json(
       { message: (e as Error).message },
@@ -59,16 +63,14 @@ export async function DELETE(req: NextRequest, context: { params: Params }) {
   if (session.user.role !== "admin") {
     return NextResponse.json({ message: "Access Denied" }, { status: 403 });
   }
-
   const currentUser = {
     id: session.user.id,
     role: session.user.role,
     organizationId: session.user.organizationId,
   };
-
   try {
-    await deleteOrganization({ id }, currentUser);
-    return NextResponse.json({ message: "Organization deleted successfully" });
+    await deleteMenuItem({ id }, currentUser);
+    return NextResponse.json({ message: "Menu item deleted successfully" });
   } catch (e) {
     return NextResponse.json(
       { message: (e as Error).message },

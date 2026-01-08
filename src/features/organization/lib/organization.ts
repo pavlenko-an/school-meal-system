@@ -37,15 +37,41 @@ export async function getOrganizationById(input: getOrganizationByIdInput) {
   return organization;
 }
 
+export async function getCurrentOrganization(currentUser: CurrentUser) {
+  const organization = await prisma.organization.findUnique({
+    where: { id: currentUser.organizationId },
+  });
+  return organization;
+}
+
 export async function createOrganization(
   input: createOrganizationInput,
   currentUser: CurrentUser
 ) {
-  const data = createOrganizationSchema.parse(input);
-
   if (currentUser.role !== "admin") {
     throw new Error("Access denied");
   }
+  const data = createOrganizationSchema.parse(input);
+
+  const existingName = await prisma.organization.findUnique({
+    where: { name: data.name },
+  });
+  if (existingName) {
+    throw new Error("Organization name already in use");
+  }
+  const existingEmail = await prisma.organization.findUnique({
+    where: { contactEmail: data.contactEmail || undefined },
+  });
+  if (existingEmail) {
+    throw new Error("Contact email already in use");
+  }
+  const existingPhone = await prisma.organization.findUnique({
+    where: { contactPhone: data.contactPhone || undefined },
+  });
+  if (existingPhone) {
+    throw new Error("Contact phone already in use");
+  }
+
   const organization = await prisma.organization.create({
     data: {
       name: data.name,
@@ -72,14 +98,22 @@ export async function updateOrganization(
   if (!organization) throw new Error("Organization not found");
 
   const updateData: Record<string, unknown> = {};
-  if (data.name !== undefined) updateData.name = data.name;
+  if (data.name !== undefined) {
+    const existingName = await prisma.organization.findUnique({
+      where: { name: data.name },
+    });
+    if (existingName && existingName.id !== data.id) {
+      throw new Error("Organization name already in use");
+    }
+    updateData.name = data.name;
+  }
   if (data.type !== undefined) {
     if (currentUser.role !== "admin") {
       throw new Error("Access denied");
     }
     updateData.type = data.type;
   }
-  
+
   if (data.contactEmail !== undefined) {
     if (data.contactEmail !== null) {
       const existingOrg = await prisma.organization.findUnique({

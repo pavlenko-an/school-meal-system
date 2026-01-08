@@ -57,7 +57,6 @@ export async function getUserById(
   if (currentUser.role !== "admin" && currentUser.id !== data.id) {
     throw new Error("Access denied");
   }
-
   const user = await prisma.user.findUnique({
     where: { id: data.id },
   });
