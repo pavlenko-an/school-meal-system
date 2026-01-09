@@ -12,6 +12,9 @@ import {
 } from "../model/menu-item.types";
 import { updateMenuItemSchema } from "../model/update-menu-item.schema";
 import { CurrentUser } from "@/shared/auth/current-user";
+import { NotFoundError } from "@/shared/errors/not-found.error";
+import { AccessDeniedError } from "@/shared/errors/access-denied.error";
+import { ConflictError } from "@/shared/errors/conflict.error";
 
 export async function getAllMenuItems(input: getAllMenuItemsInput) {
   const data = getAllMenuItemsSchema.parse(input);
@@ -39,7 +42,7 @@ export async function getMenuItemById(input: getMenuItemByIdInput) {
     where: { id: data.id },
   });
   if (!menuItem) {
-    throw new Error("Menu item not found");
+    throw new NotFoundError("Menu item not found");
   }
   return menuItem;
 }
@@ -49,14 +52,14 @@ export async function createMenuItem(
   currentUser: CurrentUser
 ) {
   if (currentUser.role !== "admin") {
-    throw new Error("Access denied");
+    throw new AccessDeniedError("Access denied");
   }
   const data = createMenuItemSchema.parse(input);
   const existingMenuItem = await prisma.menuItem.findUnique({
     where: { name: data.name },
   });
   if (existingMenuItem) {
-    throw new Error("Menu item with this name already exists");
+    throw new ConflictError("Menu item with this name already exists");
   }
   const menuItem = await prisma.menuItem.create({
     data: {
@@ -75,13 +78,13 @@ export async function updateMenuItem(
   currentUser: CurrentUser
 ) {
   if (currentUser.role !== "admin") {
-    throw new Error("Access denied");
+    throw new AccessDeniedError("Access denied");
   }
   const data = updateMenuItemSchema.parse(input);
   const menuItem = await prisma.menuItem.findUnique({
     where: { id: data.id },
   });
-  if (!menuItem) throw new Error("Menu item not found");
+  if (!menuItem) throw new NotFoundError("Menu item not found");
 
   const updateData: Record<string, unknown> = {};
   if (data.name !== undefined) {
@@ -89,7 +92,7 @@ export async function updateMenuItem(
       where: { name: data.name },
     });
     if (existingMenuItem && existingMenuItem.id !== data.id) {
-      throw new Error("Menu item with this name already exists");
+      throw new ConflictError("Menu item with this name already exists");
     }
     updateData.name = data.name;
   }
@@ -104,7 +107,7 @@ export async function updateMenuItem(
       where: { id: data.categoryId },
     });
     if (!category) {
-      throw new Error("Category not found");
+      throw new NotFoundError("Category not found");
     }
     updateData.categoryId = data.categoryId;
   }
@@ -124,13 +127,13 @@ export async function deleteMenuItem(
   currentUser: CurrentUser
 ) {
   if (currentUser.role !== "admin") {
-    throw new Error("Access denied");
+    throw new AccessDeniedError("Access denied");
   }
   const data = deleteMenuItemSchema.parse(input);
   const menuItem = await prisma.menuItem.findUnique({
     where: { id: data.id },
   });
-  if (!menuItem) throw new Error("Menu item not found");
+  if (!menuItem) throw new NotFoundError("Menu item not found");
   await prisma.menuItem.delete({
     where: { id: data.id },
   });

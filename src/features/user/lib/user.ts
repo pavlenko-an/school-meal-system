@@ -11,13 +11,16 @@ import {
 } from "../model/user.types";
 import bcrypt from "bcryptjs";
 import { CurrentUser } from "@/shared/auth/current-user";
+import { AccessDeniedError } from "@/shared/errors/access-denied.error";
+import { NotFoundError } from "@/shared/errors/not-found.error";
+import { ConflictError } from "@/shared/errors/conflict.error";
 
 export async function getAllUsers(
   input: getAllUsersInput,
   currentUser: CurrentUser
 ) {
   if (currentUser.role !== "admin") {
-    throw new Error("Access denied");
+    throw new AccessDeniedError("Access denied");
   }
 
   const data = getAllUsersSchema.parse(input);
@@ -45,7 +48,7 @@ export async function getCurrentUser(currentUser: CurrentUser) {
   const user = await prisma.user.findUnique({
     where: { id: currentUser.id },
   });
-  if (!user) throw new Error("User not found");
+  if (!user) throw new NotFoundError("User not found");
   return user;
 }
 
@@ -55,12 +58,12 @@ export async function getUserById(
 ) {
   const data = getUserByIdSchema.parse(input);
   if (currentUser.role !== "admin" && currentUser.id !== data.id) {
-    throw new Error("Access denied");
+    throw new AccessDeniedError("Access denied");
   }
   const user = await prisma.user.findUnique({
     where: { id: data.id },
   });
-  if (!user) throw new Error("User not found");
+  if (!user) throw new NotFoundError("User not found");
   return user;
 }
 
@@ -70,13 +73,13 @@ export async function updateUser(
 ) {
   const data = updateUserSchema.parse(input);
   if (currentUser.role !== "admin" && currentUser.id !== data.id) {
-    throw new Error("Access denied");
+    throw new AccessDeniedError("Access denied");
   }
 
   const user = await prisma.user.findUnique({
     where: { id: data.id },
   });
-  if (!user) throw new Error("User not found");
+  if (!user) throw new NotFoundError("User not found");
 
   const updateData: Record<string, unknown> = {};
   if (data.email !== undefined) {
@@ -84,7 +87,7 @@ export async function updateUser(
       where: { email: data.email },
     });
     if (existingUser && existingUser.id !== data.id) {
-      throw new Error("Email already in use");
+      throw new ConflictError("Email already in use");
     }
     updateData.email = data.email;
   }
@@ -93,13 +96,13 @@ export async function updateUser(
   }
   if (data.organizationId !== undefined) {
     if (currentUser.role !== "admin") {
-      throw new Error("Access denied");
+      throw new AccessDeniedError("Access denied");
     }
     updateData.organizationId = data.organizationId;
   }
   if (data.role !== undefined) {
     if (currentUser.role !== "admin") {
-      throw new Error("Access denied");
+      throw new AccessDeniedError("Access denied");
     }
     updateData.role = data.role;
   }
@@ -130,12 +133,12 @@ export async function deleteUser(
 ) {
   const data = deleteUserSchema.parse(input);
   if (currentUser.role !== "admin" && currentUser.id !== data.id) {
-    throw new Error("Access denied");
+    throw new AccessDeniedError("Access denied");
   }
   const user = await prisma.user.findUnique({
     where: { id: data.id },
   });
-  if (!user) throw new Error("User not found");
+  if (!user) throw new NotFoundError("User not found");
   await prisma.user.delete({
     where: { id: data.id },
   });

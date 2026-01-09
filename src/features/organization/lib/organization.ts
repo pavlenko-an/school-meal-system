@@ -12,6 +12,9 @@ import {
 } from "../model/organization.types";
 import { updateOrganizationSchema } from "../model/update-organization.schema";
 import { CurrentUser } from "@/shared/auth/current-user";
+import { AccessDeniedError } from "@/shared/errors/access-denied.error";
+import { ConflictError } from "@/shared/errors/conflict.error";
+import { NotFoundError } from "@/shared/errors/not-found.error";
 
 export async function getAllOrganizations(input: getAllOrganizationsInput) {
   const data = getAllOrganizationsSchema.parse(input);
@@ -49,7 +52,7 @@ export async function createOrganization(
   currentUser: CurrentUser
 ) {
   if (currentUser.role !== "admin") {
-    throw new Error("Access denied");
+    throw new AccessDeniedError("Access denied");
   }
   const data = createOrganizationSchema.parse(input);
 
@@ -57,19 +60,19 @@ export async function createOrganization(
     where: { name: data.name },
   });
   if (existingName) {
-    throw new Error("Organization name already in use");
+    throw new ConflictError("Organization name already in use");
   }
   const existingEmail = await prisma.organization.findUnique({
     where: { contactEmail: data.contactEmail || undefined },
   });
   if (existingEmail) {
-    throw new Error("Contact email already in use");
+    throw new ConflictError("Contact email already in use");
   }
   const existingPhone = await prisma.organization.findUnique({
     where: { contactPhone: data.contactPhone || undefined },
   });
   if (existingPhone) {
-    throw new Error("Contact phone already in use");
+    throw new ConflictError("Contact phone already in use");
   }
 
   const organization = await prisma.organization.create({
@@ -89,13 +92,13 @@ export async function updateOrganization(
 ) {
   const data = updateOrganizationSchema.parse(input);
   if (currentUser.role !== "admin" && currentUser.organizationId !== data.id) {
-    throw new Error("Access denied");
+    throw new AccessDeniedError("Access denied");
   }
 
   const organization = await prisma.organization.findUnique({
     where: { id: data.id },
   });
-  if (!organization) throw new Error("Organization not found");
+  if (!organization) throw new NotFoundError("Organization not found");
 
   const updateData: Record<string, unknown> = {};
   if (data.name !== undefined) {
@@ -103,13 +106,13 @@ export async function updateOrganization(
       where: { name: data.name },
     });
     if (existingName && existingName.id !== data.id) {
-      throw new Error("Organization name already in use");
+      throw new ConflictError("Organization name already in use");
     }
     updateData.name = data.name;
   }
   if (data.type !== undefined) {
     if (currentUser.role !== "admin") {
-      throw new Error("Access denied");
+      throw new AccessDeniedError("Access denied");
     }
     updateData.type = data.type;
   }
@@ -120,7 +123,7 @@ export async function updateOrganization(
         where: { contactEmail: data.contactEmail },
       });
       if (existingOrg && existingOrg.id !== data.id) {
-        throw new Error("Contact email already in use");
+        throw new ConflictError("Contact email already in use");
       }
     }
     updateData.contactEmail = data.contactEmail || null;
@@ -131,7 +134,7 @@ export async function updateOrganization(
         where: { contactPhone: data.contactPhone },
       });
       if (existingOrg && existingOrg.id !== data.id) {
-        throw new Error("Contact phone already in use");
+        throw new ConflictError("Contact phone already in use");
       }
     }
     updateData.contactPhone = data.contactPhone || null;
@@ -150,12 +153,12 @@ export async function deleteOrganization(
 ) {
   const data = deleteOrganizationSchema.parse(input);
   if (currentUser.role !== "admin") {
-    throw new Error("Access denied");
+    throw new AccessDeniedError("Access denied");
   }
   const organization = await prisma.organization.findUnique({
     where: { id: data.id },
   });
-  if (!organization) throw new Error("Organization not found");
+  if (!organization) throw new NotFoundError("Organization not found");
 
   await prisma.organization.delete({
     where: { id: data.id },

@@ -12,6 +12,9 @@ import { getAllCategoriesSchema } from "../model/get-all-categories.schema";
 import { getCategoryByIdSchema } from "../model/get-category-by-id.schema";
 import { updateCategorySchema } from "../model/update-category.schema";
 import { CurrentUser } from "@/shared/auth/current-user";
+import { NotFoundError } from "@/shared/errors/not-found.error";
+import { AccessDeniedError } from "@/shared/errors/access-denied.error";
+import { ConflictError } from "@/shared/errors/conflict.error";
 
 export async function getAllCategories(input: getAllCategoriesInput) {
   const data = getAllCategoriesSchema.parse(input);
@@ -35,7 +38,7 @@ export async function getCategoryById(input: getCategoryByIdInput) {
     where: { id: data.id },
   });
   if (!category) {
-    throw new Error("Category not found");
+    throw new NotFoundError("Category not found");
   }
   return category;
 }
@@ -45,14 +48,14 @@ export async function createCategory(
   currentUser: CurrentUser
 ) {
   if (currentUser.role !== "admin") {
-    throw new Error("Access denied");
+    throw new AccessDeniedError("Access denied");
   }
   const data = createCategorySchema.parse(input);
   const existsingCategory = await prisma.category.findUnique({
     where: { name: data.name },
   });
   if (existsingCategory) {
-    throw new Error("Category with this name already exists");
+    throw new ConflictError("Category with this name already exists");
   }
   const category = await prisma.category.create({
     data: {
@@ -68,14 +71,14 @@ export async function updateCategory(
   currentUser: CurrentUser
 ) {
   if (currentUser.role !== "admin") {
-    throw new Error("Access denied");
+    throw new AccessDeniedError("Access denied");
   }
   const data = updateCategorySchema.parse(input);
 
   const category = await prisma.category.findUnique({
     where: { id: data.id },
   });
-  if (!category) throw new Error("Category not found");
+  if (!category) throw new NotFoundError("Category not found");
 
   const updateData: Record<string, unknown> = {};
   if (data.name !== undefined) {
@@ -83,7 +86,7 @@ export async function updateCategory(
       where: { name: data.name },
     });
     if (existingCategory && existingCategory.id !== data.id) {
-      throw new Error("Category with this name already exists");
+      throw new ConflictError("Category with this name already exists");
     }
     updateData.name = data.name;
   }
@@ -103,13 +106,13 @@ export async function deleteCategory(
   currentUser: CurrentUser
 ) {
   if (currentUser.role !== "admin") {
-    throw new Error("Access denied");
+    throw new AccessDeniedError("Access denied");
   }
   const data = deleteCategorySchema.parse(input);
   const category = await prisma.category.findUnique({
     where: { id: data.id },
   });
-  if (!category) throw new Error("Category not found");
+  if (!category) throw new NotFoundError("Category not found");
   await prisma.category.delete({
     where: { id: data.id },
   });
