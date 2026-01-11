@@ -1,8 +1,4 @@
 import { prisma } from "@/shared/db/prisma";
-import { createMenuItemSchema } from "../model/create-menu-item.schema";
-import { deleteMenuItemSchema } from "../model/delete-menu-item.schema";
-import { getAllMenuItemsSchema } from "../model/get-all-menu-items.schema";
-import { getMenuItemByIdSchema } from "../model/get-menu-item-by-id.schema";
 import {
   createMenuItemInput,
   deleteMenuItemInput,
@@ -10,14 +6,20 @@ import {
   getMenuItemByIdInput,
   updateMenuItemInput,
 } from "../model/menu-item.types";
-import { updateMenuItemSchema } from "../model/update-menu-item.schema";
 import { CurrentUser } from "@/shared/auth/current-user";
 import { NotFoundError } from "@/shared/errors/not-found.error";
 import { AccessDeniedError } from "@/shared/errors/access-denied.error";
 import { ConflictError } from "@/shared/errors/conflict.error";
 
-export async function getAllMenuItems(input: getAllMenuItemsInput) {
-  const data = getAllMenuItemsSchema.parse(input);
+export async function getAllMenuItems(data: getAllMenuItemsInput) {
+  const existingCategory = data.categoryId
+    ? await prisma.category.findUnique({
+        where: { id: data.categoryId },
+      })
+    : null;
+  if (data.categoryId && !existingCategory) {
+    throw new NotFoundError("Category not found");
+  }
   const menuItems = await prisma.menuItem.findMany({
     where: {
       AND: [
@@ -36,8 +38,7 @@ export async function getAllMenuItems(input: getAllMenuItemsInput) {
   return menuItems;
 }
 
-export async function getMenuItemById(input: getMenuItemByIdInput) {
-  const data = getMenuItemByIdSchema.parse(input);
+export async function getMenuItemById(data: getMenuItemByIdInput) {
   const menuItem = await prisma.menuItem.findUnique({
     where: { id: data.id },
   });
@@ -48,13 +49,12 @@ export async function getMenuItemById(input: getMenuItemByIdInput) {
 }
 
 export async function createMenuItem(
-  input: createMenuItemInput,
+  data: createMenuItemInput,
   currentUser: CurrentUser
 ) {
   if (currentUser.role !== "admin") {
     throw new AccessDeniedError("Access denied");
   }
-  const data = createMenuItemSchema.parse(input);
   const existingMenuItem = await prisma.menuItem.findUnique({
     where: { name: data.name },
   });
@@ -74,13 +74,12 @@ export async function createMenuItem(
 }
 
 export async function updateMenuItem(
-  input: updateMenuItemInput,
+  data: updateMenuItemInput,
   currentUser: CurrentUser
 ) {
   if (currentUser.role !== "admin") {
     throw new AccessDeniedError("Access denied");
   }
-  const data = updateMenuItemSchema.parse(input);
   const menuItem = await prisma.menuItem.findUnique({
     where: { id: data.id },
   });
@@ -123,13 +122,12 @@ export async function updateMenuItem(
 }
 
 export async function deleteMenuItem(
-  input: deleteMenuItemInput,
+  data: deleteMenuItemInput,
   currentUser: CurrentUser
 ) {
   if (currentUser.role !== "admin") {
     throw new AccessDeniedError("Access denied");
   }
-  const data = deleteMenuItemSchema.parse(input);
   const menuItem = await prisma.menuItem.findUnique({
     where: { id: data.id },
   });

@@ -1,23 +1,29 @@
+import { Role } from "@/generated/prisma/enums";
+import { organizations } from "./organizations";
+
 export const users = [
   {
     email: "admin@example.com",
     password: "Admin123",
     firstName: "Admin",
     lastName: "User",
-    role: "admin" as const,
+    role: Role.admin,
+    organizationId: null,
   },
   {
-    email: "employee1@example.com",
+    email: "sarah.greenwood@example.com",
     password: "Password123",
-    firstName: "Employee",
-    lastName: "One",
-    role: "employee" as const,
+    firstName: "Sarah",
+    lastName: "Johnson",
+    role: Role.employee,
+    organizationId: organizations[0].id,
   },
   {
-    email: "employee2@example.com",
+    email: "michael.hollywood@example.com",
     password: "Password123",
-    firstName: "Employee",
-    lastName: "Two",
-    role: "employee" as const,
+    firstName: "Michael",
+    lastName: "Davis",
+    role: Role.employee,
+    organizationId: organizations[2].id,
   },
 ];

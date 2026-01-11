@@ -1,8 +1,4 @@
 import { prisma } from "@/shared/db/prisma";
-import { deleteUserSchema } from "../model/delete-user.schema";
-import { getAllUsersSchema } from "../model/get-all-users.schema";
-import { getUserByIdSchema } from "../model/get-user-by-id.schema";
-import { updateUserSchema } from "../model/update-user.schema";
 import {
   deleteUserInput,
   getAllUsersInput,
@@ -16,14 +12,20 @@ import { NotFoundError } from "@/shared/errors/not-found.error";
 import { ConflictError } from "@/shared/errors/conflict.error";
 
 export async function getAllUsers(
-  input: getAllUsersInput,
+  data: getAllUsersInput,
   currentUser: CurrentUser
 ) {
   if (currentUser.role !== "admin") {
     throw new AccessDeniedError("Access denied");
   }
-
-  const data = getAllUsersSchema.parse(input);
+  const existingOrg = data.organizationId
+    ? await prisma.organization.findUnique({
+        where: { id: data.organizationId },
+      })
+    : null;
+  if (data.organizationId && !existingOrg) {
+    throw new NotFoundError("Organization not found");
+  }
   const users = await prisma.user.findMany({
     where: {
       AND: [
@@ -53,10 +55,9 @@ export async function getCurrentUser(currentUser: CurrentUser) {
 }
 
 export async function getUserById(
-  input: getUserByIdInput,
+  data: getUserByIdInput,
   currentUser: CurrentUser
 ) {
-  const data = getUserByIdSchema.parse(input);
   if (currentUser.role !== "admin" && currentUser.id !== data.id) {
     throw new AccessDeniedError("Access denied");
   }
@@ -68,10 +69,9 @@ export async function getUserById(
 }
 
 export async function updateUser(
-  input: updateUserInput,
+  data: updateUserInput,
   currentUser: CurrentUser
 ) {
-  const data = updateUserSchema.parse(input);
   if (currentUser.role !== "admin" && currentUser.id !== data.id) {
     throw new AccessDeniedError("Access denied");
   }
@@ -128,10 +128,9 @@ export async function updateUser(
 }
 
 export async function deleteUser(
-  input: deleteUserInput,
+  data: deleteUserInput,
   currentUser: CurrentUser
 ) {
-  const data = deleteUserSchema.parse(input);
   if (currentUser.role !== "admin" && currentUser.id !== data.id) {
     throw new AccessDeniedError("Access denied");
   }

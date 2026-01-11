@@ -9,6 +9,6 @@ export const createCategorySchema = z.object({
   description: z
     .string()
     .trim()
-    .max(255, "Description cannot exceed 255 characters")
+    .max(500, "Description cannot exceed 500 characters")
     .optional(),
 });

@@ -1,7 +1,7 @@
 import { authOptions } from "@/features/auth/lib/auth";
 import { getAllUsers } from "@/features/user/lib/user";
+import { getAllUsersSchema } from "@/features/user/model/get-all-users.schema";
 import { handleApiError } from "@/shared/api/handle-api-error";
-import { AccessDeniedError } from "@/shared/errors/access-denied.error";
 import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
@@ -10,9 +10,6 @@ export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) throw new UnauthorizedError("Unauthorized");
-    if (session.user.role !== "admin") {
-      throw new AccessDeniedError("Access denied");
-    }
 
     const currentUser = {
       id: session.user.id,
@@ -22,7 +19,8 @@ export async function GET(req: NextRequest) {
 
     const url = new URL(req.url);
     const query = Object.fromEntries(url.searchParams.entries());
-    const users = await getAllUsers({ ...query }, currentUser);
+    const parsedQuery = getAllUsersSchema.parse(query);
+    const users = await getAllUsers(parsedQuery, currentUser);
     return NextResponse.json(users);
   } catch (e) {
     return handleApiError(e);

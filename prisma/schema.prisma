@@ -44,7 +44,6 @@ model Organization {
   contactEmail String?  @unique @map("contact_email") @db.VarChar(255)
   contactPhone String?  @unique @map("contact_phone") @db.VarChar(50)
   users        User[]   @relation("OrganizationUsers")
-  carts        Cart[]   @relation("OrganizationCarts")
   orders       Order[]  @relation("OrganizationOrders")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
@@ -89,7 +88,6 @@ model MenuItem {
   price       Decimal     @map("price") @db.Decimal(10, 2)
   isAvailable Boolean     @default(true) @map("is_available")
   images      MenuImage[] @relation("MenuItemImages")
-  cartItems   CartItem[]  @relation("CartItemMenuItems")
   orderItems  OrderItem[] @relation("OrderItemMenuItems")
   createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @updatedAt @map("updated_at")
@@ -102,40 +100,13 @@ model MenuImage {
   id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   menuItemId String   @map("menu_item_id") @db.Uuid
   menuItem   MenuItem @relation("MenuItemImages", fields: [menuItemId], references: [id], onDelete: Cascade)
-  imageUrl   String   @map("image_url") @db.Text
+  imageUrl   String   @unique @map("image_url") @db.Text
   isPrimary  Boolean  @default(false) @map("is_primary")
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
   @@unique([menuItemId, isPrimary], map: "unique_primary_image_per_item")
   @@map("menu_images")
-}
-
-model Cart {
-  id             String       @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
-  organizationId String       @map("organization_id") @db.Uuid
-  organization   Organization @relation("OrganizationCarts", fields: [organizationId], references: [id], onDelete: Cascade)
-  cartItems      CartItem[]   @relation("CartItems")
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @updatedAt @map("updated_at")
-
-  @@index([organizationId])
-  @@map("carts")
-}
-
-model CartItem {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  cartId     String   @map("cart_id") @db.Uuid
-  cart       Cart     @relation("CartItems", fields: [cartId], references: [id], onDelete: Cascade)
-  menuItemId String   @map("menu_item_id") @db.Uuid
-  menuItem   MenuItem @relation("CartItemMenuItems", fields: [menuItemId], references: [id], onDelete: Cascade)
-  quantity   Int      @map("quantity")
-  addedAt    DateTime @default(now()) @map("added_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
-
-  @@unique([cartId, menuItemId])
-  @@index([cartId])
-  @@map("cart_items")
 }
 
 model Order {
@@ -163,7 +134,7 @@ model OrderItem {
   order      Order     @relation("OrderOrderItems", fields: [orderId], references: [id], onDelete: Cascade)
   menuItemId String?   @map("menu_item_id") @db.Uuid
   menuItem   MenuItem? @relation("OrderItemMenuItems", fields: [menuItemId], references: [id], onDelete: SetNull)
-  quantity   Int       @map("quantity")
+  quantity   Int       @default(1) @map("quantity")
   price      Decimal   @map("price") @db.Decimal(10, 2)
   addedAt    DateTime  @default(now()) @map("added_at")
   updatedAt  DateTime  @updatedAt @map("updated_at")

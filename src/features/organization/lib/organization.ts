@@ -1,8 +1,4 @@
 import { prisma } from "@/shared/db/prisma";
-import { createOrganizationSchema } from "../model/create-organization.schema";
-import { deleteOrganizationSchema } from "../model/delete-organization.schema";
-import { getAllOrganizationsSchema } from "../model/get-all-organizations.schema";
-import { getOrganizationByIdSchema } from "../model/get-organization-by-id.schema";
 import {
   createOrganizationInput,
   deleteOrganizationInput,
@@ -10,20 +6,19 @@ import {
   getOrganizationByIdInput,
   updateOrganizationInput,
 } from "../model/organization.types";
-import { updateOrganizationSchema } from "../model/update-organization.schema";
 import { CurrentUser } from "@/shared/auth/current-user";
 import { AccessDeniedError } from "@/shared/errors/access-denied.error";
 import { ConflictError } from "@/shared/errors/conflict.error";
 import { NotFoundError } from "@/shared/errors/not-found.error";
 
-export async function getAllOrganizations(input: getAllOrganizationsInput) {
-  const data = getAllOrganizationsSchema.parse(input);
+export async function getAllOrganizations(data: getAllOrganizationsInput) {
   const organizations = await prisma.organization.findMany({
     where: {
       AND: [
+        data.name
+          ? { name: { contains: data.name, mode: "insensitive" } }
+          : undefined,
         data.type ? { type: data.type } : undefined,
-        data.contactEmail ? { contactEmail: data.contactEmail } : undefined,
-        data.contactPhone ? { contactPhone: data.contactPhone } : undefined,
       ].filter(Boolean) as any[],
     },
     take: data.limit ?? 20,
@@ -32,8 +27,7 @@ export async function getAllOrganizations(input: getAllOrganizationsInput) {
   return organizations;
 }
 
-export async function getOrganizationById(input: getOrganizationByIdInput) {
-  const data = getOrganizationByIdSchema.parse(input);
+export async function getOrganizationById(data: getOrganizationByIdInput) {
   const organization = await prisma.organization.findUnique({
     where: { id: data.id },
   });
@@ -42,35 +36,37 @@ export async function getOrganizationById(input: getOrganizationByIdInput) {
 
 export async function getCurrentOrganization(currentUser: CurrentUser) {
   const organization = await prisma.organization.findUnique({
-    where: { id: currentUser.organizationId },
+    where: { id: currentUser.organizationId || undefined },
   });
   return organization;
 }
 
 export async function createOrganization(
-  input: createOrganizationInput,
+  data: createOrganizationInput,
   currentUser: CurrentUser
 ) {
   if (currentUser.role !== "admin") {
     throw new AccessDeniedError("Access denied");
   }
-  const data = createOrganizationSchema.parse(input);
 
-  const existingName = await prisma.organization.findUnique({
-    where: { name: data.name },
-  });
+  const [existingName, existingEmail, existingPhone] = await Promise.all([
+    prisma.organization.findUnique({
+      where: { name: data.name },
+    }),
+    prisma.organization.findUnique({
+      where: { contactEmail: data.contactEmail || undefined },
+    }),
+    prisma.organization.findUnique({
+      where: { contactPhone: data.contactPhone || undefined },
+    }),
+  ]);
+
   if (existingName) {
     throw new ConflictError("Organization name already in use");
   }
-  const existingEmail = await prisma.organization.findUnique({
-    where: { contactEmail: data.contactEmail || undefined },
-  });
   if (existingEmail) {
     throw new ConflictError("Contact email already in use");
   }
-  const existingPhone = await prisma.organization.findUnique({
-    where: { contactPhone: data.contactPhone || undefined },
-  });
   if (existingPhone) {
     throw new ConflictError("Contact phone already in use");
   }
@@ -87,10 +83,9 @@ export async function createOrganization(
 }
 
 export async function updateOrganization(
-  input: updateOrganizationInput,
+  data: updateOrganizationInput,
   currentUser: CurrentUser
 ) {
-  const data = updateOrganizationSchema.parse(input);
   if (currentUser.role !== "admin" && currentUser.organizationId !== data.id) {
     throw new AccessDeniedError("Access denied");
   }
@@ -148,10 +143,9 @@ export async function updateOrganization(
 }
 
 export async function deleteOrganization(
-  input: deleteOrganizationInput,
+  data: deleteOrganizationInput,
   currentUser: CurrentUser
 ) {
-  const data = deleteOrganizationSchema.parse(input);
   if (currentUser.role !== "admin") {
     throw new AccessDeniedError("Access denied");
   }
@@ -159,7 +153,6 @@ export async function deleteOrganization(
     where: { id: data.id },
   });
   if (!organization) throw new NotFoundError("Organization not found");
-
   await prisma.organization.delete({
     where: { id: data.id },
   });

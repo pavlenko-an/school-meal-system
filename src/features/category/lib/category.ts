@@ -6,18 +6,12 @@ import {
   getCategoryByIdInput,
   updateCategoryInput,
 } from "../model/category.types";
-import { createCategorySchema } from "../model/create-category.schema";
-import { deleteCategorySchema } from "../model/delete-category.schema";
-import { getAllCategoriesSchema } from "../model/get-all-categories.schema";
-import { getCategoryByIdSchema } from "../model/get-category-by-id.schema";
-import { updateCategorySchema } from "../model/update-category.schema";
 import { CurrentUser } from "@/shared/auth/current-user";
 import { NotFoundError } from "@/shared/errors/not-found.error";
 import { AccessDeniedError } from "@/shared/errors/access-denied.error";
 import { ConflictError } from "@/shared/errors/conflict.error";
 
-export async function getAllCategories(input: getAllCategoriesInput) {
-  const data = getAllCategoriesSchema.parse(input);
+export async function getAllCategories(data: getAllCategoriesInput) {
   const categories = await prisma.category.findMany({
     where: {
       AND: [
@@ -32,8 +26,7 @@ export async function getAllCategories(input: getAllCategoriesInput) {
   return categories;
 }
 
-export async function getCategoryById(input: getCategoryByIdInput) {
-  const data = getCategoryByIdSchema.parse(input);
+export async function getCategoryById(data: getCategoryByIdInput) {
   const category = await prisma.category.findUnique({
     where: { id: data.id },
   });
@@ -44,13 +37,12 @@ export async function getCategoryById(input: getCategoryByIdInput) {
 }
 
 export async function createCategory(
-  input: createCategoryInput,
+  data: createCategoryInput,
   currentUser: CurrentUser
 ) {
   if (currentUser.role !== "admin") {
     throw new AccessDeniedError("Access denied");
   }
-  const data = createCategorySchema.parse(input);
   const existsingCategory = await prisma.category.findUnique({
     where: { name: data.name },
   });
@@ -67,13 +59,12 @@ export async function createCategory(
 }
 
 export async function updateCategory(
-  input: updateCategoryInput,
+  data: updateCategoryInput,
   currentUser: CurrentUser
 ) {
   if (currentUser.role !== "admin") {
     throw new AccessDeniedError("Access denied");
   }
-  const data = updateCategorySchema.parse(input);
 
   const category = await prisma.category.findUnique({
     where: { id: data.id },
@@ -102,13 +93,12 @@ export async function updateCategory(
 }
 
 export async function deleteCategory(
-  input: deleteCategoryInput,
+  data: deleteCategoryInput,
   currentUser: CurrentUser
 ) {
   if (currentUser.role !== "admin") {
     throw new AccessDeniedError("Access denied");
   }
-  const data = deleteCategorySchema.parse(input);
   const category = await prisma.category.findUnique({
     where: { id: data.id },
   });

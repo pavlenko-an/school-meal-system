@@ -4,8 +4,10 @@ import {
   getMenuItemById,
   updateMenuItem,
 } from "@/features/menu-item/lib/menu-item";
+import { deleteMenuItemSchema } from "@/features/menu-item/model/delete-menu-item.schema";
+import { getMenuItemByIdSchema } from "@/features/menu-item/model/get-menu-item-by-id.schema";
+import { updateMenuItemSchema } from "@/features/menu-item/model/update-menu-item.schema";
 import { handleApiError } from "@/shared/api/handle-api-error";
-import { AccessDeniedError } from "@/shared/errors/access-denied.error";
 import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
@@ -19,7 +21,8 @@ export async function GET(req: NextRequest, context: { params: Params }) {
     const { id } = await context.params;
     const session = await getServerSession(authOptions);
     if (!session) throw new UnauthorizedError("Unauthorized");
-    const menuItem = await getMenuItemById({ id });
+    const parsedParams = getMenuItemByIdSchema.parse({ id });
+    const menuItem = await getMenuItemById(parsedParams);
     return NextResponse.json(menuItem);
   } catch (e) {
     return handleApiError(e);
@@ -31,9 +34,6 @@ export async function PATCH(req: NextRequest, context: { params: Params }) {
     const { id } = await context.params;
     const session = await getServerSession(authOptions);
     if (!session) throw new UnauthorizedError("Unauthorized");
-    if (session.user.role !== "admin") {
-      throw new AccessDeniedError("Access denied");
-    }
 
     const currentUser = {
       id: session.user.id,
@@ -42,7 +42,8 @@ export async function PATCH(req: NextRequest, context: { params: Params }) {
     };
 
     const body = await req.json();
-    const menuItem = await updateMenuItem({ ...body, id }, currentUser);
+    const parsedData = updateMenuItemSchema.parse({ id, ...body });
+    const menuItem = await updateMenuItem(parsedData, currentUser);
     return NextResponse.json(menuItem);
   } catch (e) {
     return handleApiError(e);
@@ -54,9 +55,6 @@ export async function DELETE(req: NextRequest, context: { params: Params }) {
     const { id } = await context.params;
     const session = await getServerSession(authOptions);
     if (!session) throw new UnauthorizedError("Unauthorized");
-    if (session.user.role !== "admin") {
-      throw new AccessDeniedError("Access denied");
-    }
 
     const currentUser = {
       id: session.user.id,
@@ -64,7 +62,8 @@ export async function DELETE(req: NextRequest, context: { params: Params }) {
       organizationId: session.user.organizationId,
     };
 
-    await deleteMenuItem({ id }, currentUser);
+    const parsedParams = deleteMenuItemSchema.parse({ id });
+    await deleteMenuItem(parsedParams, currentUser);
     return NextResponse.json({ message: "Menu item deleted successfully" });
   } catch (e) {
     return handleApiError(e);
