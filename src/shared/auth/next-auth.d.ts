@@ -6,12 +6,14 @@ declare module "next-auth" {
       id: string;
       email: string | null;
       organizationId: string | null;
+      organizationType: "school" | "supplier" | null;
       role: "employee" | "admin";
     };
   }
   interface User {
     id: string;
     organizationId: string | null;
+    organizationType: "school" | "supplier" | null;
     role: "employee" | "admin";
   }
 }
@@ -20,5 +22,6 @@ declare module "next-auth/jwt" {
     id: string;
     role: "employee" | "admin";
     organizationId: string | null;
+    organizationType: "school" | "supplier" | null;
   }
 }

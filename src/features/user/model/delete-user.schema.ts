@@ -1,5 +1,5 @@
 import { z } from "zod";
 
 export const deleteUserSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid("Invalid user ID"),
 });

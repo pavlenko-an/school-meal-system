@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const updateOrderItemSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid("Invalid order item ID"),
   quantity: z
     .number()
     .int()

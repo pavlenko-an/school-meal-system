@@ -20,18 +20,18 @@ export const authOptions: AuthOptions = {
 
         const user = await prisma.user.findUnique({
           where: { email: data.email },
+          include: { organization: true },
         });
 
         if (!user) return null;
-
         const valid = await bcrypt.compare(data.password, user.passwordHash);
-
         if (!valid) return null;
 
         return {
           id: user.id,
           email: user.email,
           organizationId: user.organizationId,
+          organizationType: user.organization?.type ?? null,
           role: user.role,
         };
       },
@@ -44,6 +44,7 @@ export const authOptions: AuthOptions = {
         token.id = user.id;
         token.role = user.role;
         token.organizationId = user.organizationId;
+        token.organizationType = user.organizationType;
       }
       return token;
     },
@@ -52,6 +53,7 @@ export const authOptions: AuthOptions = {
         session.user.id = token.id;
         session.user.role = token.role;
         session.user.organizationId = token.organizationId;
+        session.user.organizationType = token.organizationType;
       }
       return session;
     },

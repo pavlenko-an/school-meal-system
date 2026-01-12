@@ -11,7 +11,6 @@ export const createOrganizationSchema = z.object({
     "Type must be either 'school' or 'supplier'"
   ),
   contactEmail: z
-    .string()
     .email("Invalid email format")
     .transform((v) => v.trim().toLowerCase())
     .optional(),

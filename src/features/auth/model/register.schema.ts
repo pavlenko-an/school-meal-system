@@ -2,7 +2,6 @@ import { z } from "zod";
 
 export const registerSchema = z.object({
   email: z
-    .string()
     .email("Invalid email format")
     .transform((v) => v.trim().toLowerCase()),
   password: z
@@ -14,5 +13,5 @@ export const registerSchema = z.object({
     ),
   firstName: z.string().trim().min(1).optional(),
   lastName: z.string().trim().min(1).optional(),
-  organizationId: z.string().uuid(),
+  organizationId: z.uuid("Invalid organization ID"),
 });

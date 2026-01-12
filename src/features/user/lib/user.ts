@@ -75,11 +75,13 @@ export async function updateUser(
   if (currentUser.role !== "admin" && currentUser.id !== data.id) {
     throw new AccessDeniedError("Access denied");
   }
-
   const user = await prisma.user.findUnique({
     where: { id: data.id },
   });
   if (!user) throw new NotFoundError("User not found");
+  if (user.role === "admin" && currentUser.id !== user.id) {
+    throw new AccessDeniedError("Cannot modify another admin");
+  }
 
   const updateData: Record<string, unknown> = {};
   if (data.email !== undefined) {

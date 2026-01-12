@@ -8,6 +8,7 @@ import { deleteCategorySchema } from "@/features/category/model/delete-category.
 import { getCategoryByIdSchema } from "@/features/category/model/get-category-by-id.schema";
 import { updateCategorySchema } from "@/features/category/model/update-category.schema";
 import { handleApiError } from "@/shared/api/handle-api-error";
+import { CurrentUser } from "@/shared/auth/current-user";
 import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
@@ -35,10 +36,11 @@ export async function PATCH(req: NextRequest, context: { params: Params }) {
     const session = await getServerSession(authOptions);
     if (!session) throw new UnauthorizedError("Unauthorized");
 
-    const currentUser = {
+    const currentUser: CurrentUser = {
       id: session.user.id,
       role: session.user.role,
       organizationId: session.user.organizationId,
+      organizationType: session.user.organizationType,
     };
 
     const body = await req.json();
@@ -56,10 +58,11 @@ export async function DELETE(req: NextRequest, context: { params: Params }) {
     const session = await getServerSession(authOptions);
     if (!session) throw new UnauthorizedError("Unauthorized");
 
-    const currentUser = {
+    const currentUser: CurrentUser = {
       id: session.user.id,
       role: session.user.role,
       organizationId: session.user.organizationId,
+      organizationType: session.user.organizationType,
     };
 
     const parsedParams = deleteCategorySchema.parse({ id });

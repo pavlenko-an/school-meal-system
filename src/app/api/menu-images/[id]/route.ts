@@ -2,12 +2,13 @@ import { authOptions } from "@/features/auth";
 import {
   deleteMenuImage,
   getMenuImageById,
+  updateMenuImage,
 } from "@/features/menu-image/lib/menu-image";
 import { deleteMenuImageSchema } from "@/features/menu-image/model/delete-menu-image.schema";
 import { getMenuImageByIdSchema } from "@/features/menu-image/model/get-menu-image-by-id.schema";
-import { updateMenuItem } from "@/features/menu-item/lib/menu-item";
-import { updateMenuItemSchema } from "@/features/menu-item/model/update-menu-item.schema";
+import { updateMenuImageSchema } from "@/features/menu-image/model/update-menu-image.schema";
 import { handleApiError } from "@/shared/api/handle-api-error";
+import { CurrentUser } from "@/shared/auth/current-user";
 import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
@@ -35,16 +36,17 @@ export async function PATCH(req: NextRequest, context: { params: Params }) {
     const session = await getServerSession(authOptions);
     if (!session) throw new UnauthorizedError("Unauthorized");
 
-    const currentUser = {
+    const currentUser: CurrentUser = {
       id: session.user.id,
       role: session.user.role,
       organizationId: session.user.organizationId,
+      organizationType: session.user.organizationType,
     };
 
     const body = await req.json();
-    const parsedData = updateMenuItemSchema.parse({ id, ...body });
-    const menuItem = await updateMenuItem(parsedData, currentUser);
-    return NextResponse.json(menuItem);
+    const parsedData = updateMenuImageSchema.parse({ id, ...body });
+    const menuImage = await updateMenuImage(parsedData, currentUser);
+    return NextResponse.json(menuImage);
   } catch (e) {
     return handleApiError(e);
   }
@@ -56,10 +58,11 @@ export async function DELETE(req: NextRequest, context: { params: Params }) {
     const session = await getServerSession(authOptions);
     if (!session) throw new UnauthorizedError("Unauthorized");
 
-    const currentUser = {
+    const currentUser: CurrentUser = {
       id: session.user.id,
       role: session.user.role,
       organizationId: session.user.organizationId,
+      organizationType: session.user.organizationType,
     };
 
     const parsedParams = deleteMenuImageSchema.parse({ id });

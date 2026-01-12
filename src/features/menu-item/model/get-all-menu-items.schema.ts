@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const getAllMenuItemsSchema = z.object({
-  categoryId: z.string().uuid().optional(),
+  categoryId: z.uuid("Invalid category ID").optional(),
   name: z
     .string()
     .trim()

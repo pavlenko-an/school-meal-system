@@ -1,14 +1,14 @@
 import { z } from "zod";
 
 export const updateOrderSchema = z.object({
-  id: z.string().uuid(),
-  deliveryDate: z.coerce.date(),
+  id: z.uuid("Invalid order ID"),
+  deliveryDate: z.coerce.date().optional(),
   status: z
-    .enum(["new", "paid", "in_progress", "completed", "cancelled"])
+    .enum(
+      ["paid", "in_progress", "completed", "cancelled"],
+      "Status must be one of 'paid', 'in_progress', 'completed', or 'cancelled' when updating an order"
+    )
     .optional(),
-  totalPrice: z
-    .number("Total price must be a number")
-    .positive("Total price must be positive"),
   comment: z
     .string()
     .max(500, "Comment must be at most 500 characters")

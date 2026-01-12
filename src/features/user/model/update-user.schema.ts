@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const updateUserSchema = z.object({
-  id: z.string().uuid(),
-  organizationId: z.string().uuid().optional(),
+  id: z.uuid("Invalid user ID"),
+  organizationId: z.uuid("Invalid organization ID").optional(),
   email: z
     .string()
     .email("Invalid email format")

@@ -101,7 +101,7 @@ async function main() {
   for (const img of menuImages) {
     const menuItemId = menuItemMap.get(img.itemName);
     if (!menuItemId) {
-      console.warn(`Не найден menuItem для ${img.itemName}`);
+      console.warn(`Missing menuItem for ${img.itemName}`);
       continue;
     }
 
@@ -125,18 +125,19 @@ async function main() {
     });
   }
 
-  const admin = await prisma.user.findUnique({
-    where: { email: "admin@example.com" },
-  });
-  const greenwood = await prisma.organization.findUnique({
+  const school = await prisma.organization.findUnique({
     where: { id: organizations[0].id },
   });
 
-  if (admin && greenwood) {
+  const supplier = await prisma.organization.findUnique({
+    where: { id: organizations[1].id },
+  });
+
+  if (school && supplier) {
     const order = await prisma.order.create({
       data: {
-        organizationId: greenwood.id,
-        createdById: admin.id,
+        schoolId: school.id,
+        supplierId: supplier.id,
         deliveryDate: new Date("2025-10-15"),
         status: OrderStatus.new,
         totalPrice: 0,
@@ -162,7 +163,7 @@ async function main() {
 
       if (!menuItem) continue;
 
-      const orderItem = await prisma.orderItem.create({
+      await prisma.orderItem.create({
         data: {
           orderId: order.id,
           menuItemId: menuItem.id,
@@ -173,7 +174,7 @@ async function main() {
         },
       });
 
-      total += Number(orderItem.price) * orderItem.quantity;
+      total += Number(menuItem.price) * it.qty;
     }
 
     await prisma.order.update({

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const updateOrganizationSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid("Invalid organization ID"),
   name: z
     .string()
     .trim()

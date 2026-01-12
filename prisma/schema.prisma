@@ -38,15 +38,16 @@ enum OrderStatus {
 }
 
 model Organization {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
-  name         String   @unique @map("name") @db.VarChar(255)
-  type         OrgType  @map("type")
-  contactEmail String?  @unique @map("contact_email") @db.VarChar(255)
-  contactPhone String?  @unique @map("contact_phone") @db.VarChar(50)
-  users        User[]   @relation("OrganizationUsers")
-  orders       Order[]  @relation("OrganizationOrders")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  name           String   @unique @map("name") @db.VarChar(255)
+  type           OrgType  @map("type")
+  contactEmail   String?  @unique @map("contact_email") @db.VarChar(255)
+  contactPhone   String?  @unique @map("contact_phone") @db.VarChar(50)
+  users          User[]   @relation("OrganizationUsers")
+  schoolOrders   Order[]  @relation("SchoolOrders")
+  supplierOrders Order[]  @relation("SupplierOrders")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   @@map("organizations")
 }
@@ -60,7 +61,6 @@ model User {
   firstName      String?       @map("first_name") @db.VarChar(255)
   lastName       String?       @map("last_name") @db.VarChar(255)
   role           Role          @map("role")
-  createdOrders  Order[]       @relation("OrderCreatedBy")
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
 
@@ -110,21 +110,22 @@ model MenuImage {
 }
 
 model Order {
-  id             String       @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
-  organizationId String       @map("organization_id") @db.Uuid
-  organization   Organization @relation("OrganizationOrders", fields: [organizationId], references: [id], onDelete: Cascade)
-  createdById    String?      @map("created_by") @db.Uuid
-  createdBy      User?        @relation("OrderCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-  deliveryDate   DateTime     @map("delivery_date") @db.Date
-  status         OrderStatus  @default(new) @map("status")
-  totalPrice     Decimal      @map("total_price") @db.Decimal(10, 2)
-  comment        String?      @map("comment") @db.Text
-  orderItems     OrderItem[]  @relation("OrderOrderItems")
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @updatedAt @map("updated_at")
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  schoolId     String?       @map("school_id") @db.Uuid
+  school       Organization? @relation("SchoolOrders", fields: [schoolId], references: [id], onDelete: SetNull)
+  supplierId   String?       @map("supplier_id") @db.Uuid
+  supplier     Organization? @relation("SupplierOrders", fields: [supplierId], references: [id], onDelete: SetNull)
+  deliveryDate DateTime      @map("delivery_date") @db.Date
+  status       OrderStatus   @default(new) @map("status")
+  totalPrice   Decimal       @default(0) @map("total_price") @db.Decimal(10, 2)
+  comment      String?       @map("comment") @db.Text
+  orderItems   OrderItem[]   @relation("OrderOrderItems")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
 
   @@index([status])
-  @@index([organizationId])
+  @@index([schoolId])
+  @@index([supplierId])
   @@map("orders")
 }
 

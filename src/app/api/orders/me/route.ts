@@ -1,7 +1,9 @@
 import { authOptions } from "@/features/auth";
-import { getCurrentOrganizationOrders } from "@/features/order/lib/order";
+import { getSchoolOrders, getSupplierOrders } from "@/features/order/lib/order";
 import { getCurrentOrganizationOrdersSchema } from "@/features/order/model/get-current-organization-orders.schema";
 import { handleApiError } from "@/shared/api/handle-api-error";
+import { CurrentUser } from "@/shared/auth/current-user";
+import { ConflictError } from "@/shared/errors/conflict.error";
 import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
@@ -13,17 +15,26 @@ export async function GET(req: NextRequest) {
       throw new UnauthorizedError("Unauthorized");
     }
 
-    const currentUser = {
+    const currentUser: CurrentUser = {
       id: session.user.id,
       role: session.user.role,
       organizationId: session.user.organizationId,
+      organizationType: session.user.organizationType,
     };
 
     const url = new URL(req.url);
     const query = Object.fromEntries(url.searchParams.entries());
-    const parsedQuery = getCurrentOrganizationOrdersSchema.parse({ ...query });
-    const user = await getCurrentOrganizationOrders(parsedQuery, currentUser);
-    return NextResponse.json(user);
+    const parsedQuery = getCurrentOrganizationOrdersSchema.parse(query);
+
+    let orders;
+    if (currentUser.organizationType === "school") {
+      orders = await getSchoolOrders(parsedQuery, currentUser);
+    } else if (currentUser.organizationType === "supplier") {
+      orders = await getSupplierOrders(parsedQuery, currentUser);
+    } else {
+      throw new ConflictError("Unknown organization type");
+    }
+    return NextResponse.json(orders);
   } catch (e) {
     return handleApiError(e);
   }

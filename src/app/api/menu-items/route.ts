@@ -6,6 +6,7 @@ import {
 import { createMenuItemSchema } from "@/features/menu-item/model/create-menu-item.schema";
 import { getAllMenuItemsSchema } from "@/features/menu-item/model/get-all-menu-items.schema";
 import { handleApiError } from "@/shared/api/handle-api-error";
+import { CurrentUser } from "@/shared/auth/current-user";
 import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
@@ -29,10 +30,11 @@ export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!session) throw new UnauthorizedError("Unathorized");
 
-    const currentUser = {
+    const currentUser: CurrentUser = {
       id: session.user.id,
       role: session.user.role,
       organizationId: session.user.organizationId,
+      organizationType: session.user.organizationType,
     };
 
     const body = await req.json();

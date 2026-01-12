@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const updateCategorySchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid("Invalid category ID"),
   name: z
     .string()
     .trim()

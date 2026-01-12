@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const updateMenuItemSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid("Invalid menu item ID"),
   name: z
     .string()
     .min(1, "Name is required")
@@ -12,6 +12,6 @@ export const updateMenuItemSchema = z.object({
     .number("Price must be a number")
     .positive("Price must be positive")
     .optional(),
-  categoryId: z.string().uuid().optional(),
+  categoryId: z.uuid("Invalid category ID").optional(),
   isAvailable: z.boolean().optional(),
 });

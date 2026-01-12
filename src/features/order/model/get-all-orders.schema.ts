@@ -1,7 +1,8 @@
 import { z } from "zod";
 
 export const getAllOrdersSchema = z.object({
-  organizationId: z.string().uuid().optional(),
+  schoolId: z.uuid("Invalid school ID").optional(),
+  supplierId: z.uuid("Invalid supplier ID").optional(),
   from: z.coerce.date().optional(),
   to: z.coerce.date().optional(),
   status: z
