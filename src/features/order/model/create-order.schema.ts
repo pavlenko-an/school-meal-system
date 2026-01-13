@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 export const createOrderSchema = z.object({
-  schoolId: z.uuid("Invalid school ID"),
   deliveryDate: z.coerce.date(),
   comment: z
     .string()

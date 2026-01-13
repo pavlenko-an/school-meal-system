@@ -1,4 +1,5 @@
 import { prisma } from "@/shared/db/prisma";
+import { Prisma } from "@/generated/prisma/client";
 import {
   createCategoryInput,
   deleteCategoryInput,
@@ -12,13 +13,13 @@ import { AccessDeniedError } from "@/shared/errors/access-denied.error";
 import { ConflictError } from "@/shared/errors/conflict.error";
 
 export async function getAllCategories(data: getAllCategoriesInput) {
+  const filters: Prisma.CategoryWhereInput[] = [];
+  if (data.name) {
+    filters.push({ name: { contains: data.name, mode: "insensitive" } });
+  }
   const categories = await prisma.category.findMany({
     where: {
-      AND: [
-        data.name
-          ? { name: { contains: data.name, mode: "insensitive" } }
-          : undefined,
-      ].filter(Boolean) as any[],
+      AND: filters.length > 0 ? filters : undefined,
     },
     take: data.limit ?? 20,
     skip: data.offset ?? 0,

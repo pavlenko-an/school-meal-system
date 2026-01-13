@@ -1,4 +1,5 @@
 import { prisma } from "@/shared/db/prisma";
+import { Prisma } from "@/generated/prisma/client";
 import {
   createMenuItemInput,
   deleteMenuItemInput,
@@ -20,18 +21,20 @@ export async function getAllMenuItems(data: getAllMenuItemsInput) {
   if (data.categoryId && !existingCategory) {
     throw new NotFoundError("Category not found");
   }
+
+  const filters: Prisma.MenuItemWhereInput[] = [];
+  if (data.categoryId) {
+    filters.push({ categoryId: data.categoryId });
+  }
+  if (data.name) {
+    filters.push({ name: { contains: data.name, mode: "insensitive" } });
+  }
+  if (data.isAvailable !== undefined) {
+    filters.push({ isAvailable: data.isAvailable });
+  }
+
   const menuItems = await prisma.menuItem.findMany({
-    where: {
-      AND: [
-        data.categoryId ? { categoryId: data.categoryId } : undefined,
-        data.name
-          ? { name: { contains: data.name, mode: "insensitive" } }
-          : undefined,
-        data.isAvailable !== undefined
-          ? { isAvailable: data.isAvailable }
-          : undefined,
-      ].filter(Boolean) as any[],
-    },
+    where: filters.length > 0 ? { AND: filters } : undefined,
     take: data.limit ?? 20,
     skip: data.offset ?? 0,
   });

@@ -19,7 +19,8 @@ export async function PATCH(
       throw new UnauthorizedError("Unauthorized");
     }
     const currentUser = await getCurrentUser(session);
-    const parsedData = updatePaymentStatusSchema.parse({ id });
+    const body = await req.json();
+    const parsedData = updatePaymentStatusSchema.parse({ id, ...body });
     const order = await updatePaymentStatus(parsedData, currentUser);
     const response: ApiResponse<typeof order> = { data: order };
     return NextResponse.json(response);

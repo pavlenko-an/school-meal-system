@@ -5,8 +5,14 @@ export const getAllOrdersSchema = z.object({
   supplierId: z.uuid("Invalid supplier ID").optional(),
   from: z.coerce.date().optional(),
   to: z.coerce.date().optional(),
-  status: z
-    .enum(["new", "paid", "in_progress", "completed", "cancelled"])
+  orderStatus: z
+    .enum(
+      ["new", "published", "accepted", "in_progress", "completed", "cancelled"],
+      "Invalid order status"
+    )
+    .optional(),
+  paymentStatus: z
+    .enum(["unpaid", "paid", "verified"], "Invalid payment status")
     .optional(),
   limit: z.coerce.number().int().min(1).max(100).optional(),
   offset: z.coerce.number().int().min(0).optional(),

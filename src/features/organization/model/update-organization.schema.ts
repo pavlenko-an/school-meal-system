@@ -13,12 +13,9 @@ export const updateOrganizationSchema = z.object({
     .optional(),
   contactEmail: z
     .union([
-      z
-        .string()
-        .email("Invalid email format")
-        .transform((v) => v.trim().toLowerCase()),
+      z.email("Invalid email format").transform((v) => v.trim().toLowerCase()),
       z.literal(""),
-    ])
+    ], "Invalid email format")
     .transform((v) => (v === "" ? null : v))
     .optional(),
   contactPhone: z
@@ -29,7 +26,7 @@ export const updateOrganizationSchema = z.object({
         .min(10, "Phone number must be at least 10 digits")
         .max(15, "Phone number cannot exceed 15 digits"),
       z.literal(""),
-    ])
+    ], "Invalid phone number format")
     .transform((v) => (v === "" ? null : v))
     .optional(),
 });

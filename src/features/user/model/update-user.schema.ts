@@ -4,7 +4,6 @@ export const updateUserSchema = z.object({
   id: z.uuid("Invalid user ID"),
   organizationId: z.uuid("Invalid organization ID").optional(),
   email: z
-    .string()
     .email("Invalid email format")
     .transform((v) => v.trim().toLowerCase())
     .optional()

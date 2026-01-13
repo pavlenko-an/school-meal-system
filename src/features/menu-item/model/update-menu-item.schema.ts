@@ -7,7 +7,11 @@ export const updateMenuItemSchema = z.object({
     .min(1, "Name is required")
     .max(100, "Name cannot exceed 100 characters")
     .optional(),
-  description: z.string().optional(),
+  description: z
+    .string()
+    .trim()
+    .max(500, "Description cannot exceed 500 characters")
+    .optional(),
   price: z
     .number("Price must be a number")
     .positive("Price must be positive")

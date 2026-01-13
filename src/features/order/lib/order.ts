@@ -1,4 +1,5 @@
 import { prisma } from "@/shared/db/prisma";
+import { Prisma } from "@/generated/prisma/client";
 import { NotFoundError } from "@/shared/errors/not-found.error";
 import {
   createOrderInput,
@@ -39,16 +40,28 @@ export async function getAllOrders(
     throw new NotFoundError("Supplier not found");
   }
 
+  const filters: Prisma.OrderWhereInput[] = [];
+  if (data.schoolId) {
+    filters.push({ schoolId: data.schoolId });
+  }
+  if (data.supplierId) {
+    filters.push({ supplierId: data.supplierId });
+  }
+  if (data.from) {
+    filters.push({ createdAt: { gte: data.from } });
+  }
+  if (data.to) {
+    filters.push({ createdAt: { lte: data.to } });
+  }
+  if (data.orderStatus) {
+    filters.push({ orderStatus: data.orderStatus });
+  }
+  if (data.paymentStatus) {
+    filters.push({ paymentStatus: data.paymentStatus });
+  }
+
   const orders = await prisma.order.findMany({
-    where: {
-      AND: [
-        data.schoolId ? { schoolId: data.schoolId } : undefined,
-        data.supplierId ? { supplierId: data.supplierId } : undefined,
-        data.from ? { createdAt: { gte: data.from } } : undefined,
-        data.to ? { createdAt: { lte: data.to } } : undefined,
-        data.status ? { status: data.status } : undefined,
-      ].filter(Boolean) as any[],
-    },
+    where: filters.length > 0 ? { AND: filters } : undefined,
     take: data.limit ?? 20,
     skip: data.offset ?? 0,
   });
@@ -87,39 +100,31 @@ export async function getMyOrganizationOrders(
   if (currentUser.role !== "employee") {
     throw new AccessDeniedError("Access denied");
   }
-  let orders;
-  if (currentUser.organizationType === "school") {
-    orders = await prisma.order.findMany({
-      where: {
-        schoolId: currentUser.organizationId,
-        AND: [
-          data.from ? { deliveryDate: { gte: data.from } } : undefined,
-          data.to ? { deliveryDate: { lte: data.to } } : undefined,
-        ].filter(Boolean) as any[],
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      take: data.limit ?? 20,
-      skip: data.offset ?? 0,
-    });
-  }
-  if (currentUser.organizationType === "supplier") {
-    orders = await prisma.order.findMany({
-      where: {
-        supplierId: currentUser.organizationId,
-        AND: [
-          data.from ? { deliveryDate: { gte: data.from } } : undefined,
-          data.to ? { deliveryDate: { lte: data.to } } : undefined,
-        ].filter(Boolean) as any[],
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      take: data.limit ?? 20,
-      skip: data.offset ?? 0,
-    });
-  }
+
+  const filters: Prisma.OrderWhereInput = {
+    ...(currentUser.organizationType === "school" && {
+      schoolId: currentUser.organizationId,
+    }),
+    ...(currentUser.organizationType === "supplier" && {
+      supplierId: currentUser.organizationId,
+    }),
+    ...(data.from && {
+      deliveryDate: { gte: data.from },
+    }),
+    ...(data.to && {
+      deliveryDate: { lte: data.to },
+    }),
+  };
+
+  const orders = await prisma.order.findMany({
+    where: filters,
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: data.limit ?? 20,
+    skip: data.offset ?? 0,
+  });
+
   return orders;
 }
 
@@ -186,14 +191,11 @@ export async function createOrder(
   if (currentUser.role !== "employee") {
     throw new AccessDeniedError("Access denied");
   }
-  if (currentUser.organizationId !== data.schoolId) {
-    throw new AccessDeniedError("Access denied");
-  }
   if (currentUser.organizationType !== "school") {
     throw new AccessDeniedError("Access denied");
   }
   const existingOrg = await prisma.organization.findUnique({
-    where: { id: data.schoolId },
+    where: { id: currentUser.organizationId ?? undefined },
   });
   if (!existingOrg) {
     throw new NotFoundError("School not found");
@@ -201,7 +203,7 @@ export async function createOrder(
 
   const order = await prisma.order.create({
     data: {
-      schoolId: data.schoolId,
+      schoolId: currentUser.organizationId,
       deliveryDate: data.deliveryDate,
       orderStatus: "new",
       paymentStatus: "unpaid",
@@ -271,13 +273,9 @@ export async function updateOrderStatus(
   const isSchool =
     currentUser.organizationType === "school" &&
     currentUser.organizationId === order.schoolId;
-  const isSupplier =
+  let isSupplier =
     currentUser.organizationType === "supplier" &&
     currentUser.organizationId === order.supplierId;
-
-  if (!isSchool && !isSupplier) {
-    throw new AccessDeniedError("You are not a participant of this order");
-  }
 
   const fromStatus = order.orderStatus;
   const toStatus = data.status;
@@ -297,10 +295,24 @@ export async function updateOrderStatus(
       break;
 
     case "published":
-      if ((toStatus === "accepted" || toStatus === "cancelled") && isSchool) {
+      if (
+        toStatus === "accepted" &&
+        currentUser.organizationType === "supplier"
+      ) {
+        if (!order.supplierId) {
+          order.supplierId = currentUser.organizationId;
+        } else if (order.supplierId !== currentUser.organizationId) {
+          throw new AccessDeniedError(
+            "Order is already assigned to another supplier"
+          );
+        }
+        isSupplier = currentUser.organizationId === order.supplierId;
+        allowed = true;
+      } else if (toStatus === "cancelled" && isSchool) {
         allowed = true;
       } else {
-        reason = "From 'published' only → accepted / cancelled by school";
+        reason =
+          "From 'published': 'accepted' only by supplier, 'cancelled' only by school";
       }
       break;
 
@@ -349,10 +361,17 @@ export async function updateOrderStatus(
     );
   }
 
+  if (!isSchool && !isSupplier) {
+    throw new AccessDeniedError("You are not a participant of this order");
+  }
+
   return prisma.$transaction(async (tx) => {
     const updated = await tx.order.update({
       where: { id: data.id },
-      data: { orderStatus: toStatus },
+      data: {
+        orderStatus: toStatus,
+        supplierId: order.supplierId,
+      },
     });
 
     await tx.orderStatusHistory.create({

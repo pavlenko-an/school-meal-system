@@ -1,4 +1,5 @@
 import { prisma } from "@/shared/db/prisma";
+import { Prisma } from "@/generated/prisma/client";
 import {
   deleteUserInput,
   getAllUsersInput,
@@ -26,20 +27,24 @@ export async function getAllUsers(
   if (data.organizationId && !existingOrg) {
     throw new NotFoundError("Organization not found");
   }
+
+  const filters: Prisma.UserWhereInput[] = [];
+  if (data.organizationId) {
+    filters.push({ organizationId: data.organizationId });
+  }
+  if (data.firstName) {
+    filters.push({
+      firstName: { contains: data.firstName, mode: "insensitive" },
+    });
+  }
+  if (data.lastName) {
+    filters.push({
+      lastName: { contains: data.lastName, mode: "insensitive" },
+    });
+  }
+
   const users = await prisma.user.findMany({
-    where: {
-      AND: [
-        data.organizationId
-          ? { organizationId: data.organizationId }
-          : undefined,
-        data.firstName
-          ? { firstName: { contains: data.firstName, mode: "insensitive" } }
-          : undefined,
-        data.lastName
-          ? { lastName: { contains: data.lastName, mode: "insensitive" } }
-          : undefined,
-      ].filter(Boolean) as any[],
-    },
+    where: filters.length > 0 ? { AND: filters } : undefined,
     take: data.limit ?? 20,
     skip: data.offset ?? 0,
   });
@@ -49,6 +54,16 @@ export async function getAllUsers(
 export async function getCurrentUserInfo(currentUser: CurrentUser) {
   const user = await prisma.user.findUnique({
     where: { id: currentUser.id },
+    select: {
+      id: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      role: true,
+      organizationId: true,
+      createdAt: true,
+      updatedAt: true,
+    },
   });
   if (!user) throw new NotFoundError("User not found");
   return user;
@@ -58,11 +73,21 @@ export async function getUserById(
   data: getUserByIdInput,
   currentUser: CurrentUser
 ) {
-  if (currentUser.role !== "admin" && currentUser.id !== data.id) {
+  if (currentUser.role !== "admin") {
     throw new AccessDeniedError("Access denied");
   }
   const user = await prisma.user.findUnique({
     where: { id: data.id },
+    select: {
+      id: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      role: true,
+      organizationId: true,
+      createdAt: true,
+      updatedAt: true,
+    },
   });
   if (!user) throw new NotFoundError("User not found");
   return user;

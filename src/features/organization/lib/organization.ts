@@ -1,4 +1,5 @@
 import { prisma } from "@/shared/db/prisma";
+import { Prisma } from "@/generated/prisma/client";
 import {
   createOrganizationInput,
   deleteOrganizationInput,
@@ -12,15 +13,15 @@ import { ConflictError } from "@/shared/errors/conflict.error";
 import { NotFoundError } from "@/shared/errors/not-found.error";
 
 export async function getAllOrganizations(data: getAllOrganizationsInput) {
+  const filters: Prisma.OrganizationWhereInput[] = [];
+  if (data.name) {
+    filters.push({ name: { contains: data.name, mode: "insensitive" } });
+  }
+  if (data.type) {
+    filters.push({ type: data.type });
+  }
   const organizations = await prisma.organization.findMany({
-    where: {
-      AND: [
-        data.name
-          ? { name: { contains: data.name, mode: "insensitive" } }
-          : undefined,
-        data.type ? { type: data.type } : undefined,
-      ].filter(Boolean) as any[],
-    },
+    where: filters.length > 0 ? { AND: filters } : undefined,
     take: data.limit ?? 20,
     skip: data.offset ?? 0,
   });
