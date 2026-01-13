@@ -5,8 +5,9 @@ import {
 } from "@/features/category/lib/category";
 import { createCategorySchema } from "@/features/category/model/create-category.schema";
 import { getAllCategoriesSchema } from "@/features/category/model/get-all-categories.schema";
+import { ApiResponse } from "@/shared/api/api-response";
 import { handleApiError } from "@/shared/api/handle-api-error";
-import { CurrentUser } from "@/shared/auth/current-user";
+import { getCurrentUser } from "@/shared/auth/current-user";
 import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
@@ -14,12 +15,15 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) throw new UnauthorizedError("Unauthorized");
+    if (!session?.user || !session?.user.id) {
+      throw new UnauthorizedError("Unauthorized");
+    }
     const url = new URL(req.url);
     const query = Object.fromEntries(url.searchParams.entries());
     const parsedQuery = getAllCategoriesSchema.parse(query);
     const categories = await getAllCategories(parsedQuery);
-    return NextResponse.json(categories);
+    const response: ApiResponse<typeof categories> = { data: categories };
+    return NextResponse.json(response);
   } catch (e) {
     return handleApiError(e);
   }
@@ -28,19 +32,15 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) throw new UnauthorizedError("Unauthorized");
-
-    const currentUser: CurrentUser = {
-      id: session.user.id,
-      role: session.user.role,
-      organizationId: session.user.organizationId,
-      organizationType: session.user.organizationType,
-    };
-
+    if (!session?.user || !session?.user.id) {
+      throw new UnauthorizedError("Unauthorized");
+    }
+    const currentUser = await getCurrentUser(session);
     const body = await req.json();
     const parsedBody = createCategorySchema.parse(body);
     const category = await createCategory(parsedBody, currentUser);
-    return NextResponse.json(category);
+    const response: ApiResponse<typeof category> = { data: category };
+    return NextResponse.json(response);
   } catch (e) {
     return handleApiError(e);
   }

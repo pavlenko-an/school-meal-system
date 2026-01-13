@@ -5,7 +5,10 @@ CREATE TYPE "role" AS ENUM ('employee', 'admin');
 CREATE TYPE "org_type" AS ENUM ('school', 'supplier');
 
 -- CreateEnum
-CREATE TYPE "order_status" AS ENUM ('new', 'paid', 'in_progress', 'completed', 'cancelled');
+CREATE TYPE "order_status" AS ENUM ('new', 'published', 'accepted', 'in_progress', 'completed', 'cancelled');
+
+-- CreateEnum
+CREATE TYPE "payment_status" AS ENUM ('unpaid', 'paid');
 
 -- CreateTable
 CREATE TABLE "organizations" (
@@ -73,35 +76,14 @@ CREATE TABLE "menu_images" (
 );
 
 -- CreateTable
-CREATE TABLE "carts" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "organization_id" UUID NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "carts_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "cart_items" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "cart_id" UUID NOT NULL,
-    "menu_item_id" UUID NOT NULL,
-    "quantity" INTEGER NOT NULL,
-    "added_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "cart_items_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "orders" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "organization_id" UUID NOT NULL,
-    "created_by" UUID,
+    "school_id" UUID,
+    "supplier_id" UUID,
     "delivery_date" DATE NOT NULL,
     "status" "order_status" NOT NULL DEFAULT 'new',
-    "total_price" DECIMAL(10,2) NOT NULL,
+    "payment_status" "payment_status" NOT NULL DEFAULT 'unpaid',
+    "total_price" DECIMAL(10,2) NOT NULL DEFAULT 0,
     "comment" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -114,12 +96,24 @@ CREATE TABLE "order_items" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "order_id" UUID NOT NULL,
     "menu_item_id" UUID,
-    "quantity" INTEGER NOT NULL,
+    "quantity" INTEGER NOT NULL DEFAULT 1,
     "price" DECIMAL(10,2) NOT NULL,
     "added_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "order_items_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "order_status_history" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "order_id" UUID NOT NULL,
+    "from_status" "order_status" NOT NULL,
+    "to_status" "order_status" NOT NULL,
+    "actor_id" UUID,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "order_status_history_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -147,28 +141,34 @@ CREATE UNIQUE INDEX "menu_items_name_key" ON "menu_items"("name");
 CREATE INDEX "menu_items_category_id_idx" ON "menu_items"("category_id");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "menu_images_image_url_key" ON "menu_images"("image_url");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "unique_primary_image_per_item" ON "menu_images"("menu_item_id", "is_primary");
-
--- CreateIndex
-CREATE INDEX "carts_organization_id_idx" ON "carts"("organization_id");
-
--- CreateIndex
-CREATE INDEX "cart_items_cart_id_idx" ON "cart_items"("cart_id");
-
--- CreateIndex
-CREATE UNIQUE INDEX "cart_items_cart_id_menu_item_id_key" ON "cart_items"("cart_id", "menu_item_id");
 
 -- CreateIndex
 CREATE INDEX "orders_status_idx" ON "orders"("status");
 
 -- CreateIndex
-CREATE INDEX "orders_organization_id_idx" ON "orders"("organization_id");
+CREATE INDEX "orders_payment_status_idx" ON "orders"("payment_status");
+
+-- CreateIndex
+CREATE INDEX "orders_school_id_idx" ON "orders"("school_id");
+
+-- CreateIndex
+CREATE INDEX "orders_supplier_id_idx" ON "orders"("supplier_id");
 
 -- CreateIndex
 CREATE INDEX "order_items_order_id_idx" ON "order_items"("order_id");
 
 -- CreateIndex
 CREATE INDEX "order_items_menu_item_id_idx" ON "order_items"("menu_item_id");
+
+-- CreateIndex
+CREATE INDEX "order_status_history_order_id_idx" ON "order_status_history"("order_id");
+
+-- CreateIndex
+CREATE INDEX "order_status_history_actor_id_idx" ON "order_status_history"("actor_id");
 
 -- AddForeignKey
 ALTER TABLE "users" ADD CONSTRAINT "users_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -180,22 +180,19 @@ ALTER TABLE "menu_items" ADD CONSTRAINT "menu_items_category_id_fkey" FOREIGN KE
 ALTER TABLE "menu_images" ADD CONSTRAINT "menu_images_menu_item_id_fkey" FOREIGN KEY ("menu_item_id") REFERENCES "menu_items"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "carts" ADD CONSTRAINT "carts_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "orders" ADD CONSTRAINT "orders_school_id_fkey" FOREIGN KEY ("school_id") REFERENCES "organizations"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "cart_items" ADD CONSTRAINT "cart_items_cart_id_fkey" FOREIGN KEY ("cart_id") REFERENCES "carts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "cart_items" ADD CONSTRAINT "cart_items_menu_item_id_fkey" FOREIGN KEY ("menu_item_id") REFERENCES "menu_items"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "orders" ADD CONSTRAINT "orders_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "orders" ADD CONSTRAINT "orders_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "orders" ADD CONSTRAINT "orders_supplier_id_fkey" FOREIGN KEY ("supplier_id") REFERENCES "organizations"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "order_items" ADD CONSTRAINT "order_items_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "orders"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "order_items" ADD CONSTRAINT "order_items_menu_item_id_fkey" FOREIGN KEY ("menu_item_id") REFERENCES "menu_items"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "order_status_history" ADD CONSTRAINT "order_status_history_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "orders"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "order_status_history" ADD CONSTRAINT "order_status_history_actor_id_fkey" FOREIGN KEY ("actor_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;

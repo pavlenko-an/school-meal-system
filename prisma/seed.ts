@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "@/shared/db/prisma";
-import { OrderStatus } from "@/generated/prisma/enums";
+import { OrderStatus, PaymentStatus } from "@/generated/prisma/enums";
 import { organizations } from "./seeds/organizations";
 import { users } from "./seeds/users";
 import { categories } from "./seeds/categories";
@@ -139,7 +139,8 @@ async function main() {
         schoolId: school.id,
         supplierId: supplier.id,
         deliveryDate: new Date("2025-10-15"),
-        status: OrderStatus.new,
+        orderStatus: OrderStatus.new,
+        paymentStatus: PaymentStatus.unpaid,
         totalPrice: 0,
         comment: "Initial order for October",
         createdAt: new Date(),

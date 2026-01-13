@@ -46,7 +46,7 @@ export async function getAllUsers(
   return users;
 }
 
-export async function getCurrentUser(currentUser: CurrentUser) {
+export async function getCurrentUserInfo(currentUser: CurrentUser) {
   const user = await prisma.user.findUnique({
     where: { id: currentUser.id },
   });

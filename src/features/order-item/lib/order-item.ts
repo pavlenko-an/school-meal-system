@@ -54,7 +54,7 @@ export async function createOrderItem(
   ]);
   if (!existingOrder) throw new NotFoundError("Order not found");
   if (!existingMenuItem) throw new NotFoundError("Menu item not found");
-  if (existingOrder.status !== "new")
+  if (existingOrder.orderStatus !== "new")
     throw new ConflictError("Cannot add items to a non-new order");
 
   const quantity = data.quantity ?? 1;
@@ -96,7 +96,7 @@ export async function updateOrderItem(
   });
 
   if (!existingOrderItem) throw new NotFoundError("Order item not found");
-  if (existingOrderItem.order.status !== "new") {
+  if (existingOrderItem.order.orderStatus !== "new") {
     throw new ConflictError("Cannot update items of a non-new order");
   }
 
@@ -142,7 +142,7 @@ export async function deleteOrderItem(
     include: { order: true },
   });
   if (!orderItem) throw new NotFoundError("Order item not found");
-  if (orderItem.order.status !== "new") {
+  if (orderItem.order.orderStatus !== "new") {
     throw new ConflictError("Cannot delete items from a non-new order");
   }
   const totalPrice = orderItem.order.totalPrice.sub(orderItem.price);

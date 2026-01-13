@@ -7,67 +7,71 @@ import {
 import { deleteOrderSchema } from "@/features/order/model/delete-order.schema";
 import { getOrderByIdSchema } from "@/features/order/model/get-order-by-id.schema";
 import { updateOrderSchema } from "@/features/order/model/update-order.schema";
+import { ApiResponse } from "@/shared/api/api-response";
 import { handleApiError } from "@/shared/api/handle-api-error";
-import { CurrentUser } from "@/shared/auth/current-user";
+import { getCurrentUser } from "@/shared/auth/current-user";
 import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
-interface Params {
-  id: string;
-}
-
-export async function GET(req: NextRequest, context: { params: Params }) {
+export async function GET(
+  req: NextRequest,
+  context: { params: { id: string } }
+) {
   try {
     const { id } = await context.params;
     const session = await getServerSession(authOptions);
-    if (!session) throw new UnauthorizedError("Unauthorized");
+    if (!session?.user || !session?.user.id) {
+      throw new UnauthorizedError("Unauthorized");
+    }
+    const currentUser = await getCurrentUser(session);
     const parsedParams = getOrderByIdSchema.parse({ id });
-    const order = await getOrderById(parsedParams);
-    return NextResponse.json(order);
+    const order = await getOrderById(parsedParams, currentUser);
+    const response: ApiResponse<typeof order> = { data: order };
+    return NextResponse.json(response);
   } catch (e) {
     return handleApiError(e);
   }
 }
 
-export async function PATCH(req: NextRequest, context: { params: Params }) {
+export async function PATCH(
+  req: NextRequest,
+  context: { params: { id: string } }
+) {
   try {
     const { id } = await context.params;
     const session = await getServerSession(authOptions);
-    if (!session) throw new UnauthorizedError("Unauthorized");
-
-    const currentUser: CurrentUser = {
-      id: session.user.id,
-      role: session.user.role,
-      organizationId: session.user.organizationId,
-      organizationType: session.user.organizationType,
-    };
-
+    if (!session?.user || !session?.user.id) {
+      throw new UnauthorizedError("Unauthorized");
+    }
+    const currentUser = await getCurrentUser(session);
     const body = await req.json();
     const parsedData = updateOrderSchema.parse({ id, ...body });
     const order = await updateOrder(parsedData, currentUser);
-    return NextResponse.json(order);
+    const response: ApiResponse<typeof order> = { data: order };
+    return NextResponse.json(response);
   } catch (e) {
     return handleApiError(e);
   }
 }
 
-export async function DELETE(req: NextRequest, context: { params: Params }) {
+export async function DELETE(
+  req: NextRequest,
+  context: { params: { id: string } }
+) {
   try {
     const { id } = await context.params;
     const session = await getServerSession(authOptions);
-    if (!session) throw new UnauthorizedError("Unauthorized");
-
-    const currentUser: CurrentUser = {
-      id: session.user.id,
-      role: session.user.role,
-      organizationId: session.user.organizationId,
-      organizationType: session.user.organizationType,
-    };
-
+    if (!session?.user || !session?.user.id) {
+      throw new UnauthorizedError("Unauthorized");
+    }
+    const currentUser = await getCurrentUser(session);
     const parsedData = deleteOrderSchema.parse({ id });
-    const order = await deleteOrder(parsedData, currentUser);
-    return NextResponse.json(order);
+    await deleteOrder(parsedData, currentUser);
+    const response: ApiResponse<null> = {
+      message: "Order deleted successfully",
+    };
+    return NextResponse.json(response);
   } catch (e) {
     return handleApiError(e);
   }
