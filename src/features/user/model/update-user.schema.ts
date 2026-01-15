@@ -10,16 +10,29 @@ export const updateUserSchema = z.object({
     .refine((v) => v !== "", { message: "Email cannot be empty" }),
   password: z
     .string()
-    .min(8, "Password must be at least 8 characters long")
-    .regex(
-      /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      "Password must contain uppercase, lowercase letters and a number"
-    )
     .optional()
-    .refine((v) => v !== "", { message: "Password cannot be empty" }),
+    .refine((val) => val === undefined || val.length === 0 || val.length >= 8, {
+      message: "Password must be at least 8 characters long",
+    })
+    .refine(
+      (val) =>
+        val === undefined ||
+        val.length === 0 ||
+        /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(val),
+      {
+        message:
+          "Password must contain uppercase, lowercase letters and a number",
+      }
+    ),
   firstName: z.string().trim().optional(),
   lastName: z.string().trim().optional(),
   role: z
     .enum(["employee", "admin"], "Role must be either 'employee' or 'admin'")
     .optional(),
+});
+
+export const updateUserFormSchema = updateUserSchema.omit({
+  id: true,
+  organizationId: true,
+  role: true,
 });

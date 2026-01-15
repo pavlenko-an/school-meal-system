@@ -9,6 +9,7 @@ export const users = [
     lastName: "User",
     role: Role.admin,
     organizationId: null,
+    avatarUrl: null,
   },
   {
     email: "sarah.greenwood@example.com",
@@ -17,6 +18,7 @@ export const users = [
     lastName: "Johnson",
     role: Role.employee,
     organizationId: organizations[0].id,
+    avatarUrl: null,
   },
   {
     email: "michael.hollywood@example.com",
@@ -25,5 +27,6 @@ export const users = [
     lastName: "Davis",
     role: Role.employee,
     organizationId: organizations[2].id,
+    avatarUrl: null,
   },
 ];

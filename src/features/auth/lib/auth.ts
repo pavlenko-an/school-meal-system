@@ -30,6 +30,8 @@ export const authOptions: AuthOptions = {
         return {
           id: user.id,
           email: user.email,
+          name: user.firstName + " " + user.lastName,
+          image: user.avatarUrl || null,
           organizationId: user.organizationId,
           organizationType: user.organization?.type ?? null,
           role: user.role,

@@ -15,9 +15,9 @@ import {
   X,
   Menu,
 } from "lucide-react";
-import { clsx } from "clsx";
 import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 type NavItem = {
   label: string;
@@ -132,7 +132,7 @@ export default function Sidebar() {
         {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
       </button>
       <aside
-        className={clsx(
+        className={cn(
           "fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out",
           isOpen ? "translate-x-0" : "-translate-x-full",
           "md:translate-x-0 md:relative md:z-auto"
@@ -157,7 +157,7 @@ export default function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={clsx(
+                className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium",
                   isActive
                     ? "bg-indigo-50 text-indigo-700"
@@ -178,7 +178,7 @@ export default function Sidebar() {
             className="flex w-full items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
           >
             <LogOut className="h-5 w-5" />
-            Выйти
+            Вийти
           </button>
         </div>
       </aside>

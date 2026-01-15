@@ -1,7 +1,7 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { clsx } from "clsx";
 import { Providers } from "./providers";
+import { cn } from "@/lib/utils";
 
 const inter = Inter({
   subsets: ["latin", "cyrillic"],
@@ -17,7 +17,7 @@ export default function RootLayout({
   return (
     <html lang="uk" suppressHydrationWarning>
       <body
-        className={clsx(
+        className={cn(
           inter.variable,
           "min-h-screen bg-background font-sans antialiased"
         )}

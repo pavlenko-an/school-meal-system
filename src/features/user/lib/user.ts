@@ -54,19 +54,25 @@ export async function getAllUsers(
 export async function getCurrentUserInfo(currentUser: CurrentUser) {
   const user = await prisma.user.findUnique({
     where: { id: currentUser.id },
-    select: {
-      id: true,
-      email: true,
-      firstName: true,
-      lastName: true,
-      role: true,
-      organizationId: true,
-      createdAt: true,
-      updatedAt: true,
-    },
+    include: { organization: true },
   });
   if (!user) throw new NotFoundError("User not found");
-  return user;
+  return {
+    id: user.id,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    role: user.role,
+    organization: user.organization
+      ? {
+          id: user.organization.id,
+          name: user.organization.name,
+          type: user.organization.type,
+          contactEmail: user.organization.contactEmail,
+          contactPhone: user.organization.contactPhone,
+        }
+      : null,
+  };
 }
 
 export async function getUserById(
@@ -139,19 +145,25 @@ export async function updateUser(
   const updatedUser = await prisma.user.update({
     where: { id: data.id },
     data: updateData,
-    select: {
-      id: true,
-      email: true,
-      firstName: true,
-      lastName: true,
-      role: true,
-      organizationId: true,
-      createdAt: true,
-      updatedAt: true,
-    },
+    include: { organization: true },
   });
 
-  return updatedUser;
+  return {
+    id: updatedUser.id,
+    email: updatedUser.email,
+    firstName: updatedUser.firstName,
+    lastName: updatedUser.lastName,
+    role: updatedUser.role,
+    organization: updatedUser.organization
+      ? {
+          id: updatedUser.organization.id,
+          name: updatedUser.organization.name,
+          type: updatedUser.organization.type,
+          contactEmail: updatedUser.organization.contactEmail,
+          contactPhone: updatedUser.organization.contactPhone,
+        }
+      : null,
+  };
 }
 
 export async function deleteUser(
