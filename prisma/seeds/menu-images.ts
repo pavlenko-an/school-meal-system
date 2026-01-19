@@ -1,27 +1,67 @@
 export const menuImages = [
   {
     itemName: "Grilled Chicken Breast",
-    imageUrl: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38",
+    fileName: "grilled-chicken-breast.jpg",
     isPrimary: true,
-  },
-  {
-    itemName: "Grilled Chicken Breast",
-    imageUrl: "https://images.unsplash.com/photo-1606857521015-7f9fcf423740",
-    isPrimary: false,
   },
   {
     itemName: "Vegetarian Pasta",
-    imageUrl: "https://images.unsplash.com/photo-1565958011703-44f9829ba187",
+    fileName: "vegetarian-pasta.jpg",
     isPrimary: true,
   },
   {
     itemName: "Beef Burger",
-    imageUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd",
+    fileName: "beef-burger.jpg",
     isPrimary: true,
   },
   {
-    itemName: "Beef Burger",
-    imageUrl: "https://images.unsplash.com/photo-1553979459-d2229ba7433b",
-    isPrimary: false,
+    itemName: "French Fries",
+    fileName: "french-fries.jpg",
+    isPrimary: true,
+  },
+  {
+    itemName: "Garden Salad",
+    fileName: "garden-salad.jpg",
+    isPrimary: true,
+  },
+  {
+    itemName: "Mashed Potatoes",
+    fileName: "mashed-potatoes.jpg",
+    isPrimary: true,
+  },
+  {
+    itemName: "Orange Juice",
+    fileName: "orange-juice.jpg",
+    isPrimary: true,
+  },
+  {
+    itemName: "Apple Juice",
+    fileName: "apple-juice.jpg",
+    isPrimary: true,
+  },
+  {
+    itemName: "Bottled Water",
+    fileName: "bottled-water.jpg",
+    isPrimary: true,
+  },
+  {
+    itemName: "Chocolate Brownie",
+    fileName: "chocolate-brownie.jpg",
+    isPrimary: true,
+  },
+  {
+    itemName: "Fruit Salad",
+    fileName: "fruit-salad.jpg",
+    isPrimary: true,
+  },
+  {
+    itemName: "Yogurt Parfait",
+    fileName: "yogurt-parfait.jpg",
+    isPrimary: true,
+  },
+  {
+    itemName: "Cheese Stick",
+    fileName: "cheese-stick.jpg",
+    isPrimary: true,
   },
 ];

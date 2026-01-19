@@ -51,35 +51,11 @@ export async function getAllUsers(
   return users;
 }
 
-export async function getCurrentUserInfo(currentUser: CurrentUser) {
-  const user = await prisma.user.findUnique({
-    where: { id: currentUser.id },
-    include: { organization: true },
-  });
-  if (!user) throw new NotFoundError("User not found");
-  return {
-    id: user.id,
-    email: user.email,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    role: user.role,
-    organization: user.organization
-      ? {
-          id: user.organization.id,
-          name: user.organization.name,
-          type: user.organization.type,
-          contactEmail: user.organization.contactEmail,
-          contactPhone: user.organization.contactPhone,
-        }
-      : null,
-  };
-}
-
 export async function getUserById(
   data: getUserByIdInput,
   currentUser: CurrentUser
 ) {
-  if (currentUser.role !== "admin") {
+  if (currentUser.role !== "admin" && currentUser.id !== data.id) {
     throw new AccessDeniedError("Access denied");
   }
   const user = await prisma.user.findUnique({
@@ -90,9 +66,15 @@ export async function getUserById(
       firstName: true,
       lastName: true,
       role: true,
-      organizationId: true,
-      createdAt: true,
-      updatedAt: true,
+      organization: {
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          contactEmail: true,
+          contactPhone: true,
+        },
+      },
     },
   });
   if (!user) throw new NotFoundError("User not found");

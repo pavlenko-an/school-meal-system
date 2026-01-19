@@ -1,4 +1,3 @@
-import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { loginSchema } from "../model/login.schema";
 import { useForm } from "react-hook-form";
@@ -8,9 +7,6 @@ import { Eye, EyeOff } from "lucide-react";
 import { loginApi } from "../lib/api";
 
 export default function LoginForm() {
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
-
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -31,7 +27,7 @@ export default function LoginForm() {
     setServerError(null);
 
     try {
-      await loginApi(data, callbackUrl);
+      await loginApi(data);
     } catch (err: unknown) {
       if (err instanceof Error) {
         setServerError(err.message);

@@ -1,7 +1,6 @@
 import { authOptions } from "@/features/auth/lib/auth";
 import {
   deleteUser,
-  getCurrentUserInfo,
   updateUser,
 } from "@/features/user/lib/user";
 import { deleteUserSchema } from "@/features/user/model/delete-user.schema";
@@ -12,22 +11,6 @@ import { getCurrentUser } from "@/shared/auth/current-user";
 import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
-
-// наразі не використовується
-export async function GET(req: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user || !session?.user.id) {
-      throw new UnauthorizedError("Unauthorized");
-    }
-    const currentUser = await getCurrentUser(session);
-    const user = await getCurrentUserInfo(currentUser);
-    const response: ApiResponse<typeof user> = { data: user };
-    return NextResponse.json(response);
-  } catch (e) {
-    return handleApiError(e);
-  }
-}
 
 export async function PATCH(req: NextRequest) {
   try {

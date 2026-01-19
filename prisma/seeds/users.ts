@@ -21,6 +21,15 @@ export const users = [
     avatarUrl: null,
   },
   {
+    email: "bob.global@example.com",
+    password: "Password123",
+    firstName: "Bob",
+    lastName: "Smith",
+    role: Role.employee,
+    organizationId: organizations[1].id,
+    avatarUrl: null,
+  },
+  {
     email: "michael.hollywood@example.com",
     password: "Password123",
     firstName: "Michael",

@@ -10,3 +10,9 @@ export type getCategoryByIdInput = z.infer<typeof getCategoryByIdSchema>;
 export type createCategoryInput = z.infer<typeof createCategorySchema>;
 export type updateCategoryInput = z.infer<typeof updateCategorySchema>;
 export type deleteCategoryInput = z.infer<typeof deleteCategorySchema>;
+
+export interface CategoryInfo {
+  id: string;
+  name: string;
+  description: string | null;
+}

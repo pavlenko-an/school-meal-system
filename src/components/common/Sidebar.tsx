@@ -113,14 +113,28 @@ export default function Sidebar() {
   const userRole = session?.user?.role as string | undefined;
   const orgType = session?.user?.organizationType as string | null;
 
-  const filteredItems = navItems.filter((item) => {
-    if (!item.roles && !item.orgTypes) return true;
+  const getDashboardHref = () => {
+    if (userRole === "admin") return "/admin/dashboard";
+    if (userRole === "employee" && orgType === "school")
+      return "/school/dashboard";
+    if (userRole === "employee" && orgType === "supplier")
+      return "/supplier/dashboard";
+    return "/dashboard";
+  };
 
-    const roleMatch = !item.roles || item.roles.includes(userRole ?? "");
-    const orgMatch = !item.orgTypes || item.orgTypes.includes(orgType ?? "");
-
-    return roleMatch && orgMatch;
-  });
+  const filteredItems = navItems
+    .map((item) => {
+      if (item.label === "Дашборд") {
+        return { ...item, href: getDashboardHref() };
+      }
+      return item;
+    })
+    .filter((item) => {
+      if (!item.roles && !item.orgTypes) return true;
+      const roleMatch = !item.roles || item.roles.includes(userRole ?? "");
+      const orgMatch = !item.orgTypes || item.orgTypes.includes(orgType ?? "");
+      return roleMatch && orgMatch;
+    });
 
   return (
     <>

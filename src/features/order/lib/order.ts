@@ -1,5 +1,5 @@
 import { prisma } from "@/shared/db/prisma";
-import { Prisma } from "@/generated/prisma/client";
+import { OrderStatus, Prisma } from "@/generated/prisma/client";
 import { NotFoundError } from "@/shared/errors/not-found.error";
 import {
   createOrderInput,
@@ -18,7 +18,7 @@ import { AccessDeniedError } from "@/shared/errors/access-denied.error";
 
 export async function getAllOrders(
   data: getAllOrdersInput,
-  currentUser: CurrentUser
+  currentUser: CurrentUser,
 ) {
   if (currentUser.role !== "admin") {
     throw new AccessDeniedError("Access denied");
@@ -70,7 +70,7 @@ export async function getAllOrders(
 
 export async function getOrderById(
   data: getOrderByIdInput,
-  currentUser: CurrentUser
+  currentUser: CurrentUser,
 ) {
   const order = await prisma.order.findUnique({
     where: { id: data.id },
@@ -95,42 +95,135 @@ export async function getOrderById(
 
 export async function getMyOrganizationOrders(
   data: getMyOrganizationOrdersInput,
-  currentUser: CurrentUser
+  currentUser: CurrentUser,
 ) {
   if (currentUser.role !== "employee") {
     throw new AccessDeniedError("Access denied");
   }
 
-  const filters: Prisma.OrderWhereInput = {
+  const baseFilters: Prisma.OrderWhereInput = {
     ...(currentUser.organizationType === "school" && {
       schoolId: currentUser.organizationId,
     }),
     ...(currentUser.organizationType === "supplier" && {
       supplierId: currentUser.organizationId,
     }),
-    ...(data.from && {
-      deliveryDate: { gte: data.from },
-    }),
-    ...(data.to && {
-      deliveryDate: { lte: data.to },
-    }),
   };
 
-  const orders = await prisma.order.findMany({
-    where: filters,
-    orderBy: {
-      createdAt: "desc",
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const pastWhere: Prisma.OrderWhereInput = {
+    ...baseFilters,
+    deliveryDate: {
+      ...(data.from && { gte: data.from }),
+      ...(data.to && { lte: data.to }),
+      lt: startOfToday,
     },
-    take: data.limit ?? 20,
+  };
+
+  const upcomingWhere: Prisma.OrderWhereInput = {
+    ...baseFilters,
+    deliveryDate: {
+      ...(data.from && { gte: data.from }),
+      ...(data.to && { lte: data.to }),
+      gte: startOfToday,
+    },
+  };
+
+  const recentDb = await prisma.order.findMany({
+    where: pastWhere,
+    select: {
+      id: true,
+      deliveryDate: true,
+      orderStatus: true,
+      paymentStatus: true,
+      totalPrice: true,
+      school: { select: { id: true, name: true } },
+      supplier: { select: { id: true, name: true } },
+    },
+    orderBy: { deliveryDate: "desc" },
+    take: 5,
     skip: data.offset ?? 0,
   });
 
-  return orders;
+  const upcomingDb = await prisma.order.findMany({
+    where: upcomingWhere,
+    select: {
+      id: true,
+      deliveryDate: true,
+      orderStatus: true,
+      paymentStatus: true,
+      totalPrice: true,
+      school: { select: { id: true, name: true } },
+      supplier: { select: { id: true, name: true } },
+    },
+    orderBy: { deliveryDate: "asc" },
+    take: 5,
+    skip: data.offset ?? 0,
+  });
+
+  const recentOrders = recentDb.map((order) => ({
+    ...order,
+    totalPrice: order.totalPrice.toNumber(),
+  }));
+  const upcomingOrders = upcomingDb.map((order) => ({
+    ...order,
+    totalPrice: order.totalPrice.toNumber(),
+  }));
+
+  const ordersCount = await prisma.order.count({
+    where: pastWhere,
+  });
+
+  const unpaidAgg = await prisma.order.aggregate({
+    _sum: { totalPrice: true },
+    where: {
+      ...pastWhere,
+      paymentStatus: "unpaid",
+      orderStatus: { not: "cancelled" },
+    },
+  });
+  const unpaidAmount = Number(unpaidAgg._sum.totalPrice ?? 0);
+
+  const now = new Date();
+  const activeStatuses = [
+    "published",
+    "accepted",
+    "in_progress",
+  ] as OrderStatus[];
+  const next = await prisma.order.findFirst({
+    where: {
+      ...(currentUser.organizationType === "school" && {
+        schoolId: currentUser.organizationId,
+      }),
+      ...(currentUser.organizationType === "supplier" && {
+        supplierId: currentUser.organizationId,
+      }),
+      deliveryDate: { gte: now },
+      orderStatus: { in: activeStatuses },
+    },
+    orderBy: { deliveryDate: "asc" },
+    select: { deliveryDate: true, comment: true },
+  });
+
+  return {
+    recent: recentOrders,
+    upcoming: upcomingOrders,
+    stats: {
+      ordersCount,
+      nextDelivery: {
+        deliveryDate: next?.deliveryDate ?? null,
+        comment: next?.comment ?? null,
+      },
+      unpaidAmount,
+    },
+  };
 }
 
 export async function getOrderHistory(
   data: getOrderHistoryInput,
-  currentUser: CurrentUser
+  currentUser: CurrentUser,
 ) {
   if (currentUser.role !== "employee") {
     throw new AccessDeniedError("Only employees can view order history");
@@ -154,7 +247,7 @@ export async function getOrderHistory(
     currentUser.organizationId === order.supplierId;
   if (!isSchoolParticipant && !isSupplierParticipant) {
     throw new AccessDeniedError(
-      "You do not have access to this order's history"
+      "You do not have access to this order's history",
     );
   }
 
@@ -186,7 +279,7 @@ export async function getOrderHistory(
 
 export async function createOrder(
   data: createOrderInput,
-  currentUser: CurrentUser
+  currentUser: CurrentUser,
 ) {
   if (currentUser.role !== "employee") {
     throw new AccessDeniedError("Access denied");
@@ -216,7 +309,7 @@ export async function createOrder(
 
 export async function updateOrder(
   data: updateOrderInput,
-  currentUser: CurrentUser
+  currentUser: CurrentUser,
 ) {
   if (currentUser.role !== "employee") {
     throw new AccessDeniedError("Access denied");
@@ -254,7 +347,7 @@ export async function updateOrder(
 
 export async function updateOrderStatus(
   data: updateOrderStatusInput,
-  currentUser: CurrentUser
+  currentUser: CurrentUser,
 ) {
   if (currentUser.role !== "employee") {
     throw new AccessDeniedError("Only employees can change order status");
@@ -303,7 +396,7 @@ export async function updateOrderStatus(
           order.supplierId = currentUser.organizationId;
         } else if (order.supplierId !== currentUser.organizationId) {
           throw new AccessDeniedError(
-            "Order is already assigned to another supplier"
+            "Order is already assigned to another supplier",
           );
         }
         isSupplier = currentUser.organizationId === order.supplierId;
@@ -320,7 +413,7 @@ export async function updateOrderStatus(
       if (toStatus === "in_progress" && isSupplier) {
         if (order.paymentStatus !== "verified") {
           throw new ConflictError(
-            "Cannot start 'in_progress' until payment is verified"
+            "Cannot start 'in_progress' until payment is verified",
           );
         }
         allowed = true;
@@ -357,7 +450,7 @@ export async function updateOrderStatus(
 
   if (!allowed) {
     throw new ConflictError(
-      reason || `Transition ${fromStatus} → ${toStatus} not allowed`
+      reason || `Transition ${fromStatus} → ${toStatus} not allowed`,
     );
   }
 
@@ -389,7 +482,7 @@ export async function updateOrderStatus(
 
 export async function updatePaymentStatus(
   data: updatePaymentStatusInput,
-  currentUser: CurrentUser
+  currentUser: CurrentUser,
 ) {
   if (currentUser.role !== "employee") {
     throw new AccessDeniedError("Only employees can change payment status");
@@ -462,7 +555,7 @@ export async function updatePaymentStatus(
 
   if (!allowed) {
     throw new ConflictError(
-      errorMessage || `Cannot transition ${currentPayment} → ${targetPayment}`
+      errorMessage || `Cannot transition ${currentPayment} → ${targetPayment}`,
     );
   }
 
@@ -478,7 +571,7 @@ export async function updatePaymentStatus(
 
 export async function deleteOrder(
   data: deleteOrderInput,
-  currentUser: CurrentUser
+  currentUser: CurrentUser,
 ) {
   if (currentUser.role !== "employee") {
     throw new AccessDeniedError("Access denied");

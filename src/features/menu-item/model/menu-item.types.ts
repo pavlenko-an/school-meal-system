@@ -10,3 +10,22 @@ export type getMenuItemByIdInput = z.infer<typeof getMenuItemByIdSchema>;
 export type createMenuItemInput = z.infer<typeof createMenuItemSchema>;
 export type updateMenuItemInput = z.infer<typeof updateMenuItemSchema>;
 export type deleteMenuItemInput = z.infer<typeof deleteMenuItemSchema>;
+
+export type MenuItemsInfo = {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  isAvailable: boolean;
+  category: {
+    id: string;
+    name: string;
+  } | null;
+  images:
+    | {
+        id: string;
+        imageUrl: string;
+        isPrimary: boolean;
+      }[]
+    | null;
+};

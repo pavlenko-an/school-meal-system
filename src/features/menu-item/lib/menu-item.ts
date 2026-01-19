@@ -37,13 +37,56 @@ export async function getAllMenuItems(data: getAllMenuItemsInput) {
     where: filters.length > 0 ? { AND: filters } : undefined,
     take: data.limit ?? 20,
     skip: data.offset ?? 0,
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      price: true,
+      isAvailable: true,
+      category: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      images: {
+        select: {
+          id: true,
+          imageUrl: true,
+          isPrimary: true,
+        },
+      },
+    },
   });
-  return menuItems;
+  return menuItems.map((item) => ({
+    ...item,
+    price: item.price.toNumber(),
+  }));
 }
 
 export async function getMenuItemById(data: getMenuItemByIdInput) {
   const menuItem = await prisma.menuItem.findUnique({
     where: { id: data.id },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      price: true,
+      isAvailable: true,
+      category: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      images: {
+        select: {
+          id: true,
+          imageUrl: true,
+          isPrimary: true,
+        },
+      },
+    },
   });
   if (!menuItem) {
     throw new NotFoundError("Menu item not found");

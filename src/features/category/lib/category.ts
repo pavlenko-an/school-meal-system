@@ -23,6 +23,11 @@ export async function getAllCategories(data: getAllCategoriesInput) {
     },
     take: data.limit ?? 20,
     skip: data.offset ?? 0,
+    select: {
+      id: true,
+      name: true,
+      description: true,
+    },
   });
   return categories;
 }
@@ -30,6 +35,11 @@ export async function getAllCategories(data: getAllCategoriesInput) {
 export async function getCategoryById(data: getCategoryByIdInput) {
   const category = await prisma.category.findUnique({
     where: { id: data.id },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+    },
   });
   if (!category) {
     throw new NotFoundError("Category not found");

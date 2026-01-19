@@ -4,7 +4,7 @@ import { authOptions } from "@/features/auth";
 import ProfileForm from "@/features/user/ui/ProfileForm";
 import ProfileInfo from "@/features/user/ui/ProfileInfo";
 import { updateUserInput } from "@/features/user/model/user.types";
-import { getCurrentUserInfo } from "@/features/user/lib/user";
+import { getUserById } from "@/features/user/lib/user";
 import { getCurrentUser } from "@/shared/auth/current-user";
 import DeleteAccountSection from "@/features/user/ui/DeleteAccountButton";
 import {
@@ -21,7 +21,7 @@ export default async function ProfilePage() {
     redirect("/auth/login?callbackUrl=/profile");
   }
   const currentUser = await getCurrentUser(session);
-  const userInfo = await getCurrentUserInfo(currentUser);
+  const userInfo = await getUserById({ id: currentUser.id }, currentUser);
   const defaultValues: Partial<updateUserInput> = {
     email: userInfo.email,
     firstName: userInfo.firstName || "",
@@ -63,7 +63,7 @@ export default async function ProfilePage() {
             <ProfileForm defaultValues={defaultValues} />
           </CardContent>
         </Card>
-        
+
         <Card className="border-destructive/50 bg-destructive/5">
           <CardHeader>
             <CardTitle className="text-destructive">Небезпечна зона</CardTitle>

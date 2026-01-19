@@ -22,3 +22,38 @@ export type updatePaymentStatusInput = z.infer<
   typeof updatePaymentStatusSchema
 >;
 export type deleteOrderInput = z.infer<typeof deleteOrderSchema>;
+
+export type OrdersInfo = {
+  id: string;
+  deliveryDate: Date;
+  orderStatus:
+    | "new"
+    | "published"
+    | "accepted"
+    | "in_progress"
+    | "completed"
+    | "cancelled";
+  paymentStatus: "unpaid" | "paid" | "verified";
+  totalPrice: number;
+  school: {
+    id: string;
+    name: string;
+  } | null;
+  supplier: {
+    id: string;
+    name: string;
+  } | null;
+};
+
+export type OrdersStats = {
+  recent: OrdersInfo[];
+  upcoming: OrdersInfo[];
+  stats: {
+    ordersCount: number;
+    nextDelivery: {
+      deliveryDate: Date | null;
+      comment: string | null;
+    };
+    unpaidAmount: number;
+  };
+};
