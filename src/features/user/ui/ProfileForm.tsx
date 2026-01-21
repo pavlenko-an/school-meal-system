@@ -3,7 +3,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { updateUserApi } from "../lib/api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +16,8 @@ import {
 import { updateUserFormInput } from "../model/user.types";
 import { updateUserFormSchema } from "../model/update-user.schema";
 import { useRouter } from "next/navigation";
+import { useActionState, useEffect } from "react";
+import { updateUser } from "../actions/update-user.action";
 
 type Props = {
   defaultValues?: Partial<updateUserFormInput>;
@@ -35,21 +36,22 @@ export default function ProfileForm({ defaultValues }: Props) {
     },
   });
 
-  const onSubmit = async (data: updateUserFormInput) => {
-    try {
-      await updateUserApi(data);
+  const [state, formAction, isPending] = useActionState(updateUser, null);
+
+  useEffect(() => {
+    if (state?.success) {
       toast.success("Профіль успішно оновлено");
       router.refresh();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : "Не вдалося оновити профіль"
-      );
+      form.reset();
     }
-  };
+    if (state?.success === false && state.error) {
+      toast.error(state.error);
+    }
+  }, [state, router, form]);
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form action={formAction} className="space-y-6">
         <div className="grid gap-6 sm:grid-cols-2">
           <FormField
             control={form.control}
@@ -109,7 +111,7 @@ export default function ProfileForm({ defaultValues }: Props) {
         </div>
 
         <div className="flex justify-end">
-          <Button type="submit" disabled={form.formState.isSubmitting}>
+          <Button type="submit" disabled={isPending}>
             Зберегти зміни
           </Button>
         </div>

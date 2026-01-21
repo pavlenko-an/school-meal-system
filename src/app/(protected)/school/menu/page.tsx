@@ -1,11 +1,12 @@
 import { Card, CardContent } from "@/components/ui/card";
 import MenuCategoryTabs from "@/features/category/ui/MenuCategoryTabs";
 import MenuGrid from "@/features/menu-item/ui/MenuGrid";
-import { MenuItemsInfo } from "@/features/menu-item/model/menu-item.types";
-import { CategoryInfo } from "@/features/category/model/category.types";
-import { getAllCategories } from "@/features/category/lib/category";
-import { getAllMenuItems } from "@/features/menu-item/lib/menu-item";
-import { getAllMenuItemsSchema } from "@/features/menu-item/model/get-all-menu-items.schema";
+import { CategoryInfo, getAllCategories } from "@/features/category";
+import {
+  MenuItemsInfo,
+  getAllMenuItems,
+  getAllMenuItemsSchema,
+} from "@/features/menu-item";
 
 export default async function SchoolMenuPage({
   searchParams,

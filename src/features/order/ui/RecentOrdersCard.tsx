@@ -14,7 +14,7 @@ export default function RecentOrdersHistoryCard({
         <div className="flex items-center justify-between">
           <CardTitle>Минулі поставки</CardTitle>
           <Button variant="outline" size="sm" asChild>
-            <Link href="/school/orders?status=future">Усі майбутні</Link>
+            <Link href="/school/orders?dateTo=today">Усі минулі</Link>
           </Button>
         </div>
       </CardHeader>

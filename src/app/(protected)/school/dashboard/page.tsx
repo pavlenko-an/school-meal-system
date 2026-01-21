@@ -2,15 +2,12 @@ import StatsCards from "@/features/order/ui/StatsCards";
 import UpcomingOrdersCard from "@/features/order/ui/UpcomingOrdersCard";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { OrdersStats } from "@/features/order/model/order.types";
-import { getMyOrganizationOrders } from "@/features/order/lib/order";
+import { getMyOrganizationStatsSchema, OrdersStats } from "@/features/order";
 import { getCurrentUser } from "@/shared/auth/current-user";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/features/auth";
 import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import MonthsSelector from "@/features/order/ui/MonthsSelector";
-import { getMyOrganizationOrdersSchema } from "@/features/order/model/get-my-organization-orders.schema";
 import RecentOrdersCard from "@/features/order/ui/RecentOrdersCard";
+import { orderService } from "@/features/order/services/order.service";
 
 export default async function SchoolDashboardClient({
   searchParams,
@@ -25,27 +22,25 @@ export default async function SchoolDashboardClient({
       : 1;
 
   const now = new Date();
-
   const from = new Date(
     now.getFullYear(),
     now.getMonth() - initialMonths,
     now.getDate(),
   );
-
-  const parsedQuery = getMyOrganizationOrdersSchema.parse({
+  const parsedQuery = getMyOrganizationStatsSchema.parse({
     from,
-    limit: 20,
-    offset: 0,
   });
 
   let data: OrdersStats;
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user || !session?.user.id) {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
       throw new UnauthorizedError("Unauthorized");
     }
-    const currentUser = await getCurrentUser(session);
-    data = await getMyOrganizationOrders(parsedQuery, currentUser);
+    data = await orderService.getMyOrganizationStats.execute(
+      parsedQuery,
+      currentUser,
+    );
   } catch (err: unknown) {
     if (err instanceof Error) {
       throw new Error(err.message);

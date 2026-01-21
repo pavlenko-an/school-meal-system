@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { deleteUserApi } from "@/features/user/lib/api";
 import { useRouter } from "next/navigation";
 import {
   AlertDialog,
@@ -16,29 +15,23 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { deleteUser } from "../actions/delete-user.action";
 
 export default function DeleteAccountSection() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [state, formAction, isPending] = useActionState(deleteUser, null);
 
-  const handleDelete = async () => {
-    setIsDeleting(true);
-    try {
-      await deleteUserApi();
+  useEffect(() => {
+    if (state?.success) {
       toast.success("Обліковий запис видалено");
       router.push("/auth/login");
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error
-          ? err.message
-          : "Не вдалося видалити обліковий запис"
-      );
-    } finally {
-      setIsDeleting(false);
-      setOpen(false);
     }
-  };
+    if (state?.success === false && state.error) {
+      toast.error(state.error);
+      setTimeout(() => setOpen(false), 0);
+    }
+  }, [state, router]);
 
   return (
     <div className="space-y-4">
@@ -49,8 +42,8 @@ export default function DeleteAccountSection() {
 
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogTrigger asChild>
-          <Button variant="destructive" disabled={isDeleting}>
-            {isDeleting ? "Видалення..." : "Видалити обліковий запис"}
+          <Button variant="destructive" disabled={isPending}>
+            {isPending ? "Видалення..." : "Видалити обліковий запис"}
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent>
@@ -63,14 +56,18 @@ export default function DeleteAccountSection() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Скасувати</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={isDeleting}
-            >
-              {isDeleting ? "Видаляємо..." : "Видалити назавжди"}
-            </AlertDialogAction>
+            <AlertDialogCancel disabled={isPending}>
+              Скасувати
+            </AlertDialogCancel>
+            <form action={formAction}>
+              <AlertDialogAction
+                type="submit"
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                disabled={isPending}
+              >
+                {isPending ? "Видаляємо..." : "Видалити назавжди"}
+              </AlertDialogAction>
+            </form>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

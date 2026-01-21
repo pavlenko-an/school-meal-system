@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { registerUser } from "@/features/auth/lib/register";
 import { handleApiError } from "@/shared/api/handle-api-error";
-import { authOptions, registerSchema } from "@/features/auth";
+import { authOptions, registerUser, registerSchema } from "@/features/auth";
 import { getServerSession } from "next-auth";
 import { AccessDeniedError } from "@/shared/errors/access-denied.error";
 import { ApiResponse } from "@/shared/api/api-response";

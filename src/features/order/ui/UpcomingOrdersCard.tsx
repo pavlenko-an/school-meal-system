@@ -15,7 +15,7 @@ export default function UpcomingOrdersCard({
           <div className="flex items-center justify-between">
             <CardTitle>Майбутні поставки</CardTitle>
             <Button variant="outline" size="sm" asChild>
-              <Link href="/school/orders?status=future">Усі майбутні</Link>
+              <Link href="/school/orders?dateFrom=today">Усі майбутні</Link>
             </Button>
           </div>
         </CardHeader>

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const updateUserSchema = z.object({
-  id: z.uuid("Invalid user ID"),
+  id: z.uuid("Invalid user ID").optional(),
   organizationId: z.uuid("Invalid organization ID").optional(),
   email: z
     .email("Invalid email format")
@@ -22,7 +22,7 @@ export const updateUserSchema = z.object({
       {
         message:
           "Password must contain uppercase, lowercase letters and a number",
-      }
+      },
     ),
   firstName: z.string().trim().optional(),
   lastName: z.string().trim().optional(),

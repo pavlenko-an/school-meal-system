@@ -1,21 +1,19 @@
-import { authOptions } from "@/features/auth";
 import {
   createMenuImage,
+  createMenuImageSchema,
   getAllMenuImages,
-} from "@/features/menu-image/lib/menu-image";
-import { createMenuImageSchema } from "@/features/menu-image/model/create-menu-image.schema";
-import { getAllMenuImagesSchema } from "@/features/menu-image/model/get-all-menu-images.schema";
+  getAllMenuImagesSchema,
+} from "@/features/menu-image";
 import { ApiResponse } from "@/shared/api/api-response";
 import { handleApiError } from "@/shared/api/handle-api-error";
 import { getCurrentUser } from "@/shared/auth/current-user";
 import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
-import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user || !session?.user.id) {
+    const user = await getCurrentUser();
+    if (!user) {
       throw new UnauthorizedError("Unauthorized");
     }
     const url = new URL(req.url);
@@ -31,11 +29,10 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user || !session?.user.id) {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
       throw new UnauthorizedError("Unauthorized");
     }
-    const currentUser = await getCurrentUser(session);
     const body = await req.json();
     const parsedBody = createMenuImageSchema.parse(body);
     const menuImage = await createMenuImage(parsedBody, currentUser);

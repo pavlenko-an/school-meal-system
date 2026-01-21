@@ -1,10 +1,5 @@
-import { getServerSession } from "next-auth/next";
-import { redirect } from "next/navigation";
-import { authOptions } from "@/features/auth";
 import ProfileForm from "@/features/user/ui/ProfileForm";
 import ProfileInfo from "@/features/user/ui/ProfileInfo";
-import { updateUserInput } from "@/features/user/model/user.types";
-import { getUserById } from "@/features/user/lib/user";
 import { getCurrentUser } from "@/shared/auth/current-user";
 import DeleteAccountSection from "@/features/user/ui/DeleteAccountButton";
 import {
@@ -14,13 +9,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { getUserById } from "@/features/user/queries/get-user-by-id.query";
+import { updateUserInput } from "@/features/user/model/user.types";
+import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 
 export default async function ProfilePage() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user || !session?.user.id) {
-    redirect("/auth/login?callbackUrl=/profile");
+  const currentUser = await getCurrentUser();
+  if (!currentUser) {
+    throw new UnauthorizedError("Unauthorized");
   }
-  const currentUser = await getCurrentUser(session);
   const userInfo = await getUserById({ id: currentUser.id }, currentUser);
   const defaultValues: Partial<updateUserInput> = {
     email: userInfo.email,

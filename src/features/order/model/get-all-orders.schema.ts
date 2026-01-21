@@ -8,12 +8,12 @@ export const getAllOrdersSchema = z.object({
   orderStatus: z
     .enum(
       ["new", "published", "accepted", "in_progress", "completed", "cancelled"],
-      "Invalid order status"
+      "Invalid order status",
     )
     .optional(),
   paymentStatus: z
     .enum(["unpaid", "paid", "verified"], "Invalid payment status")
     .optional(),
-  limit: z.coerce.number().int().min(1).max(100).optional(),
-  offset: z.coerce.number().int().min(0).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
 });
