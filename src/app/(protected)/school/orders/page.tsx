@@ -6,8 +6,8 @@ import Pagination from "@/components/common/Pagination";
 import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { getCurrentUser } from "@/shared/auth/current-user";
 import { OrdersList } from "@/features/order";
-import { orderService } from "@/features/order/services/order.service";
 import { getMyOrganizationOrdersSchema } from "@/features/order/model/get-my-organization-orders.schema";
+import { getMyOrganizationOrders } from "@/features/order/queries/get-my-organization-orders.query";
 
 export default async function SchoolOrdersPage({
   searchParams,
@@ -54,10 +54,7 @@ export default async function SchoolOrdersPage({
     if (!currentUser) {
       throw new UnauthorizedError("Unauthorized");
     }
-    data = await orderService.getMyOrganizationOrders.execute(
-      parsedQuery,
-      currentUser,
-    );
+    data = await getMyOrganizationOrders(parsedQuery, currentUser);
   } catch (err: unknown) {
     if (err instanceof Error) {
       throw new Error(err.message);

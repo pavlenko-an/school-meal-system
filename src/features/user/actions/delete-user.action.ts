@@ -8,57 +8,25 @@ type ActionResult =
   | { success: false; error: string };
 
 export async function deleteUser(
-  prevState: ActionResult | null,
-  formData: FormData,
+  prevState: ActionResult | null = null,
 ): Promise<ActionResult> {
   try {
     const currentUser = await getCurrentUser();
-
-    if (!currentUser) {
+    if (currentUser.role !== "employee") {
       return {
         success: false,
-        error: "Сесія не активна. Увійдіть повторно",
+        error: "Лишe працівники можуть видаляти свої профілі",
       };
     }
-
-    let targetUserId: string;
-
-    const rawId = formData.get("id");
-    if (rawId && typeof rawId === "string" && rawId.trim()) {
-      if (currentUser.role !== "admin") {
-        return {
-          success: false,
-          error:
-            "Тільки адміністратор може видаляти профіль іншого користувача",
-        };
-      }
-      targetUserId = rawId.trim();
-    } else {
-      targetUserId = currentUser.id;
-    }
-
     const user = await prisma.user.findUnique({
-      where: { id: targetUserId },
+      where: { id: currentUser.id },
     });
-
     if (!user) {
-      return {
-        success: false,
-        error: "Користувача не знайдено",
-      };
+      return { success: false, error: "Користувача не знайдено" };
     }
-
-    if (user.role === "admin" && currentUser.id !== targetUserId) {
-      return {
-        success: false,
-        error: "Не можна видаляти іншого адміністратора",
-      };
-    }
-
     await prisma.user.delete({
-      where: { id: targetUserId },
+      where: { id: currentUser.id },
     });
-
     return {
       success: true,
       message: "Користувача успішно видалено",

@@ -34,7 +34,7 @@ const navItems: NavItem[] = [
     icon: LayoutDashboard,
   },
   {
-    label: "Мої замовлення",
+    label: "Замовлення",
     href: "/school/orders",
     icon: ShoppingCart,
     roles: ["employee"],

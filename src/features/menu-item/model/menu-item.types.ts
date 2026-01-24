@@ -11,7 +11,7 @@ export type createMenuItemInput = z.infer<typeof createMenuItemSchema>;
 export type updateMenuItemInput = z.infer<typeof updateMenuItemSchema>;
 export type deleteMenuItemInput = z.infer<typeof deleteMenuItemSchema>;
 
-export type MenuItemsInfo = {
+export type MenuItemInfo = {
   id: string;
   name: string;
   description: string | null;

@@ -7,7 +7,7 @@ import { getCurrentUser } from "@/shared/auth/current-user";
 import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import MonthsSelector from "@/features/order/ui/MonthsSelector";
 import RecentOrdersCard from "@/features/order/ui/RecentOrdersCard";
-import { orderService } from "@/features/order/services/order.service";
+import { getMyOrganizationStats } from "@/features/order/queries/get-my-organization-stats.query";
 
 export default async function SchoolDashboardClient({
   searchParams,
@@ -37,10 +37,7 @@ export default async function SchoolDashboardClient({
     if (!currentUser) {
       throw new UnauthorizedError("Unauthorized");
     }
-    data = await orderService.getMyOrganizationStats.execute(
-      parsedQuery,
-      currentUser,
-    );
+    data = await getMyOrganizationStats(parsedQuery, currentUser);
   } catch (err: unknown) {
     if (err instanceof Error) {
       throw new Error(err.message);

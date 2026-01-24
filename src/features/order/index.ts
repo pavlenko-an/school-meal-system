@@ -1,4 +1,3 @@
-export * from "./model/create-order.schema";
 export * from "./model/delete-order.schema";
 export * from "./model/get-all-orders.schema";
 export * from "./model/get-my-organization-stats.schema";

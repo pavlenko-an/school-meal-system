@@ -14,10 +14,10 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { uk } from "date-fns/locale";
 import { Eye } from "lucide-react";
-import { OrdersInfo } from "../model/order.types";
+import { OrderInfo } from "../model/order.types";
 
 interface Props {
-  orders: OrdersInfo[];
+  orders: OrderInfo[];
   isLoading?: boolean;
 }
 

@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { getAllOrdersSchema } from "./get-all-orders.schema";
 import { getOrderByIdSchema } from "./get-order-by-id.schema";
-import { createOrderSchema } from "./create-order.schema";
 import { updateOrderSchema } from "./update-order.schema";
 import { getMyOrganizationStatsSchema } from "./get-my-organization-stats.schema";
 import { deleteOrderSchema } from "./delete-order.schema";
@@ -9,6 +8,7 @@ import { updateOrderStatusSchema } from "./update-order-status.schema";
 import { updatePaymentStatusSchema } from "./update-payment-status.schema";
 import { getOrderHistorySchema } from "./get-order-history.schema";
 import { getMyOrganizationOrdersSchema } from "./get-my-organization-orders.schema";
+import { createOrderSchema } from "./create-order.schema";
 
 export type getAllOrdersInput = z.infer<typeof getAllOrdersSchema>;
 export type getOrderByIdInput = z.infer<typeof getOrderByIdSchema>;
@@ -27,9 +27,10 @@ export type updatePaymentStatusInput = z.infer<
 >;
 export type deleteOrderInput = z.infer<typeof deleteOrderSchema>;
 
-export type OrdersInfo = {
+export type OrderInfo = {
   id: string;
-  deliveryDate: Date;
+  deliveryDate: Date | null;
+  comment: string | null;
   orderStatus:
     | "new"
     | "published"
@@ -49,16 +50,28 @@ export type OrdersInfo = {
   } | null;
 };
 
+export type OrderDetails = OrderInfo & {
+  orderItems: {
+    id: string;
+    quantity: number;
+    price: number;
+    menuItem: {
+      id: string;
+      name: string;
+    } | null;
+  }[];
+};
+
 export type OrdersList = {
-  orders: OrdersInfo[];
+  orders: OrderInfo[];
   total: number;
   page: number;
   totalPages: number;
 };
 
 export type OrdersStats = {
-  recent: OrdersInfo[];
-  upcoming: OrdersInfo[];
+  recent: OrderInfo[];
+  upcoming: OrderInfo[];
   stats: {
     ordersCount: number;
     nextDelivery: {

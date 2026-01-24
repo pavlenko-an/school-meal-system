@@ -4,9 +4,9 @@ import MenuGrid from "@/features/menu-item/ui/MenuGrid";
 import { CategoryInfo, getAllCategories } from "@/features/category";
 import {
   MenuItemsInfo,
-  getAllMenuItems,
   getAllMenuItemsSchema,
 } from "@/features/menu-item";
+import { getAllMenuItems } from "@/features/menu-item/queries/get-all-menu-items.query";
 
 export default async function SchoolMenuPage({
   searchParams,

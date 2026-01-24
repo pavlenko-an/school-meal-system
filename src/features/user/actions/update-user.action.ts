@@ -4,69 +4,41 @@ import { prisma } from "@/shared/db/prisma";
 import bcrypt from "bcryptjs";
 import { updateUserInput, UserInfo } from "../model/user.types";
 import { getCurrentUser } from "@/shared/auth/current-user";
+import { updateUserSchema } from "../model/update-user.schema";
+import { revalidatePath } from "next/cache";
 
 type ActionResult =
   | { success: true; user: UserInfo }
   | { success: false; error: string };
 
 export async function updateUser(
-  prevState: ActionResult | null,
+  prevState: ActionResult | null = null,
   formData: FormData | updateUserInput,
 ): Promise<ActionResult> {
   try {
     const currentUser = await getCurrentUser();
-    if (!currentUser) {
+    if (currentUser.role !== "employee") {
       return {
         success: false,
-        error: "Сесія не активна. Увійдіть повторно",
+        error: "Лишe працівники можуть оновлювати свої дані",
       };
     }
-
-    let targetUserId: string;
-
-    if (typeof formData === "object" && "id" in formData && formData.id) {
-      if (currentUser.role !== "admin") {
-        return {
-          success: false,
-          error:
-            "Тільки адміністратор може змінювати профіль іншого користувача",
-        };
-      }
-      targetUserId = formData.id;
-    } else {
-      targetUserId = currentUser.id;
-    }
-
-    const targetUser = await prisma.user.findUnique({
-      where: { id: targetUserId },
+    const rawData =
+      formData instanceof FormData ? Object.fromEntries(formData) : formData;
+    const data = updateUserSchema.parse(rawData);
+    const user = await prisma.user.findUnique({
+      where: { id: currentUser.id },
     });
-
-    if (!targetUser) {
-      return {
-        success: false,
-        error: "Користувача не знайдено",
-      };
-    }
-
-    if (targetUser.role === "admin" && currentUser.id !== targetUserId) {
-      return {
-        success: false,
-        error: "Не можна змінювати іншого адміністратора",
-      };
+    if (!user) {
+      return { success: false, error: "Користувача не знайдено" };
     }
 
     const updateData: Record<string, unknown> = {};
-
-    const data =
-      formData instanceof FormData
-        ? (Object.fromEntries(formData) as Partial<updateUserInput>)
-        : formData;
-
     if (data.email !== undefined) {
-      const existing = await prisma.user.findUnique({
+      const existingUser = await prisma.user.findUnique({
         where: { email: data.email },
       });
-      if (existing && existing.id !== targetUserId) {
+      if (existingUser && existingUser.id !== currentUser.id) {
         return {
           success: false,
           error: "Email вже використовується",
@@ -74,36 +46,14 @@ export async function updateUser(
       }
       updateData.email = data.email;
     }
-
-    if (data.password !== undefined && data.password !== "") {
+    if (data.password !== undefined) {
       updateData.passwordHash = await bcrypt.hash(data.password, 10);
     }
-
-    if (data.organizationId !== undefined) {
-      if (currentUser.role !== "admin") {
-        return {
-          success: false,
-          error: "Доступ заборонено",
-        };
-      }
-      updateData.organizationId = data.organizationId;
-    }
-
-    if (data.role !== undefined) {
-      if (currentUser.role !== "admin") {
-        return {
-          success: false,
-          error: "Доступ заборонено",
-        };
-      }
-      updateData.role = data.role;
-    }
-
     if (data.firstName !== undefined) updateData.firstName = data.firstName;
     if (data.lastName !== undefined) updateData.lastName = data.lastName;
 
     const updatedUser = await prisma.user.update({
-      where: { id: targetUserId },
+      where: { id: currentUser.id },
       data: updateData,
       select: {
         id: true,
@@ -123,6 +73,7 @@ export async function updateUser(
       },
     });
 
+    revalidatePath(`/profile`);
     return { success: true, user: updatedUser };
   } catch (error: unknown) {
     return {

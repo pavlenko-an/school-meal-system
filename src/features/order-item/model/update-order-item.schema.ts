@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const updateOrderItemSchema = z.object({
   id: z.uuid("Invalid order item ID"),
-  quantity: z
+  quantity: z.coerce
     .number()
     .int()
     .min(1, "Quantity must be at least 1")

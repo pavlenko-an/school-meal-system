@@ -1,8 +1,6 @@
 import { z } from "zod";
 
 export const updateUserSchema = z.object({
-  id: z.uuid("Invalid user ID").optional(),
-  organizationId: z.uuid("Invalid organization ID").optional(),
   email: z
     .email("Invalid email format")
     .transform((v) => v.trim().toLowerCase())
@@ -26,13 +24,4 @@ export const updateUserSchema = z.object({
     ),
   firstName: z.string().trim().optional(),
   lastName: z.string().trim().optional(),
-  role: z
-    .enum(["employee", "admin"], "Role must be either 'employee' or 'admin'")
-    .optional(),
-});
-
-export const updateUserFormSchema = updateUserSchema.omit({
-  id: true,
-  organizationId: true,
-  role: true,
 });

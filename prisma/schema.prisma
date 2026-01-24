@@ -127,7 +127,7 @@ model Order {
   school               Organization?        @relation("SchoolOrders", fields: [schoolId], references: [id], onDelete: SetNull)
   supplierId           String?              @map("supplier_id") @db.Uuid
   supplier             Organization?        @relation("SupplierOrders", fields: [supplierId], references: [id], onDelete: SetNull)
-  deliveryDate         DateTime             @map("delivery_date") @db.Date
+  deliveryDate         DateTime?            @map("delivery_date") @db.Date
   orderStatus          OrderStatus          @default(new) @map("status")
   paymentStatus        PaymentStatus        @default(unpaid) @map("payment_status")
   totalPrice           Decimal              @default(0) @map("total_price") @db.Decimal(10, 2)

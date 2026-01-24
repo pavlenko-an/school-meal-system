@@ -1,20 +1,33 @@
+import { Order } from "@/generated/prisma/client";
 import { OrderStatus } from "@/generated/prisma/enums";
 
 export function canTransitionOrderStatus(
-  from: OrderStatus,
+  order: Order & { orderItems: { id: string }[] },
   to: OrderStatus,
   isSchool: boolean,
   isSupplier: boolean,
-  paymentStatus: "unpaid" | "paid" | "verified",
 ): { allowed: boolean; reason?: string; newSupplierId?: string } {
   let allowed = false;
   let reason = "";
   let newSupplierId: string | undefined;
 
-  switch (from) {
+  switch (order.orderStatus) {
     case "new":
-      if (to === "published" && isSchool) allowed = true;
-      else reason = "From 'new' only → published by school";
+      if (to === "published" && isSchool) {
+        if (order.orderItems.length === 0) {
+          reason = "Замовлення порожнє — додайте хоча б один товар";
+          break;
+        }
+        if (!order.deliveryDate) {
+          reason = "Вкажіть дату доставки";
+          break;
+        }
+        if (order.deliveryDate <= new Date()) {
+          reason = "Дата доставки повинна бути в майбутньому";
+          break;
+        }
+        allowed = true;
+      } else reason = "From 'new' only → published by school";
       break;
 
     case "published":
@@ -28,9 +41,17 @@ export function canTransitionOrderStatus(
       break;
 
     case "accepted":
-      if (to === "in_progress" && isSupplier && paymentStatus === "verified")
+      if (
+        to === "in_progress" &&
+        isSupplier &&
+        order.paymentStatus === "verified"
+      )
         allowed = true;
-      else if (to === "cancelled" && isSupplier && paymentStatus === "unpaid")
+      else if (
+        to === "cancelled" &&
+        isSupplier &&
+        order.paymentStatus === "unpaid"
+      )
         allowed = true;
       else
         reason =

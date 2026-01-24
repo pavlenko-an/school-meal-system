@@ -1,12 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { OrdersInfo } from "../model/order.types";
+import { OrderInfo } from "../model/order.types";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 export default function RecentOrdersHistoryCard({
   orders,
 }: {
-  orders: OrdersInfo[];
+  orders: OrderInfo[];
 }) {
   return (
     <Card>

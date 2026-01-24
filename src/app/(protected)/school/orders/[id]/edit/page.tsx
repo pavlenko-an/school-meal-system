@@ -1,49 +1,39 @@
 import { notFound, redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/features/auth";
-import { apiFetch } from "@/lib/api";
 import OrderEditForm from "@/features/order/ui/OrderEditForm";
+import { getOrderById } from "@/features/order/queries/get-order-by-id.query";
+import { getCurrentUser } from "@/shared/auth/current-user";
+import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
+import { getAllMenuItems } from "@/features/menu-item/queries/get-all-menu-items.query";
 
 export default async function EditOrderPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.organizationId) redirect("/auth/login");
-
-  let order, orderItems;
-
-  try {
-    order = await apiFetch(`/orders/${params.id}`);
-    if (order.schoolId !== session.user.organizationId) {
-      redirect("/school/orders?error=access-denied");
-    }
-
-    orderItems = await apiFetch(
-      `/order-items?orderId=${params.id}&include=menuItem`,
-    );
-  } catch {
+  const { id } = await params;
+  const currentUser = await getCurrentUser();
+  if (!currentUser) {
+    throw new UnauthorizedError("Unauthorized");
+  }
+  const order = await getOrderById({ id }, currentUser);
+  if (!order || order.school?.id !== currentUser.organizationId) {
     notFound();
   }
-
   if (order.orderStatus !== "new") {
-    redirect(`/school/orders/${params.id}`);
+    redirect(`/school/orders/${id}`);
   }
-
+  const menuItems = await getAllMenuItems({});
   return (
     <div className="container max-w-5xl mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold tracking-tight mb-2">
-        Редагування замовлення #{params.id.slice(0, 8)}
+      <h1 className="text-3xl font-bold tracking-tight mb-8">
+        Редагування замовлення #{id.slice(0, 8)}
       </h1>
 
       <OrderEditForm
-        orderId={params.id}
+        orderId={id}
         initialOrder={order}
-        initialItems={orderItems}
-        menuItems={await apiFetch(
-          "/menu-items?include=images,category&isAvailable=true",
-        )}
+        initialItems={order.orderItems || []}
+        menuItems={menuItems}
       />
     </div>
   );

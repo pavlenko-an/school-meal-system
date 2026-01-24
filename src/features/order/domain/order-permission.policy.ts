@@ -1,12 +1,15 @@
-import { AccessDeniedError } from "@/shared/errors/access-denied.error";
 import { CurrentUser } from "@/shared/auth/current-user";
 import { Order } from "@/generated/prisma/client";
 
 export class OrderPermissionPolicy {
   static canViewAllOrders(user: CurrentUser) {
     if (user.role !== "admin") {
-      throw new AccessDeniedError("Access denied");
+      return {
+        allowed: false,
+        reason: "Відмовлено в доступі",
+      };
     }
+    return { allowed: true };
   }
 
   static canViewOrderById(user: CurrentUser, order: Order) {
@@ -18,8 +21,12 @@ export class OrderPermissionPolicy {
       order.supplierId === user.organizationId;
     const isAdmin = user.role === "admin";
     if (!isSchoolMember && !isSupplierMember && !isAdmin) {
-      throw new AccessDeniedError("Access denied");
+      return {
+        allowed: false,
+        reason: "Відмовлено в доступі",
+      };
     }
+    return { allowed: true };
   }
 
   static canViewOrganizationData(user: CurrentUser) {
@@ -28,8 +35,12 @@ export class OrderPermissionPolicy {
       !user.organizationId ||
       !user.organizationType
     ) {
-      throw new AccessDeniedError("Access denied");
+      return {
+        allowed: false,
+        reason: "Відмовлено в доступі",
+      };
     }
+    return { allowed: true };
   }
 
   static canCreateOrder(user: CurrentUser) {
@@ -38,8 +49,12 @@ export class OrderPermissionPolicy {
       user.organizationType !== "school" ||
       !user.organizationId
     ) {
-      throw new AccessDeniedError("Access denied");
+      return {
+        allowed: false,
+        reason: "Відмовлено в доступі",
+      };
     }
+    return { allowed: true };
   }
 
   static canUpdateOrder(user: CurrentUser, order: Order) {
@@ -48,13 +63,25 @@ export class OrderPermissionPolicy {
       user.organizationType !== "school" ||
       user.organizationId !== order.schoolId
     ) {
-      throw new AccessDeniedError("Access denied");
+      return {
+        allowed: false,
+        reason: "Відмовлено в доступі",
+      };
     }
+    return { allowed: true };
   }
 
-  static canChangeStatus(user: CurrentUser, order: Order) {
+  static canChangeStatus(
+    user: CurrentUser,
+    order: Order,
+  ):
+    | { allowed: true; isSchool: boolean; isSupplier: boolean }
+    | { allowed: false; reason: string } {
     if (user.role !== "employee") {
-      throw new AccessDeniedError("Only employees can change order status");
+      return {
+        allowed: false,
+        reason: "Тільки працівники можуть змінювати статус замовлення",
+      };
     }
     const isSchool =
       user.organizationType === "school" &&
@@ -63,9 +90,13 @@ export class OrderPermissionPolicy {
       user.organizationType === "supplier" &&
       user.organizationId === order.supplierId;
     if (!isSchool && !isSupplier) {
-      throw new AccessDeniedError("You are not a participant of this order");
+      return {
+        allowed: false,
+        reason: "Ви не маєте права змінювати статус цього замовлення",
+      };
     }
-    return { isSchool, isSupplier };
+
+    return { allowed: true, isSchool, isSupplier };
   }
 
   static canDeleteOrder(user: CurrentUser, order: Order) {
@@ -74,7 +105,11 @@ export class OrderPermissionPolicy {
       user.organizationType !== "school" ||
       user.organizationId !== order.schoolId
     ) {
-      throw new AccessDeniedError("Access denied");
+      return {
+        allowed: false,
+        reason: "Відмовлено в доступі",
+      };
     }
+    return { allowed: true };
   }
 }

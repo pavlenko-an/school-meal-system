@@ -1,12 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { OrdersInfo } from "../model/order.types";
+import { OrderInfo } from "../model/order.types";
 
 export default function UpcomingOrdersCard({
   orders,
 }: {
-  orders: OrdersInfo[];
+  orders: OrderInfo[];
 }) {
   return (
     <div className="mb-2">

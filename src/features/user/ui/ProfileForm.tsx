@@ -13,21 +13,21 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { updateUserFormInput } from "../model/user.types";
-import { updateUserFormSchema } from "../model/update-user.schema";
+import { updateUserInput } from "../model/user.types";
+import { updateUserSchema } from "../model/update-user.schema";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
 import { updateUser } from "../actions/update-user.action";
 
 type Props = {
-  defaultValues?: Partial<updateUserFormInput>;
+  defaultValues?: Partial<updateUserInput>;
 };
 
 export default function ProfileForm({ defaultValues }: Props) {
   const router = useRouter();
 
-  const form = useForm<updateUserFormInput>({
-    resolver: zodResolver(updateUserFormSchema),
+  const form = useForm<updateUserInput>({
+    resolver: zodResolver(updateUserSchema),
     defaultValues: {
       firstName: defaultValues?.firstName || "",
       lastName: defaultValues?.lastName || "",
@@ -41,8 +41,13 @@ export default function ProfileForm({ defaultValues }: Props) {
   useEffect(() => {
     if (state?.success) {
       toast.success("Профіль успішно оновлено");
+      form.reset({
+        firstName: state.user.firstName || "",
+        lastName: state.user.lastName || "",
+        email: state.user.email || "",
+        password: "",
+      });
       router.refresh();
-      form.reset();
     }
     if (state?.success === false && state.error) {
       toast.error(state.error);

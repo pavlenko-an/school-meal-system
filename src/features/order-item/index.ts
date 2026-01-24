@@ -1,4 +1,3 @@
-export * from "./lib/order-item";
 export * from "./model/create-order-item.schema";
 export * from "./model/delete-order-item.schema";
 export * from "./model/get-all-order-items.schema";
