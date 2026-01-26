@@ -31,6 +31,7 @@ export default function OrderHeader({ form }: { form: UseFormReturn<createOrderI
                     "w-full justify-start text-left font-normal",
                     !field.value && "text-muted-foreground",
                   )}
+                  aria-label="Оберіть дату поставки"
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {field.value instanceof Date && !isNaN(field.value.getTime())

@@ -42,7 +42,11 @@ export default function DeleteAccountSection() {
 
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogTrigger asChild>
-          <Button variant="destructive" disabled={isPending}>
+          <Button
+            variant="destructive"
+            disabled={isPending}
+            aria-label="Видалити обліковий запис"
+          >
             {isPending ? "Видалення..." : "Видалити обліковий запис"}
           </Button>
         </AlertDialogTrigger>

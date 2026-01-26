@@ -23,8 +23,8 @@ import { cn } from "@/lib/utils";
 
 interface Props {
   currentParams: {
-    status?: string;
-    payment?: string;
+    orderStatus?: string;
+    paymentStatus?: string;
     dateFrom?: string;
     dateTo?: string;
   };
@@ -43,16 +43,16 @@ export default function OrdersFilters({ currentParams }: Props) {
       params.delete(key);
     }
     params.delete("page");
-    router.push(`${pathname}?${params.toString()}`);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
   return (
     <div className="space-y-4 md:flex md:items-center md:justify-between md:space-y-0 md:gap-6">
       <div className="flex-1">
         <Tabs
-          value={currentParams.status || "all"}
+          value={currentParams.orderStatus || "all"}
           onValueChange={(value) =>
-            updateFilter("status", value === "all" ? undefined : value)
+            updateFilter("orderStatus", value === "all" ? undefined : value)
           }
           className="w-full"
         >
@@ -69,9 +69,9 @@ export default function OrdersFilters({ currentParams }: Props) {
       </div>
 
       <Select
-        value={currentParams.payment || "all"}
+        value={currentParams.paymentStatus || "all"}
         onValueChange={(value) =>
-          updateFilter("payment", value === "all" ? undefined : value)
+          updateFilter("paymentStatus", value === "all" ? undefined : value)
         }
       >
         <SelectTrigger className="w-45">
@@ -94,6 +94,7 @@ export default function OrdersFilters({ currentParams }: Props) {
                 "w-60 justify-start text-left font-normal",
                 !currentParams.dateFrom && "text-muted-foreground",
               )}
+              aria-label="Оберіть дату від"
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
               {currentParams.dateFrom
@@ -117,7 +118,7 @@ export default function OrdersFilters({ currentParams }: Props) {
                   date ? format(date, "yyyy-MM-dd") : undefined,
                 )
               }
-              initialFocus
+              autoFocus
             />
           </PopoverContent>
         </Popover>
@@ -130,6 +131,7 @@ export default function OrdersFilters({ currentParams }: Props) {
                 "w-60 justify-start text-left font-normal",
                 !currentParams.dateTo && "text-muted-foreground",
               )}
+              aria-label="Оберіть дату до"
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
               {currentParams.dateTo
@@ -151,7 +153,7 @@ export default function OrdersFilters({ currentParams }: Props) {
                   date ? format(date, "yyyy-MM-dd") : undefined,
                 )
               }
-              initialFocus
+              autoFocus
             />
           </PopoverContent>
         </Popover>

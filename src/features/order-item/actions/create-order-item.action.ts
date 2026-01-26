@@ -72,6 +72,14 @@ export async function createOrderItem(
             select: {
               id: true,
               name: true,
+              description: true,
+              images: {
+                select: {
+                  id: true,
+                  imageUrl: true,
+                  isPrimary: true,
+                },
+              },
             },
           },
         },

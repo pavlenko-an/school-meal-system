@@ -18,5 +18,13 @@ export type OrderItemInfo = {
   menuItem: {
     id: string;
     name: string;
+    description: string | null;
+    images:
+      | {
+          id: string;
+          imageUrl: string;
+          isPrimary: boolean;
+        }[]
+      | null;
   } | null;
 };

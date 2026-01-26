@@ -1,6 +1,6 @@
 import { prisma } from "@/shared/db/prisma";
 import { CurrentUser } from "@/shared/auth/current-user";
-import { getOrderHistoryInput } from "../model/order.types";
+import { getOrderHistoryInput, OrderHistory } from "../model/order.types";
 import { OrderPermissionPolicy } from "../domain/order-permission.policy";
 import { NotFoundError } from "@/shared/errors/not-found.error";
 import { AccessDeniedError } from "@/shared/errors/access-denied.error";
@@ -9,7 +9,7 @@ import { getOrderHistorySchema } from "../model/get-order-history.schema";
 export async function getOrderHistory(
   data: getOrderHistoryInput,
   currentUser: CurrentUser,
-) {
+): Promise<OrderHistory[]> {
   const validated = getOrderHistorySchema.parse(data);
   const order = await prisma.order.findUnique({
     where: { id: validated.id },
@@ -26,13 +26,13 @@ export async function getOrderHistory(
       orderId: validated.id,
     },
     orderBy: {
-      createdAt: "asc",
+      changedAt: "asc",
     },
     select: {
       id: true,
-      from: true,
-      to: true,
-      createdAt: true,
+      previousStatus: true,
+      newStatus: true,
+      changedAt: true,
       actor: {
         select: {
           id: true,

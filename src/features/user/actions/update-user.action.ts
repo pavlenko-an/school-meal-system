@@ -5,10 +5,9 @@ import bcrypt from "bcryptjs";
 import { updateUserInput, UserInfo } from "../model/user.types";
 import { getCurrentUser } from "@/shared/auth/current-user";
 import { updateUserSchema } from "../model/update-user.schema";
-import { revalidatePath } from "next/cache";
 
 type ActionResult =
-  | { success: true; user: UserInfo }
+  | { success: true; data: UserInfo }
   | { success: false; error: string };
 
 export async function updateUser(
@@ -25,7 +24,14 @@ export async function updateUser(
     }
     const rawData =
       formData instanceof FormData ? Object.fromEntries(formData) : formData;
-    const data = updateUserSchema.parse(rawData);
+    const validation = updateUserSchema.safeParse(rawData);
+    if (!validation.success) {
+      return {
+        success: false,
+        error: "Невірні вхідні дані: " + validation.error.issues[0].message,
+      };
+    }
+    const data = validation.data;
     const user = await prisma.user.findUnique({
       where: { id: currentUser.id },
     });
@@ -72,9 +78,7 @@ export async function updateUser(
         },
       },
     });
-
-    revalidatePath(`/profile`);
-    return { success: true, user: updatedUser };
+    return { success: true, data: updatedUser };
   } catch (error: unknown) {
     return {
       success: false,

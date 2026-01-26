@@ -2,48 +2,27 @@ import { Card, CardContent } from "@/components/ui/card";
 import MenuCategoryTabs from "@/features/category/ui/MenuCategoryTabs";
 import MenuGrid from "@/features/menu-item/ui/MenuGrid";
 import { CategoryInfo, getAllCategories } from "@/features/category";
-import {
-  MenuItemsInfo,
-  getAllMenuItemsSchema,
-} from "@/features/menu-item";
+import { MenuItemInfo, getAllMenuItemsSchema } from "@/features/menu-item";
 import { getAllMenuItems } from "@/features/menu-item/queries/get-all-menu-items.query";
 
-export default async function SchoolMenuPage({
-  searchParams,
-}: {
+interface Props {
   searchParams?: Promise<{ categoryId?: string }>;
-}) {
+}
+
+export default async function SchoolMenuPage({ searchParams }: Props) {
   const params = await searchParams;
-  let parsedQuery;
-  try {
-    parsedQuery = getAllMenuItemsSchema.parse(params || {});
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      throw new Error(err.message);
-    } else {
-      throw new Error("Недійсні параметри запиту");
-    }
-  }
+  const menuQuery = getAllMenuItemsSchema.parse(params || {});
 
   const categoryId =
-    parsedQuery.categoryId && parsedQuery.categoryId !== "all"
-      ? parsedQuery.categoryId
+    menuQuery.categoryId && menuQuery.categoryId !== "all"
+      ? menuQuery.categoryId
       : undefined;
 
-  let categories: CategoryInfo[] = [];
-  let menuItems: MenuItemsInfo[] = [];
-  try {
-    [categories, menuItems] = await Promise.all([
+  const [categories, menuItems]: [CategoryInfo[], MenuItemInfo[]] =
+    await Promise.all([
       getAllCategories({ limit: 20 }),
-      getAllMenuItems({ ...parsedQuery, categoryId, isAvailable: true }),
+      getAllMenuItems({ ...menuQuery, categoryId, isAvailable: true }),
     ]);
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      throw new Error(err.message);
-    } else {
-      throw new Error("Не вдалося завантажити категорії або пункти меню");
-    }
-  }
 
   return (
     <div className="space-y-8">

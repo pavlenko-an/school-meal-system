@@ -40,6 +40,7 @@ export type OrderInfo = {
     | "cancelled";
   paymentStatus: "unpaid" | "paid" | "verified";
   totalPrice: number;
+  createdAt: Date;
   school: {
     id: string;
     name: string;
@@ -48,18 +49,6 @@ export type OrderInfo = {
     id: string;
     name: string;
   } | null;
-};
-
-export type OrderDetails = OrderInfo & {
-  orderItems: {
-    id: string;
-    quantity: number;
-    price: number;
-    menuItem: {
-      id: string;
-      name: string;
-    } | null;
-  }[];
 };
 
 export type OrdersList = {
@@ -80,4 +69,17 @@ export type OrdersStats = {
     };
     unpaidAmount: number;
   };
+};
+
+export type OrderHistory = {
+  id: string;
+  previousStatus: string;
+  newStatus: string;
+  changedAt: Date;
+  actor: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+  } | null;
 };

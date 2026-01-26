@@ -64,6 +64,7 @@ export async function updatePaymentStatus(
           orderStatus: true,
           paymentStatus: true,
           totalPrice: true,
+          createdAt: true,
           school: {
             select: {
               id: true,

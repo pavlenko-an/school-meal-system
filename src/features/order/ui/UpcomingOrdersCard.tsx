@@ -2,19 +2,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { OrderInfo } from "../model/order.types";
+import { Eye } from "lucide-react";
 
-export default function UpcomingOrdersCard({
-  orders,
-}: {
+interface Props {
   orders: OrderInfo[];
-}) {
+}
+
+export default function UpcomingOrdersCard({ orders }: Props) {
   return (
     <div className="mb-2">
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Майбутні поставки</CardTitle>
-            <Button variant="outline" size="sm" asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              aria-label="Переглянути всі майбутні поставки"
+            >
               <Link href="/school/orders?dateFrom=today">Усі майбутні</Link>
             </Button>
           </div>
@@ -33,8 +39,7 @@ export default function UpcomingOrdersCard({
                 >
                   <div>
                     <p className="font-medium">
-                      Поставка{" "}
-                      {new Date(order.deliveryDate).toLocaleDateString("uk-UA")}
+                      Поставка {order.deliveryDate?.toLocaleDateString("uk-UA")}
                     </p>
                     <p className="text-sm text-muted-foreground capitalize">
                       Статус: {order.orderStatus}
@@ -42,11 +47,17 @@ export default function UpcomingOrdersCard({
                   </div>
                   <div className="flex items-center gap-6 sm:gap-8">
                     <p className="font-medium whitespace-nowrap">
-                      {order.totalPrice} грн
+                      {new Intl.NumberFormat("uk-UA", {
+                        style: "currency",
+                        currency: "UAH",
+                      }).format(order.totalPrice)}
                     </p>
-                    <Button variant="link" size="sm" asChild>
-                      <Link href={`/school/orders/${order.id}`}>Деталі</Link>
-                    </Button>
+                    <Link href={`/school/orders/${order.id}`}>
+                      <Eye
+                        className="h-4 w-4"
+                        aria-label="Переглянути замовлення"
+                      />
+                    </Link>
                   </div>
                 </div>
               ))}

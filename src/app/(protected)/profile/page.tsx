@@ -12,6 +12,8 @@ import {
 import { getUserById } from "@/features/user/queries/get-user-by-id.query";
 import { updateUserInput } from "@/features/user/model/user.types";
 import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
+import OrganizationForm from "@/features/organization/ui/OrganizationForm";
+import { updateOrganizationInput } from "@/features/organization";
 
 export default async function ProfilePage() {
   const currentUser = await getCurrentUser();
@@ -19,11 +21,20 @@ export default async function ProfilePage() {
     throw new UnauthorizedError("Unauthorized");
   }
   const userInfo = await getUserById({ id: currentUser.id }, currentUser);
-  const defaultValues: Partial<updateUserInput> = {
+  const defaultUserValues: Partial<updateUserInput> = {
     email: userInfo.email,
     firstName: userInfo.firstName || "",
     lastName: userInfo.lastName || "",
   };
+  const defaultOrgValues: Partial<updateOrganizationInput> =
+    userInfo.organization
+      ? {
+          id: userInfo.organization.id,
+          name: userInfo.organization.name || "",
+          contactEmail: userInfo.organization.contactEmail || "",
+          contactPhone: userInfo.organization.contactPhone || "",
+        }
+      : {};
 
   return (
     <div className="container max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
@@ -52,15 +63,26 @@ export default async function ProfilePage() {
           <CardHeader>
             <CardTitle>Редагувати дані</CardTitle>
             <CardDescription>
-              Змініть ім&apos;я, прізвище. Email змінити можна тільки через
-              підтримку.
+              Змініть ім&apos;я, прізвище, Email або пароль.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ProfileForm defaultValues={defaultValues} />
+            <ProfileForm defaultValues={defaultUserValues} />
           </CardContent>
         </Card>
-
+        {userInfo.organization && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Дані організації</CardTitle>
+              <CardDescription>
+                Змініть назву організації та контактні дані
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <OrganizationForm defaultValues={defaultOrgValues} />
+            </CardContent>
+          </Card>
+        )}
         <Card className="border-destructive/50 bg-destructive/5">
           <CardHeader>
             <CardTitle className="text-destructive">Небезпечна зона</CardTitle>

@@ -68,6 +68,7 @@ export async function updateOrderStatus(
           orderStatus: true,
           paymentStatus: true,
           totalPrice: true,
+          createdAt: true,
           school: {
             select: {
               id: true,
@@ -86,8 +87,8 @@ export async function updateOrderStatus(
       await tx.orderStatusHistory.create({
         data: {
           orderId: data.id,
-          from: order.orderStatus,
-          to: data.status,
+          previousStatus: order.orderStatus,
+          newStatus: data.status,
           actorId: currentUser.id,
         },
       });

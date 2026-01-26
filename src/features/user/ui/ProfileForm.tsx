@@ -20,18 +20,19 @@ import { useActionState, useEffect } from "react";
 import { updateUser } from "../actions/update-user.action";
 
 type Props = {
-  defaultValues?: Partial<updateUserInput>;
+  defaultValues: Partial<updateUserInput>;
 };
 
 export default function ProfileForm({ defaultValues }: Props) {
   const router = useRouter();
 
-  const form = useForm<updateUserInput>({
+  const form = useForm<Partial<updateUserInput>>({
     resolver: zodResolver(updateUserSchema),
+    mode: "onChange",
     defaultValues: {
-      firstName: defaultValues?.firstName || "",
-      lastName: defaultValues?.lastName || "",
-      email: defaultValues?.email || "",
+      firstName: defaultValues.firstName ?? "",
+      lastName: defaultValues.lastName ?? "",
+      email: defaultValues.email ?? "",
       password: "",
     },
   });
@@ -42,9 +43,9 @@ export default function ProfileForm({ defaultValues }: Props) {
     if (state?.success) {
       toast.success("Профіль успішно оновлено");
       form.reset({
-        firstName: state.user.firstName || "",
-        lastName: state.user.lastName || "",
-        email: state.user.email || "",
+        firstName: state.data.firstName || "",
+        lastName: state.data.lastName || "",
+        email: state.data.email || "",
         password: "",
       });
       router.refresh();
@@ -65,7 +66,11 @@ export default function ProfileForm({ defaultValues }: Props) {
               <FormItem>
                 <FormLabel>Ім&apos;я</FormLabel>
                 <FormControl>
-                  <Input placeholder="Іван" {...field} />
+                  <Input
+                    placeholder="Іван"
+                    {...field}
+                    value={field.value ?? ""}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -79,7 +84,11 @@ export default function ProfileForm({ defaultValues }: Props) {
               <FormItem>
                 <FormLabel>Прізвище</FormLabel>
                 <FormControl>
-                  <Input placeholder="Петров" {...field} />
+                  <Input
+                    placeholder="Петров"
+                    {...field}
+                    value={field.value ?? ""}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -116,7 +125,11 @@ export default function ProfileForm({ defaultValues }: Props) {
         </div>
 
         <div className="flex justify-end">
-          <Button type="submit" disabled={isPending}>
+          <Button
+            type="submit"
+            disabled={isPending}
+            aria-label="Зберегти зміни в профілі"
+          >
             Зберегти зміни
           </Button>
         </div>

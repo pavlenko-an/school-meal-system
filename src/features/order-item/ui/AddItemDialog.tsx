@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -19,24 +18,13 @@ import { MenuItemInfo } from "@/features/menu-item";
 
 interface Props {
   menuItems: MenuItemInfo[];
-  onAdd: (menuItemId: string, quantity: number) => Promise<void>;
+  onAdd: (menuItemId: string, quantity: number) => void;
 }
 
 export default function AddItemDialog({ menuItems, onAdd }: Props) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<MenuItemInfo | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const [loading, setLoading] = useState(false);
-
-  const handleAdd = async () => {
-    if (!selected) return;
-    setLoading(true);
-    await onAdd(selected.id, quantity);
-    setLoading(false);
-    setOpen(false);
-    setSelected(null);
-    setQuantity(1);
-  };
 
   const quantityInputRef = useRef<HTMLInputElement>(null);
 
@@ -47,10 +35,18 @@ export default function AddItemDialog({ menuItems, onAdd }: Props) {
     }
   }, [selected]);
 
+  const handleAdd = () => {
+    if (!selected) return;
+    onAdd(selected.id, quantity);
+    setOpen(false);
+    setSelected(null);
+    setQuantity(1);
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button aria-label="Додати страву">
           <Plus className="mr-2 h-4 w-4" /> Додати страву
         </Button>
       </DialogTrigger>
@@ -69,18 +65,23 @@ export default function AddItemDialog({ menuItems, onAdd }: Props) {
                 selected?.id === item.id &&
                   "border-primary bg-primary/5 ring-2 ring-primary/20",
               )}
-              onClick={() => setSelected(item)}
+              onClick={() => {
+                setSelected(item);
+              }}
             >
               <div className="aspect-square relative mb-3 rounded-lg overflow-hidden bg-muted">
-                {item.images?.find((i: any) => i.isPrimary)?.imageUrl ? (
+                {item.images && item.images.length > 0 ? (
                   <Image
-                    src={item.images.find((i: any) => i.isPrimary)!.imageUrl}
+                    src={
+                      item.images.find((img) => img.isPrimary)?.imageUrl ||
+                      item.images[0].imageUrl
+                    }
                     alt={item.name}
                     fill
                     className="object-cover"
                   />
                 ) : (
-                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                  <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
                     Без фото
                   </div>
                 )}
@@ -128,15 +129,16 @@ export default function AddItemDialog({ menuItems, onAdd }: Props) {
               variant="outline"
               onClick={() => setOpen(false)}
               className="w-full sm:w-auto"
+              aria-label="Скасувати додавання страви"
             >
               Скасувати
             </Button>
             <Button
-              disabled={!selected || loading}
+              disabled={!selected}
               onClick={handleAdd}
               className="w-full sm:w-auto"
             >
-              {loading ? "Додаємо..." : "Додати в замовлення"}
+              Додати в замовлення
             </Button>
           </div>
         </DialogFooter>

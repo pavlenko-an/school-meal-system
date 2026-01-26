@@ -1,7 +1,7 @@
 export const categories = [
-  { name: "Main Courses", description: "Hearty and nutritious main dishes" },
-  { name: "Sides", description: "Complementary side dishes" },
-  { name: "Beverages", description: "Drinks and juices" },
-  { name: "Desserts", description: "Sweet treats" },
-  { name: "Snacks", description: "Quick bites and healthy options" },
+  { name: "Основні страви", description: "Ситні та поживні основні страви" },
+  { name: "Гарніри", description: "Доповнюючі гарніри" },
+  { name: "Напої", description: "Напої та соки" },
+  { name: "Десерти", description: "Солодкі ласощі" },
+  { name: "Закуски", description: "Швидкі закуски та здорові варіанти" },
 ];

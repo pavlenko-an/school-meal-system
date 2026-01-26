@@ -46,6 +46,7 @@ export async function createOrder(
         orderStatus: true,
         paymentStatus: true,
         totalPrice: true,
+        createdAt: true,
         school: {
           select: {
             id: true,

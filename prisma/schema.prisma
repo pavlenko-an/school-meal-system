@@ -161,14 +161,14 @@ model OrderItem {
 }
 
 model OrderStatusHistory {
-  id        String      @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
-  orderId   String      @map("order_id") @db.Uuid
-  order     Order       @relation("OrderStatusHistoryOrders", fields: [orderId], references: [id], onDelete: Cascade)
-  from      OrderStatus @map("from_status")
-  to        OrderStatus @map("to_status")
-  actorId   String?     @map("actor_id") @db.Uuid
-  actor     User?       @relation("OrderStatusHistoryActors", fields: [actorId], references: [id], onDelete: SetNull)
-  createdAt DateTime    @default(now()) @map("created_at")
+  id             String      @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  orderId        String      @map("order_id") @db.Uuid
+  order          Order       @relation("OrderStatusHistoryOrders", fields: [orderId], references: [id], onDelete: Cascade)
+  previousStatus OrderStatus @map("previous_status")
+  newStatus      OrderStatus @map("new_status")
+  actorId        String?     @map("actor_id") @db.Uuid
+  actor          User?       @relation("OrderStatusHistoryActors", fields: [actorId], references: [id], onDelete: SetNull)
+  changedAt      DateTime    @default(now()) @map("changed_at")
 
   @@index([orderId])
   @@index([actorId])

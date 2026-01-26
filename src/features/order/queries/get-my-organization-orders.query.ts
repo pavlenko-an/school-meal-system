@@ -52,6 +52,8 @@ export async function getMyOrganizationOrders(
         orderStatus: true,
         paymentStatus: true,
         totalPrice: true,
+        createdAt: true,
+        comment: true,
         school: { select: { id: true, name: true } },
         supplier: { select: { id: true, name: true } },
       },

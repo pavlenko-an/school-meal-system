@@ -150,31 +150,28 @@ async function main() {
     );
   } else {
     const additionalOrders = [
-      // 1. Новый заказ (только created → new, без переходов)
       {
         comment: "New draft order - January",
         deliveryDate: new Date("2026-03-10"),
         status: "new" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
-        history: [], // нет переходов
-        items: [{ name: "Grilled Chicken Breast", qty: 8 }],
+        history: [],
+        items: [{ name: "Смажена куряча грудка", qty: 8 }],
         schoolActor: false,
         supplierActor: false,
       },
 
-      // 2. Опубликован школой
       {
         comment: "Published for bidding",
         deliveryDate: new Date("2026-02-10"),
         status: "published" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         history: [{ from: "new", to: "published" }],
-        items: [{ name: "Vegetarian Pasta", qty: 15 }],
+        items: [{ name: "Вегетаріанська паста", qty: 15 }],
         schoolActor: true,
         supplierActor: false,
       },
 
-      // 3. Принят поставщиком
       {
         comment: "Accepted by supplier",
         deliveryDate: new Date("2026-01-10"),
@@ -185,14 +182,13 @@ async function main() {
           { from: "published", to: "accepted" },
         ],
         items: [
-          { name: "Beef Burger", qty: 25 },
-          { name: "French Fries", qty: 40 },
+          { name: "Бургер з яловичини", qty: 25 },
+          { name: "Картопля фрі", qty: 40 },
         ],
         schoolActor: true,
         supplierActor: true,
       },
 
-      // 4. В работе (accepted → in_progress), оплата verified
       {
         comment: "In progress - being prepared",
         deliveryDate: new Date("2025-12-10"),
@@ -203,12 +199,11 @@ async function main() {
           { from: "published", to: "accepted" },
           { from: "accepted", to: "in_progress" },
         ],
-        items: [{ name: "Orange Juice", qty: 60 }],
+        items: [{ name: "Апельсиновий сік", qty: 60 }],
         schoolActor: true,
         supplierActor: true,
       },
 
-      // 5. Завершён (in_progress → completed)
       {
         comment: "Completed & delivered",
         deliveryDate: new Date("2025-11-10"),
@@ -220,12 +215,11 @@ async function main() {
           { from: "accepted", to: "in_progress" },
           { from: "in_progress", to: "completed" },
         ],
-        items: [{ name: "Chocolate Brownie", qty: 30 }],
+        items: [{ name: "Шоколадний брауні", qty: 30 }],
         schoolActor: true,
         supplierActor: true,
       },
 
-      // 6. Отменён после published (school)
       {
         comment: "Cancelled by school - no longer needed",
         deliveryDate: new Date("2025-10-10"),
@@ -235,12 +229,11 @@ async function main() {
           { from: "new", to: "published" },
           { from: "published", to: "cancelled" },
         ],
-        items: [{ name: "Garden Salad", qty: 10 }],
+        items: [{ name: "Салат з овочів", qty: 10 }],
         schoolActor: true,
         supplierActor: false,
       },
 
-      // 7. Отменён после accepted (supplier, пока unpaid)
       {
         comment: "Cancelled by supplier - out of stock",
         deliveryDate: new Date("2025-09-10"),
@@ -251,7 +244,7 @@ async function main() {
           { from: "published", to: "accepted" },
           { from: "accepted", to: "cancelled" },
         ],
-        items: [{ name: "Mashed Potatoes", qty: 18 }],
+        items: [{ name: "Картопляне пюре", qty: 18 }],
         schoolActor: true,
         supplierActor: true,
       },
@@ -305,13 +298,13 @@ async function main() {
 
           if (
             h.to === "published" ||
-            (h.to === "cancelled" && h.from === "published")
+            (h.to === "cancelled" && h.from === "published") ||
+            h.to === "completed"
           ) {
             actorId = schoolUser.id;
           } else if (
             h.to === "accepted" ||
             h.to === "in_progress" ||
-            h.to === "completed" ||
             (h.to === "cancelled" && h.from === "accepted")
           ) {
             actorId = supplierUser.id;
@@ -321,8 +314,8 @@ async function main() {
             await tx.orderStatusHistory.create({
               data: {
                 orderId: order.id,
-                from: h.from as OrderStatus,
-                to: h.to as OrderStatus,
+                previousStatus: h.from as OrderStatus,
+                newStatus: h.to as OrderStatus,
                 actorId,
               },
             });

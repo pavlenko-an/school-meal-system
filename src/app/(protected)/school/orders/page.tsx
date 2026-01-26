@@ -9,59 +9,47 @@ import { OrdersList } from "@/features/order";
 import { getMyOrganizationOrdersSchema } from "@/features/order/model/get-my-organization-orders.schema";
 import { getMyOrganizationOrders } from "@/features/order/queries/get-my-organization-orders.query";
 
-export default async function SchoolOrdersPage({
-  searchParams,
-}: {
+interface Props {
   searchParams: Promise<{
-    status?: string;
-    payment?: string;
+    orderStatus?: string;
+    paymentStatus?: string;
     dateFrom?: string;
     dateTo?: string;
     page?: string;
     limit?: string;
   }>;
-}) {
+}
+
+export default async function SchoolOrdersPage({ searchParams }: Props) {
   const paramsResolved = await searchParams;
 
-  const params = new URLSearchParams();
-  if (paramsResolved.status && paramsResolved.status !== "all") {
-    params.set("status", paramsResolved.status);
-  }
-  if (paramsResolved.payment && paramsResolved.payment !== "all") {
-    params.set("payment", paramsResolved.payment);
-  }
-  if (paramsResolved.dateFrom) {
-    params.set("dateFrom", paramsResolved.dateFrom);
-  }
-  if (paramsResolved.dateTo) {
-    params.set("dateTo", paramsResolved.dateTo);
-  }
-  params.set("page", paramsResolved.page || "1");
-  params.set("limit", paramsResolved.limit || "10");
-
-  const parsedQuery = getMyOrganizationOrdersSchema.parse({
+  const query = {
+    orderStatus:
+      paramsResolved.orderStatus !== "all" ? paramsResolved.orderStatus : undefined,
+    paymentStatus:
+      paramsResolved.paymentStatus !== "all" ? paramsResolved.paymentStatus : undefined,
     from: paramsResolved.dateFrom,
     to: paramsResolved.dateTo,
-    orderStatus: paramsResolved.status,
-    paymentStatus: paramsResolved.payment,
     page: paramsResolved.page ? Number(paramsResolved.page) : 1,
     limit: paramsResolved.limit ? Number(paramsResolved.limit) : 10,
+  };
+
+  const parsedQuery = getMyOrganizationOrdersSchema.parse(query);
+
+  const params = new URLSearchParams();
+  Object.entries(query).forEach(([key, value]) => {
+    if (value !== undefined) params.set(key, String(value));
   });
 
-  let data: OrdersList;
-  try {
-    const currentUser = await getCurrentUser();
-    if (!currentUser) {
-      throw new UnauthorizedError("Unauthorized");
-    }
-    data = await getMyOrganizationOrders(parsedQuery, currentUser);
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      throw new Error(err.message);
-    } else {
-      throw new Error("Не вдалося завантажити інформаційну панель");
-    }
+  const currentUser = await getCurrentUser();
+  if (!currentUser) {
+    throw new UnauthorizedError("Unauthorized");
   }
+
+  const data: OrdersList = await getMyOrganizationOrders(
+    parsedQuery,
+    currentUser,
+  );
 
   return (
     <div className="space-y-8">
@@ -71,15 +59,12 @@ export default async function SchoolOrdersPage({
           Перегляд та управління всіма вашими замовленнями
         </p>
       </div>
-
       <Suspense
         fallback={<LoadingSpinner size="md" text="Завантаження фільтрів..." />}
       >
         <OrdersFilters currentParams={paramsResolved} />
       </Suspense>
-
       <OrderTable orders={data.orders} />
-
       <Pagination
         currentPage={data.page}
         totalPages={data.totalPages}

@@ -11,8 +11,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { format } from "date-fns";
-import { uk } from "date-fns/locale";
 import { Eye } from "lucide-react";
 import { OrderInfo } from "../model/order.types";
 
@@ -21,7 +19,7 @@ interface Props {
   isLoading?: boolean;
 }
 
-const statusColors: Record<string, string> = {
+const statusColors: Record<OrderInfo["orderStatus"], string> = {
   new: "bg-gray-200 text-gray-800",
   published: "bg-blue-100 text-blue-800",
   accepted: "bg-green-100 text-green-800",
@@ -49,6 +47,21 @@ export default function OrderTable({ orders, isLoading = false }: Props) {
     );
   }
 
+  const statusLabels: Record<OrderInfo["orderStatus"], string> = {
+    new: "Новий",
+    published: "Опубліковано",
+    accepted: "Прийнято",
+    in_progress: "В роботі",
+    completed: "Завершено",
+    cancelled: "Скасовано",
+  };
+
+  const paymentStatusLabels: Record<OrderInfo["paymentStatus"], string> = {
+    unpaid: "Не оплачено",
+    paid: "Оплачено",
+    verified: "Підтверджено",
+  };
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -65,26 +78,14 @@ export default function OrderTable({ orders, isLoading = false }: Props) {
           {orders.map((order) => (
             <TableRow key={order.id} className="hover:bg-muted/50">
               <TableCell>
-                {format(new Date(order.deliveryDate), "dd MMMM yyyy", {
-                  locale: uk,
-                })}
+                {order.deliveryDate?.toLocaleDateString("uk-UA")}
               </TableCell>
               <TableCell>
                 <Badge
                   variant="outline"
                   className={statusColors[order.orderStatus] || "bg-gray-100"}
                 >
-                  {order.orderStatus === "new"
-                    ? "Новий"
-                    : order.orderStatus === "published"
-                      ? "Опубліковано"
-                      : order.orderStatus === "accepted"
-                        ? "Прийнято"
-                        : order.orderStatus === "in_progress"
-                          ? "В роботі"
-                          : order.orderStatus === "completed"
-                            ? "Завершено"
-                            : "Скасовано"}
+                  {statusLabels[order.orderStatus]}
                 </Badge>
               </TableCell>
               <TableCell>
@@ -93,20 +94,22 @@ export default function OrderTable({ orders, isLoading = false }: Props) {
                     order.paymentStatus === "paid" ? "default" : "secondary"
                   }
                 >
-                  {order.paymentStatus === "paid"
-                    ? "Оплачено"
-                    : order.paymentStatus === "verified"
-                      ? "Підтверджено"
-                      : "Не оплачено"}
+                  {paymentStatusLabels[order.paymentStatus]}
                 </Badge>
               </TableCell>
               <TableCell className="text-right font-medium">
-                {order.totalPrice} грн
+                {new Intl.NumberFormat("uk-UA", {
+                  style: "currency",
+                  currency: "UAH",
+                }).format(order.totalPrice)}
               </TableCell>
               <TableCell className="text-right">
                 <Button variant="ghost" size="icon" asChild>
                   <Link href={`/school/orders/${order.id}`}>
-                    <Eye className="h-4 w-4" />
+                    <Eye
+                      className="h-4 w-4"
+                      aria-label="Переглянути замовлення"
+                    />
                   </Link>
                 </Button>
               </TableCell>

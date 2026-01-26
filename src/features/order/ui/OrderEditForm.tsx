@@ -1,13 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { startTransition, useActionState, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-
 import OrderHeader from "./OrderHeader";
-import OrderItemsList from "@/features/order-item/ui/OrderItemsList";
-import OrderSummary from "./OrderSummary";
 import OrderActions from "./OrderActions";
 import { updateOrder } from "../actions/update-order.action";
 import { createOrderItem } from "@/features/order-item/actions/create-order-item.action";
@@ -17,13 +14,15 @@ import { updateOrderStatus } from "../actions/update-order-status.action";
 import { deleteOrder } from "../actions/delete-order.action";
 import { MenuItemInfo } from "@/features/menu-item";
 import { OrderItemInfo } from "@/features/order-item";
-import { createOrderInput, OrderDetails } from "../model/order.types";
+import { createOrderInput, OrderInfo } from "../model/order.types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createOrderSchema } from "../model/create-order.schema";
+import AddItemDialog from "@/features/order-item/ui/AddItemDialog";
+import OrderItemRow from "@/features/order-item/ui/OrderItemRow";
 
 interface Props {
   orderId: string;
-  initialOrder: OrderDetails;
+  initialOrder: OrderInfo;
   initialItems: OrderItemInfo[];
   menuItems: MenuItemInfo[];
 }
@@ -36,7 +35,6 @@ export default function OrderEditForm({
 }: Props) {
   const router = useRouter();
   const [localItems, setLocalItems] = useState(initialItems);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<createOrderInput>({
     resolver: zodResolver(createOrderSchema),
@@ -53,170 +51,167 @@ export default function OrderEditForm({
     0,
   );
 
-  const handleSave = async () => {
-    setIsSubmitting(true);
-    try {
-      const deliveryDate = form.getValues("deliveryDate");
-      if (!deliveryDate || isNaN(deliveryDate.getTime())) {
-        toast.error("Оберіть коректну дату поставки");
-        setIsSubmitting(false);
-        return;
-      }
-      const result = await updateOrder(null, {
-        id: orderId,
-        deliveryDate,
-        comment: form.getValues("comment") || "",
-      });
-      if (!result.success) {
-        toast.error(result.error || "Помилка при збереженні замовлення");
-        return;
-      }
-      toast.success("Замовлення збережено!");
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        toast.error(err.message);
-      } else {
-        toast.error("Не вдалося зберегти замовлення");
-      }
-    } finally {
-      setIsSubmitting(false);
-      router.refresh();
-    }
-  };
+  const [saveState, saveAction, isSavePending] = useActionState(
+    updateOrder,
+    null,
+  );
+  const [publishState, publishAction, isPublishPending] = useActionState(
+    updateOrderStatus,
+    null,
+  );
+  const [deleteOrderState, deleteOrderAction, isDeleteOrderPending] =
+    useActionState(deleteOrder, null);
 
   const handleAddItem = async (menuItemId: string, quantity: number) => {
+    const optimisticItem: OrderItemInfo = {
+      id: crypto.randomUUID(),
+      quantity,
+      price: 0,
+      menuItem: menuItems.find((m) => m.id === menuItemId)!,
+    };
+    setLocalItems((prev) => [...prev, optimisticItem]);
+
     try {
       const result = await createOrderItem(null, {
         orderId,
         menuItemId,
         quantity,
       });
-      if (!result.success) {
-        toast.error(result.error || "Помилка при додаванні");
-        return;
-      }
-      setLocalItems((prev) => [...prev, result.data]);
-      toast.success("Страву додано");
-      router.refresh();
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        toast.error(err.message);
+      if (result.success) {
+        setLocalItems((prev) =>
+          prev.map((i) => (i.id === optimisticItem.id ? result.data : i)),
+        );
+        toast.success("Страву додано");
       } else {
-        toast.error("Не вдалося додати страву");
+        setLocalItems((prev) => prev.filter((i) => i.id !== optimisticItem.id));
+        toast.error(result.error);
       }
-    } finally {
-      router.refresh();
+    } catch (err: unknown) {
+      setLocalItems((prev) => prev.filter((i) => i.id !== optimisticItem.id));
+      toast.error(
+        err instanceof Error ? err.message : "Не вдалося додати страву",
+      );
     }
   };
 
   const handleUpdateQuantity = async (itemId: string, quantity: number) => {
+    const previousItems = localItems;
+    setLocalItems((items) =>
+      items.map((i) => (i.id === itemId ? { ...i, quantity } : i)),
+    );
+
     try {
-      const result = await updateOrderItem(null, {
-        id: itemId,
-        quantity,
-      });
-      if (!result.success) {
-        toast.error(result.error);
-        return;
-      }
-      setLocalItems((prev) =>
-        prev.map((item) =>
-          item.id === itemId ? { ...item, ...result.data } : item,
-        ),
-      );
+      await updateOrderItem(null, { id: itemId, quantity });
       toast.success("Кількість оновлено");
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        toast.error(err.message);
-      } else {
-        toast.error("Не вдалося оновити кількість");
-      }
-    } finally {
-      router.refresh();
+      setLocalItems(previousItems);
+      toast.error(
+        err instanceof Error ? err.message : "Не вдалося оновити кількість",
+      );
     }
   };
 
   const handleRemoveItem = async (itemId: string) => {
+    const previousItems = localItems;
+    setLocalItems((prev) => prev.filter((i) => i.id !== itemId));
+
     try {
-      const result = await deleteOrderItem(null, {
-        id: itemId,
-      });
-      if (!result.success) {
-        toast.error(result.error || "Помилка при видаленні");
-        return;
-      }
-      setLocalItems((prev) => prev.filter((item) => item.id !== itemId));
+      await deleteOrderItem(null, { id: itemId });
       toast.success("Позицію видалено");
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        toast.error(err.message);
-      } else {
-        toast.error("Не вдалося видалити позицію");
-      }
-    } finally {
-      router.refresh();
+      setLocalItems(previousItems);
+      toast.error(
+        err instanceof Error ? err.message : "Не вдалося видалити позицію",
+      );
     }
   };
 
-  const handlePublish = async () => {
-    try {
-      const result = await updateOrderStatus(null, {
-        id: orderId,
-        status: "published",
-      });
-      if (!result.success) {
-        toast.error(result.error || "Помилка при публікації замовлення");
-        return;
-      }
+  const handleSaveOrder = () => {
+    startTransition(() => {
+      saveAction({ id: orderId, ...form.getValues() });
+    });
+  };
+
+  const handlePublishOrder = () => {
+    startTransition(() => {
+      publishAction({ id: orderId, status: "published" });
+    });
+  };
+
+  const handleDeleteOrder = () => {
+    startTransition(() => {
+      deleteOrderAction({ id: orderId });
+    });
+  };
+
+  useEffect(() => {
+    if (saveState?.success) {
+      toast.success("Замовлення збережено!");
+      router.push("/school/orders");
+    } else if (saveState?.success === false && saveState.error) {
+      toast.error(saveState.error);
+    }
+  }, [saveState, router]);
+
+  useEffect(() => {
+    if (publishState?.success) {
       toast.success("Замовлення опубліковано!");
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        toast.error(err.message);
-      } else {
-        toast.error("Не вдалося опублікувати замовлення");
-      }
-    } finally {
       router.push("/school/orders");
-      router.refresh();
+    } else if (publishState?.success === false && publishState.error) {
+      toast.error(publishState.error);
     }
-  };
+  }, [publishState, router]);
 
-  const handleDeleteOrder = async () => {
-    try {
-      const result = await deleteOrder(null, { id: orderId });
-      if (!result.success) {
-        toast.error(result.error || "Помилка при видаленні замовлення");
-        return;
-      }
+  useEffect(() => {
+    if (deleteOrderState?.success) {
       toast.success("Замовлення видалено");
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        toast.error(err.message);
-      } else {
-        toast.error("Не вдалося видалити замовлення");
-      }
-    } finally {
       router.push("/school/orders");
-      router.refresh();
+    } else if (deleteOrderState?.success === false && deleteOrderState.error) {
+      toast.error(deleteOrderState.error);
     }
-  };
+  }, [deleteOrderState, router]);
 
   return (
     <div className="space-y-10">
       <OrderHeader form={form} />
-      <OrderItemsList
-        items={localItems}
-        menuItems={menuItems}
-        onAddItem={handleAddItem}
-        onUpdateQuantity={handleUpdateQuantity}
-        onRemoveItem={handleRemoveItem}
-      />
-      <OrderSummary totalPrice={totalPrice} />
+
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h3 className="text-xl font-semibold">Позиції замовлення</h3>
+          <AddItemDialog menuItems={menuItems} onAdd={handleAddItem} />
+        </div>
+        {localItems.length === 0 ? (
+          <div className="border-2 border-dashed border-muted-foreground/50 rounded-xl p-12 text-center text-muted-foreground">
+            Замовлення порожнє. Натисніть «Додати страву», щоб розпочати.
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {localItems.map((item) => (
+              <OrderItemRow
+                key={item.id}
+                item={item}
+                onUpdateQuantity={(qty) => handleUpdateQuantity(item.id, qty)}
+                onRemove={() => handleRemoveItem(item.id)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="flex flex-col sm:flex-row justify-between items-center py-6 px-6 bg-muted/40 rounded-xl border">
+        <span className="text-xl font-semibold">Загальна сума замовлення:</span>
+        <span className="text-3xl font-bold text-primary mt-2 sm:mt-0">
+          {totalPrice.toLocaleString("uk-UA", {
+            style: "currency",
+            currency: "UAH",
+          })}
+        </span>
+      </div>
+
       <OrderActions
-        onSave={handleSave}
-        onPublish={handlePublish}
+        onSave={handleSaveOrder}
+        onPublish={handlePublishOrder}
         onDelete={handleDeleteOrder}
-        isSubmitting={isSubmitting}
+        isSubmitting={isSavePending || isPublishPending || isDeleteOrderPending}
         disabled={localItems.length === 0}
       />
     </div>

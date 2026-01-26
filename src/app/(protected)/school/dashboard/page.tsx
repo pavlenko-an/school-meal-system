@@ -9,11 +9,11 @@ import MonthsSelector from "@/features/order/ui/MonthsSelector";
 import RecentOrdersCard from "@/features/order/ui/RecentOrdersCard";
 import { getMyOrganizationStats } from "@/features/order/queries/get-my-organization-stats.query";
 
-export default async function SchoolDashboardClient({
-  searchParams,
-}: {
+type Props = {
   searchParams?: Promise<{ months?: number }>;
-}) {
+};
+
+export default async function SchoolDashboard({ searchParams }: Props) {
   const params = await searchParams;
   const monthsParsed = Number(params?.months);
   const initialMonths: 1 | 3 | 6 =
@@ -27,25 +27,19 @@ export default async function SchoolDashboardClient({
     now.getMonth() - initialMonths,
     now.getDate(),
   );
-  const parsedQuery = getMyOrganizationStatsSchema.parse({
+
+  const statsQuery = getMyOrganizationStatsSchema.parse({
     from,
   });
 
-  let data: OrdersStats;
-  try {
-    const currentUser = await getCurrentUser();
-    if (!currentUser) {
-      throw new UnauthorizedError("Unauthorized");
-    }
-    data = await getMyOrganizationStats(parsedQuery, currentUser);
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      throw new Error(err.message);
-    } else {
-      throw new Error("Не вдалося завантажити інформаційну панель");
-    }
+  const currentUser = await getCurrentUser();
+  if (!currentUser) {
+    throw new UnauthorizedError("Unauthorized");
   }
-
+  const data: OrdersStats = await getMyOrganizationStats(
+    statsQuery,
+    currentUser,
+  );
   const stats = {
     ordersCount: data.stats?.ordersCount ?? 0,
     nextDelivery: data.stats?.nextDelivery ?? null,
@@ -60,10 +54,15 @@ export default async function SchoolDashboardClient({
         nextDelivery={stats.nextDelivery}
         unpaidAmount={stats.unpaidAmount}
       />
-      <UpcomingOrdersCard orders={data.upcoming || []} />
-      <RecentOrdersCard orders={data.recent || []} />
+      <UpcomingOrdersCard orders={data.upcoming ?? []} />
+      <RecentOrdersCard orders={data.recent ?? []} />
       <div className="flex justify-center md:justify-start pt-4">
-        <Button size="lg" className="w-full sm:w-auto" asChild>
+        <Button
+          asChild
+          size="lg"
+          className="w-full sm:w-auto"
+          aria-label="Створити нове замовлення"
+        >
           <Link href="/school/orders/new">Створити нове замовлення</Link>
         </Button>
       </div>

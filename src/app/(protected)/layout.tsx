@@ -25,7 +25,7 @@ export default async function ProtectedLayout({
         </main>
       </div>
       <Footer />
-      <Toaster richColors position="top-right" closeButton />
+      <Toaster richColors position="top-center" closeButton />
     </div>
   );
 }

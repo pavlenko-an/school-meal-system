@@ -4,11 +4,11 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { CategoryInfo } from "../model/category.types";
 
-export default function MenuCategoryTabs({
-  categories,
-}: {
+interface Props {
   categories: CategoryInfo[];
-}) {
+}
+
+export default function MenuCategoryTabs({ categories }: Props) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -22,7 +22,7 @@ export default function MenuCategoryTabs({
     } else {
       params.set("categoryId", value);
     }
-    router.push(`${pathname}?${params.toString()}`);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
   return (

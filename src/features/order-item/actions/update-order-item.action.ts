@@ -69,6 +69,14 @@ export async function updateOrderItem(
             select: {
               id: true,
               name: true,
+              description: true,
+              images: {
+                select: {
+                  id: true,
+                  imageUrl: true,
+                  isPrimary: true,
+                },
+              },
             },
           },
         },

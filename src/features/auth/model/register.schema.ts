@@ -10,18 +10,10 @@ export const registerSchema = z
       .min(8, "Password must be at least 8 characters long")
       .regex(
         /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        "Password must contain uppercase, lowercase letters and a number"
+        "Password must contain uppercase, lowercase letters and a number",
       ),
-    firstName: z
-      .string()
-      .trim()
-      .min(1, "First name must be at least 1 character long")
-      .optional(),
-    lastName: z
-      .string()
-      .trim()
-      .min(1, "Last name must be at least 1 character long")
-      .optional(),
+    firstName: z.string().trim().optional(),
+    lastName: z.string().trim().optional(),
     organizationId: z.uuid("Invalid organization ID"),
     confirmPassword: z.string().optional(),
   })
@@ -35,5 +27,5 @@ export const registerSchema = z
     {
       message: "Passwords do not match",
       path: ["confirmPassword"],
-    }
+    },
   );

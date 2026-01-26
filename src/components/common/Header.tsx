@@ -37,7 +37,11 @@ export default function Header() {
         {session ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+              <Button
+                variant="ghost"
+                className="relative h-8 w-8 rounded-full"
+                aria-label="Відкрити меню користувача"
+              >
                 <Avatar className="h-8 w-8">
                   <AvatarImage
                     src={session.user?.image ?? undefined}
@@ -71,12 +75,17 @@ export default function Header() {
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <Button variant="outline" asChild>
+          <Button asChild variant="outline" aria-label="Увійти в систему">
             <Link href="/auth/login">Увійти</Link>
           </Button>
         )}
 
-        <Button variant="ghost" size="icon" className="md:hidden">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
+          aria-label="Відкрити меню навігації"
+        >
           <Menu className="h-5 w-5" />
         </Button>
       </div>

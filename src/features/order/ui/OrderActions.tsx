@@ -12,9 +12,9 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface Props {
-  onSave: () => Promise<void>;
-  onPublish: () => Promise<void>;
-  onDelete: () => Promise<void>;
+  onSave: () => void;
+  onPublish: () => void;
+  onDelete: () => void;
   isSubmitting: boolean;
   disabled?: boolean;
 }
@@ -33,6 +33,7 @@ export default function OrderActions({
         onClick={onSave}
         disabled={isSubmitting || disabled}
         className="flex-1"
+        aria-label="Зберегти зміни в замовленні"
       >
         {isSubmitting ? "Збереження..." : "Зберегти зміни"}
       </Button>
@@ -44,6 +45,7 @@ export default function OrderActions({
             variant="default"
             disabled={disabled}
             className="flex-1"
+            aria-label="Опублікувати замовлення"
           >
             Опублікувати замовлення
           </Button>
@@ -67,7 +69,12 @@ export default function OrderActions({
 
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button size="lg" variant="destructive" className="flex-1">
+          <Button
+            size="lg"
+            variant="destructive"
+            className="flex-1"
+            aria-label="Видалити замовлення"
+          >
             Видалити замовлення
           </Button>
         </AlertDialogTrigger>

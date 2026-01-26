@@ -22,6 +22,16 @@ export const updateUserSchema = z.object({
           "Password must contain uppercase, lowercase letters and a number",
       },
     ),
-  firstName: z.string().trim().optional(),
-  lastName: z.string().trim().optional(),
+  firstName: z
+    .string()
+    .trim()
+    .optional()
+    .nullable()
+    .transform((val) => (val === "" ? null : val)),
+  lastName: z
+    .string()
+    .trim()
+    .optional()
+    .nullable()
+    .transform((val) => (val === "" ? null : val)),
 });
