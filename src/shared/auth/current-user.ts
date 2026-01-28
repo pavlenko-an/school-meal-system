@@ -4,11 +4,11 @@ import { UnauthorizedError } from "../errors/unauthorized-error";
 
 export type CurrentUser = {
   id: string;
-  email: string | null;
-  name: string | null;
-  image: string | null;
-  organizationId: string | null;
-  organizationType: "school" | "supplier" | null;
+  email: string;
+  name?: string;
+  image?: string;
+  organizationId?: string;
+  organizationType?: "school" | "supplier";
   role: "employee" | "admin";
 };
 
@@ -20,10 +20,10 @@ export async function getCurrentUser(): Promise<CurrentUser> {
   return {
     id: session.user.id,
     email: session.user.email,
-    name: session.user.name,
-    image: session.user.image,
-    organizationId: session.user.organizationId ?? null,
-    organizationType: session.user.organizationType ?? null,
+    name: session.user.name ?? undefined,
+    image: session.user.image ?? undefined,
+    organizationId: session.user.organizationId ?? undefined,
+    organizationType: session.user.organizationType ?? undefined,
     role: session.user.role,
   };
 }

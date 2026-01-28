@@ -1,7 +1,6 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -47,26 +46,26 @@ export default function OrdersFilters({ currentParams }: Props) {
   };
 
   return (
-    <div className="space-y-4 md:flex md:items-center md:justify-between md:space-y-0 md:gap-6">
-      <div className="flex-1">
-        <Tabs
-          value={currentParams.orderStatus || "all"}
-          onValueChange={(value) =>
-            updateFilter("orderStatus", value === "all" ? undefined : value)
-          }
-          className="w-full"
-        >
-          <TabsList className="w-full justify-start overflow-x-auto">
-            <TabsTrigger value="all">Всі</TabsTrigger>
-            <TabsTrigger value="new">Нові</TabsTrigger>
-            <TabsTrigger value="published">Опубліковані</TabsTrigger>
-            <TabsTrigger value="accepted">Прийняті</TabsTrigger>
-            <TabsTrigger value="in_progress">В роботі</TabsTrigger>
-            <TabsTrigger value="completed">Завершені</TabsTrigger>
-            <TabsTrigger value="cancelled">Скасовані</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
+    <div className="space-y-4 flex flex-wrap md:flex-nowrap md:items-center md:justify-center md:space-y-0 gap-2 md:gap-4">
+      <Select
+        value={currentParams.orderStatus || "all"}
+        onValueChange={(value) =>
+          updateFilter("orderStatus", value === "all" ? undefined : value)
+        }
+      >
+        <SelectTrigger className="w-45">
+          <SelectValue placeholder="Статус замовлення" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Всі</SelectItem>
+          <SelectItem value="new">Нові</SelectItem>
+          <SelectItem value="published">Опубліковані</SelectItem>
+          <SelectItem value="accepted">Прийняті</SelectItem>
+          <SelectItem value="in_progress">В роботі</SelectItem>
+          <SelectItem value="completed">Завершені</SelectItem>
+          <SelectItem value="cancelled">Скасовані</SelectItem>
+        </SelectContent>
+      </Select>
 
       <Select
         value={currentParams.paymentStatus || "all"}
@@ -85,79 +84,75 @@ export default function OrdersFilters({ currentParams }: Props) {
         </SelectContent>
       </Select>
 
-      <div className="flex gap-4">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "w-60 justify-start text-left font-normal",
-                !currentParams.dateFrom && "text-muted-foreground",
-              )}
-              aria-label="Оберіть дату від"
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {currentParams.dateFrom
-                ? format(new Date(currentParams.dateFrom), "PPP", {
-                    locale: uk,
-                  })
-                : "Дата від"}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={
-                currentParams.dateFrom
-                  ? new Date(currentParams.dateFrom)
-                  : undefined
-              }
-              onSelect={(date) =>
-                updateFilter(
-                  "dateFrom",
-                  date ? format(date, "yyyy-MM-dd") : undefined,
-                )
-              }
-              autoFocus
-            />
-          </PopoverContent>
-        </Popover>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className={cn(
+              "w-45 justify-start text-left font-normal",
+              !currentParams.dateFrom && "text-muted-foreground",
+            )}
+            aria-label="Оберіть дату від"
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {currentParams.dateFrom
+              ? format(new Date(currentParams.dateFrom), "PPP", {
+                  locale: uk,
+                })
+              : "Дата від"}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={
+              currentParams.dateFrom
+                ? new Date(currentParams.dateFrom)
+                : undefined
+            }
+            onSelect={(date) =>
+              updateFilter(
+                "dateFrom",
+                date ? format(date, "yyyy-MM-dd") : undefined,
+              )
+            }
+            autoFocus
+          />
+        </PopoverContent>
+      </Popover>
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "w-60 justify-start text-left font-normal",
-                !currentParams.dateTo && "text-muted-foreground",
-              )}
-              aria-label="Оберіть дату до"
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {currentParams.dateTo
-                ? format(new Date(currentParams.dateTo), "PPP", { locale: uk })
-                : "Дата до"}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={
-                currentParams.dateTo
-                  ? new Date(currentParams.dateTo)
-                  : undefined
-              }
-              onSelect={(date) =>
-                updateFilter(
-                  "dateTo",
-                  date ? format(date, "yyyy-MM-dd") : undefined,
-                )
-              }
-              autoFocus
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className={cn(
+              "w-45 justify-start text-left font-normal",
+              !currentParams.dateTo && "text-muted-foreground",
+            )}
+            aria-label="Оберіть дату до"
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {currentParams.dateTo
+              ? format(new Date(currentParams.dateTo), "PPP", { locale: uk })
+              : "Дата до"}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={
+              currentParams.dateTo ? new Date(currentParams.dateTo) : undefined
+            }
+            onSelect={(date) =>
+              updateFilter(
+                "dateTo",
+                date ? format(date, "yyyy-MM-dd") : undefined,
+              )
+            }
+            autoFocus
+          />
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }

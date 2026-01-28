@@ -9,11 +9,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getUserById } from "@/features/user/queries/get-user-by-id.query";
-import { updateUserInput } from "@/features/user/model/user.types";
+import { updateUserInput } from "@/features/user/model/types";
 import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import OrganizationForm from "@/features/organization/ui/OrganizationForm";
-import { updateOrganizationInput } from "@/features/organization";
+import { getUserById } from "@/features/user/model/queries";
+import { updateOrganizationInput } from "@/features/organization/model/types";
 
 export default async function ProfilePage() {
   const currentUser = await getCurrentUser();

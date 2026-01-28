@@ -16,9 +16,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { updateOrganizationSchema } from "@/features/organization/model/update-organization.schema";
-import { updateOrganizationInput } from "../model/organization.types";
-import { updateOrganization } from "../actions/update-organization.action";
+import { updateOrganizationInput } from "../model/types";
+import { updateOrganizationSchema } from "../model/schemas";
+import { updateOrganization } from "../api/actions";
 
 interface Props {
   defaultValues: Partial<updateOrganizationInput>;
@@ -37,24 +37,34 @@ export default function OrganizationForm({ defaultValues }: Props) {
     },
   });
 
+  const { setError, reset } = form;
+
   const [state, formAction, isPending] = useActionState(
     updateOrganization,
     null,
   );
 
   useEffect(() => {
-    if (state?.success) {
+    if (!state) return;
+
+    if (state.success && state.data) {
       toast.success("Дані організації оновлено");
-      form.reset({
-        name: state.data.name || "",
-        contactEmail: state.data.contactEmail || "",
-        contactPhone: state.data.contactPhone || "",
-      });
+      reset(state.data);
       router.refresh();
-    } else if (state?.error) {
-      toast.error(state.error);
+    } else if (!state.success && state.error) {
+      toast.error(
+        state.error ?? "Не вдалося оновити організацію. Спробуйте пізніше.",
+      );
+      if (state.fieldErrors) {
+        Object.entries(state.fieldErrors).forEach(([field, messages]) => {
+          setError(field as keyof updateOrganizationInput, {
+            type: "server",
+            message: messages?.join(", ") || "Помилка",
+          });
+        });
+      }
     }
-  }, [state, router, form]);
+  }, [state, reset, router, setError]);
 
   return (
     <Form {...form}>

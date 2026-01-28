@@ -13,9 +13,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Menu } from "lucide-react";
+import useSidebarStore from "@/store/useSidebarStore";
 
 export default function Header() {
   const { data: session } = useSession();
+  const setOpen = useSidebarStore((s) => s.setOpen);
 
   const userInitials = session?.user?.name
     ? session.user.name
@@ -28,7 +30,16 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="mx-8 flex h-14 items-center justify-between">
-        <Link href="/" className="flex items-center space-x-2">
+        <Button
+          variant="outline"
+          size="icon"
+          className="md:hidden mr-3"
+          aria-label="Відкрити меню"
+          onClick={() => setOpen(true)}
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+        <Link href="/" className="hidden md:block">
           <span className="font-bold text-xl text-primary">
             Шкільне харчування
           </span>
@@ -79,15 +90,6 @@ export default function Header() {
             <Link href="/auth/login">Увійти</Link>
           </Button>
         )}
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden"
-          aria-label="Відкрити меню навігації"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
       </div>
     </header>
   );

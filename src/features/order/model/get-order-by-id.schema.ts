@@ -1,5 +1,0 @@
-import { z } from "zod";
-
-export const getOrderByIdSchema = z.object({
-  id: z.uuid("Invalid order ID"),
-});

@@ -16,11 +16,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { OrderInfo } from "../model/order.types";
-import { deleteOrder } from "../actions/delete-order.action";
-import { updateOrderStatus } from "../actions/update-order-status.action";
-import { startTransition, useActionState, useEffect } from "react";
+import { OrderInfo } from "../model/types";
+import { useTransition } from "react";
 import Link from "next/link";
+import { deleteOrder, updateOrderStatus } from "../api/actions";
 
 interface Props {
   order: OrderInfo;
@@ -29,11 +28,12 @@ interface Props {
 export function OrderDetailsCard({ order }: Props) {
   const router = useRouter();
 
-  const isNew = order.orderStatus === "new";
-  const isPublished = order.orderStatus === "published";
-  const canDelete = isNew;
-  const canEdit = isNew;
-  const canCancel = isPublished;
+  const permissions = {
+    canDelete: order.orderStatus === "new",
+    canEdit: order.orderStatus === "new",
+    canPublish: order.orderStatus === "new",
+    canCancel: order.orderStatus === "published",
+  };
 
   const statusLabels: Record<OrderInfo["orderStatus"], string> = {
     new: "Новий",
@@ -50,35 +50,54 @@ export function OrderDetailsCard({ order }: Props) {
     verified: "Підтверджено",
   };
 
-  const [cancelState, cancelAction, isCancelPending] = useActionState(
-    updateOrderStatus,
-    null,
-  );
+  const [isPublishing, startPublish] = useTransition();
+  const [isCancelling, startCancel] = useTransition();
+  const [isDeleting, startDelete] = useTransition();
 
-  const [deleteState, deleteAction, isDeletePending] = useActionState(
-    deleteOrder,
-    null,
-  );
+  const handlePublish = () => {
+    startPublish(async () => {
+      const result = await updateOrderStatus(null, {
+        id: order.id,
+        status: "published",
+      });
 
-  useEffect(() => {
-    if (cancelState?.success) {
-      toast.success("Замовлення скасовано");
-      router.refresh();
-    }
-    if (cancelState?.success === false && cancelState.error) {
-      toast.error(cancelState.error);
-    }
-  }, [cancelState, router]);
+      if (result?.success) {
+        toast.success("Замовлення опубліковано");
+        router.refresh();
+      } else {
+        toast.error(result?.error ?? "Не вдалося опублікувати");
+      }
+    });
+  };
 
-  useEffect(() => {
-    if (deleteState?.success) {
-      toast.success("Замовлення повністю видалено");
-      router.push("/school/orders");
-    }
-    if (deleteState?.success === false && deleteState.error) {
-      toast.error(deleteState.error);
-    }
-  }, [deleteState, router]);
+  const handleCancel = () => {
+    startCancel(async () => {
+      const result = await updateOrderStatus(null, {
+        id: order.id,
+        status: "cancelled",
+      });
+
+      if (result?.success) {
+        toast.success("Замовлення скасовано");
+        router.refresh();
+      } else {
+        toast.error(result?.error ?? "Не вдалося скасувати");
+      }
+    });
+  };
+
+  const handleDelete = () => {
+    startDelete(async () => {
+      const result = await deleteOrder(null, { id: order.id });
+
+      if (result?.success) {
+        toast.success("Замовлення повністю видалено");
+        router.push("/school/orders");
+      } else {
+        toast.error(result?.error ?? "Не вдалося видалити");
+      }
+    });
+  };
 
   return (
     <Card>
@@ -150,7 +169,7 @@ export function OrderDetailsCard({ order }: Props) {
       </CardContent>
 
       <div className="p-6 pt-0 flex flex-wrap gap-4">
-        {canEdit && (
+        {permissions.canEdit && (
           <Button
             asChild
             variant="outline"
@@ -163,16 +182,46 @@ export function OrderDetailsCard({ order }: Props) {
           </Button>
         )}
 
-        {canDelete && (
+        {permissions.canPublish && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="default"
+                disabled={isPublishing}
+                className="w-full sm:w-auto cursor-pointer"
+                aria-label="Опублікувати замовлення"
+              >
+                {isPublishing ? "Публікуємо..." : "Опублікувати замовлення"}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Опублікувати замовлення?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Після публікації редагування буде заборонено. Постачальники
+                  побачать замовлення в списку.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Скасувати</AlertDialogCancel>
+                <AlertDialogAction onClick={handlePublish}>
+                  Опублікувати
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+
+        {permissions.canDelete && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
                 variant="destructive"
-                disabled={isDeletePending}
+                disabled={isDeleting}
                 className="w-full sm:w-auto cursor-pointer"
                 aria-label="Видалити замовлення"
               >
-                {isDeletePending ? "Видаляємо..." : "Видалити замовлення"}
+                {isDeleting ? "Видаляємо..." : "Видалити замовлення"}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
@@ -188,9 +237,7 @@ export function OrderDetailsCard({ order }: Props) {
               <AlertDialogFooter>
                 <AlertDialogCancel>Скасувати</AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={() => {
-                    startTransition(() => deleteAction({ id: order.id }));
-                  }}
+                  onClick={handleDelete}
                   className="bg-destructive hover:bg-destructive/90"
                 >
                   Видалити
@@ -200,16 +247,16 @@ export function OrderDetailsCard({ order }: Props) {
           </AlertDialog>
         )}
 
-        {canCancel && (
+        {permissions.canCancel && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
                 variant="outline"
-                disabled={isCancelPending}
+                disabled={isCancelling}
                 className="w-full sm:w-auto border-destructive text-destructive hover:bg-destructive/10"
                 aria-label="Скасувати замовлення"
               >
-                {isCancelPending ? "Скасовуємо..." : "Скасувати замовлення"}
+                {isCancelling ? "Скасовуємо..." : "Скасувати замовлення"}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
@@ -224,11 +271,7 @@ export function OrderDetailsCard({ order }: Props) {
               <AlertDialogFooter>
                 <AlertDialogCancel>Залишити</AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={() => {
-                    startTransition(() =>
-                      cancelAction({ id: order.id, status: "cancelled" }),
-                    );
-                  }}
+                  onClick={handleCancel}
                   className="bg-destructive hover:bg-destructive/90"
                 >
                   Скасувати
@@ -238,10 +281,8 @@ export function OrderDetailsCard({ order }: Props) {
           </AlertDialog>
         )}
 
-        {!canDelete && !canCancel && (
-          <p className="text-sm text-muted-foreground italic">
-            Дії недоступні
-          </p>
+        {!permissions.canDelete && !permissions.canCancel && (
+          <p className="text-sm text-muted-foreground italic">Дії недоступні</p>
         )}
       </div>
     </Card>

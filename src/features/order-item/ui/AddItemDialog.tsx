@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { MenuItemInfo } from "@/features/menu-item";
+import { MenuItemInfo } from "@/features/menu-item/model/types";
 
 interface Props {
   menuItems: MenuItemInfo[];

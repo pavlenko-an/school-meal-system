@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MenuItemInfo } from "../model/menu-item.types";
+import { MenuItemInfo } from "../model/types";
 
 interface Props {
   items: MenuItemInfo[];

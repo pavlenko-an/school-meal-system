@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 import OrderEditForm from "@/features/order/ui/OrderEditForm";
-import { getOrderById } from "@/features/order/queries/get-order-by-id.query";
 import { getCurrentUser } from "@/shared/auth/current-user";
 import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
-import { getAllMenuItems } from "@/features/menu-item/queries/get-all-menu-items.query";
-import { getAllOrderItems } from "@/features/order-item/queries/get-all-order-items.query";
+import { getOrderById } from "@/features/order/model/queries";
+import { getAllOrderItems } from "@/features/order-item/model/queries";
+import { getAllMenuItems } from "@/features/menu-item/model/queries";
 
 interface Props {
   params: Promise<{ id: string }>;

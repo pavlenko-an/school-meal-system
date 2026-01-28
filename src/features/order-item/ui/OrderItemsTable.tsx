@@ -6,7 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { OrderItemInfo } from "../model/order-item.types";
+import { OrderItemInfo } from "../model/types";
 
 interface Props {
   items: OrderItemInfo[];

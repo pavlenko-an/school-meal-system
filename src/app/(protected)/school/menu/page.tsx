@@ -2,8 +2,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import MenuCategoryTabs from "@/features/category/ui/MenuCategoryTabs";
 import MenuGrid from "@/features/menu-item/ui/MenuGrid";
 import { CategoryInfo, getAllCategories } from "@/features/category";
-import { MenuItemInfo, getAllMenuItemsSchema } from "@/features/menu-item";
-import { getAllMenuItems } from "@/features/menu-item/queries/get-all-menu-items.query";
+import { getAllMenuItemsSchema } from "@/features/menu-item/model/schemas";
+import { MenuItemInfo } from "@/features/menu-item/model/types";
+import { getAllMenuItems } from "@/features/menu-item/model/queries";
 
 interface Props {
   searchParams?: Promise<{ categoryId?: string }>;

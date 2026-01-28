@@ -13,11 +13,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { updateUserInput } from "../model/user.types";
-import { updateUserSchema } from "../model/update-user.schema";
+import { updateUserInput } from "../model/types";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
-import { updateUser } from "../actions/update-user.action";
+import { updateUserSchema } from "../model/schemas";
+import { updateUser } from "../api/actions";
 
 type Props = {
   defaultValues: Partial<updateUserInput>;
@@ -37,23 +37,30 @@ export default function ProfileForm({ defaultValues }: Props) {
     },
   });
 
+  const { setError, reset } = form;
+
   const [state, formAction, isPending] = useActionState(updateUser, null);
 
   useEffect(() => {
-    if (state?.success) {
+    if (!state) return;
+    if (state.success && state.data) {
       toast.success("Профіль успішно оновлено");
-      form.reset({
-        firstName: state.data.firstName || "",
-        lastName: state.data.lastName || "",
-        email: state.data.email || "",
-        password: "",
-      });
+      reset(state.data);
       router.refresh();
+    } else if (state?.success === false && state.error) {
+      toast.error(
+        state.error ?? "Не вдалося оновити профіль. Спробуйте пізніше.",
+      );
+      if (state.fieldErrors) {
+        Object.entries(state.fieldErrors).forEach(([field, messages]) => {
+          setError(field as keyof updateUserInput, {
+            type: "server",
+            message: messages?.join(", ") || "Помилка",
+          });
+        });
+      }
     }
-    if (state?.success === false && state.error) {
-      toast.error(state.error);
-    }
-  }, [state, router, form]);
+  }, [state, router, setError, reset]);
 
   return (
     <Form {...form}>

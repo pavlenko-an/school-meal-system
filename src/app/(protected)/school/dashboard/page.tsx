@@ -2,12 +2,13 @@ import StatsCards from "@/features/order/ui/StatsCards";
 import UpcomingOrdersCard from "@/features/order/ui/UpcomingOrdersCard";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { getMyOrganizationStatsSchema, OrdersStats } from "@/features/order";
 import { getCurrentUser } from "@/shared/auth/current-user";
 import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import MonthsSelector from "@/features/order/ui/MonthsSelector";
 import RecentOrdersCard from "@/features/order/ui/RecentOrdersCard";
-import { getMyOrganizationStats } from "@/features/order/queries/get-my-organization-stats.query";
+import { getMyOrganizationStatsSchema } from "@/features/order/model/params.schemas";
+import { getMyOrganizationStats } from "@/features/order/model/queries";
+import { OrdersStats } from "@/features/order/model/types";
 
 type Props = {
   searchParams?: Promise<{ months?: number }>;

@@ -15,7 +15,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { deleteUser } from "../actions/delete-user.action";
+import { signOut } from "next-auth/react";
+import { deleteUser } from "../api/actions";
 
 export default function DeleteAccountSection() {
   const router = useRouter();
@@ -25,7 +26,9 @@ export default function DeleteAccountSection() {
   useEffect(() => {
     if (state?.success) {
       toast.success("Обліковий запис видалено");
-      router.push("/auth/login");
+      signOut({ redirect: false }).then(() => {
+        router.push("/auth/login");
+      });
     }
     if (state?.success === false && state.error) {
       toast.error(state.error);

@@ -57,11 +57,11 @@ export class OrderPermissionPolicy {
     return { allowed: true };
   }
 
-  static canUpdateOrder(user: CurrentUser, order: Order) {
+  static canUpdateOrder(user: CurrentUser) {
     if (
       user.role !== "employee" ||
       user.organizationType !== "school" ||
-      user.organizationId !== order.schoolId
+      !user.organizationId
     ) {
       return {
         allowed: false,

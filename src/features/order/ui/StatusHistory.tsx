@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { uk } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { OrderHistory } from "../model/order.types";
+import { OrderHistory } from "../model/types";
 
 interface Props {
   history: OrderHistory[];

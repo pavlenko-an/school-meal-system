@@ -1,9 +1,8 @@
-import { OrderHistory, OrderInfo } from "@/features/order";
-import { OrderItemInfo } from "@/features/order-item";
-import { getAllOrderItems } from "@/features/order-item/queries/get-all-order-items.query";
+import { getAllOrderItems } from "@/features/order-item/model/queries";
+import { OrderItemInfo } from "@/features/order-item/model/types";
 import { OrderItemsTable } from "@/features/order-item/ui/OrderItemsTable";
-import { getOrderById } from "@/features/order/queries/get-order-by-id.query";
-import { getOrderHistory } from "@/features/order/queries/get-order-history.use-case";
+import { getOrderById, getOrderHistory } from "@/features/order/model/queries";
+import { OrderHistory, OrderInfo } from "@/features/order/model/types";
 import { OrderDetailsCard } from "@/features/order/ui/OrderDetailsCard";
 import StatusHistory from "@/features/order/ui/StatusHistory";
 import { getCurrentUser } from "@/shared/auth/current-user";

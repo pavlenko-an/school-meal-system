@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Eye } from "lucide-react";
-import { OrderInfo } from "../model/order.types";
+import { OrderInfo } from "../model/types";
 
 interface Props {
   orders: OrderInfo[];
@@ -98,10 +98,7 @@ export default function OrderTable({ orders, isLoading = false }: Props) {
                 </Badge>
               </TableCell>
               <TableCell className="text-right font-medium">
-                {new Intl.NumberFormat("uk-UA", {
-                  style: "currency",
-                  currency: "UAH",
-                }).format(order.totalPrice)}
+                {order.totalPrice} ₴
               </TableCell>
               <TableCell className="text-right">
                 <Button variant="ghost" size="icon" asChild>

@@ -5,9 +5,9 @@ import OrderTable from "@/features/order/ui/OrderTable";
 import Pagination from "@/components/common/Pagination";
 import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { getCurrentUser } from "@/shared/auth/current-user";
-import { OrdersList } from "@/features/order";
-import { getMyOrganizationOrdersSchema } from "@/features/order/model/get-my-organization-orders.schema";
-import { getMyOrganizationOrders } from "@/features/order/queries/get-my-organization-orders.query";
+import { getMyOrganizationOrdersSchema } from "@/features/order/model/params.schemas";
+import { getMyOrganizationOrders } from "@/features/order/model/queries";
+import { OrdersList } from "@/features/order/model/types";
 
 interface Props {
   searchParams: Promise<{
@@ -25,9 +25,13 @@ export default async function SchoolOrdersPage({ searchParams }: Props) {
 
   const query = {
     orderStatus:
-      paramsResolved.orderStatus !== "all" ? paramsResolved.orderStatus : undefined,
+      paramsResolved.orderStatus !== "all"
+        ? paramsResolved.orderStatus
+        : undefined,
     paymentStatus:
-      paramsResolved.paymentStatus !== "all" ? paramsResolved.paymentStatus : undefined,
+      paramsResolved.paymentStatus !== "all"
+        ? paramsResolved.paymentStatus
+        : undefined,
     from: paramsResolved.dateFrom,
     to: paramsResolved.dateTo,
     page: paramsResolved.page ? Number(paramsResolved.page) : 1,

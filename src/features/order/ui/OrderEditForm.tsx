@@ -1,24 +1,24 @@
 "use client";
 
-import { startTransition, useActionState, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useState, useTransition } from "react";
+import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import OrderHeader from "./OrderHeader";
 import OrderActions from "./OrderActions";
-import { updateOrder } from "../actions/update-order.action";
-import { createOrderItem } from "@/features/order-item/actions/create-order-item.action";
-import { updateOrderItem } from "@/features/order-item/actions/update-order-item.action";
-import { deleteOrderItem } from "@/features/order-item/actions/delete-order-item.action";
-import { updateOrderStatus } from "../actions/update-order-status.action";
-import { deleteOrder } from "../actions/delete-order.action";
-import { MenuItemInfo } from "@/features/menu-item";
-import { OrderItemInfo } from "@/features/order-item";
-import { createOrderInput, OrderInfo } from "../model/order.types";
+import { createOrderInput, OrderInfo } from "../model/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createOrderSchema } from "../model/create-order.schema";
 import AddItemDialog from "@/features/order-item/ui/AddItemDialog";
 import OrderItemRow from "@/features/order-item/ui/OrderItemRow";
+import { OrderItemInfo } from "@/features/order-item/model/types";
+import { MenuItemInfo } from "@/features/menu-item/model/types";
+import { createOrderSchema } from "../model/input.schemas";
+import { deleteOrder, updateOrder, updateOrderStatus } from "../api/actions";
+import {
+  createOrderItem,
+  deleteOrderItem,
+  updateOrderItem,
+} from "@/features/order-item/api/actions";
 
 interface Props {
   orderId: string;
@@ -35,6 +35,10 @@ export default function OrderEditForm({
 }: Props) {
   const router = useRouter();
   const [localItems, setLocalItems] = useState(initialItems);
+  const totalPrice = localItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0,
+  );
 
   const form = useForm<createOrderInput>({
     resolver: zodResolver(createOrderSchema),
@@ -46,21 +50,9 @@ export default function OrderEditForm({
     },
   });
 
-  const totalPrice = localItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0,
-  );
-
-  const [saveState, saveAction, isSavePending] = useActionState(
-    updateOrder,
-    null,
-  );
-  const [publishState, publishAction, isPublishPending] = useActionState(
-    updateOrderStatus,
-    null,
-  );
-  const [deleteOrderState, deleteOrderAction, isDeleteOrderPending] =
-    useActionState(deleteOrder, null);
+  const [isSaving, startSave] = useTransition();
+  const [isPublishing, startPublish] = useTransition();
+  const [isDeleting, startDelete] = useTransition();
 
   const handleAddItem = async (menuItemId: string, quantity: number) => {
     const optimisticItem: OrderItemInfo = {
@@ -77,12 +69,13 @@ export default function OrderEditForm({
         menuItemId,
         quantity,
       });
-      if (result.success) {
+      if (result.success && result.data) {
+        const created = result.data;
         setLocalItems((prev) =>
-          prev.map((i) => (i.id === optimisticItem.id ? result.data : i)),
+          prev.map((i) => (i.id === optimisticItem.id ? created : i)),
         );
         toast.success("Страву додано");
-      } else {
+      } else if (!result.success && result.error) {
         setLocalItems((prev) => prev.filter((i) => i.id !== optimisticItem.id));
         toast.error(result.error);
       }
@@ -101,8 +94,17 @@ export default function OrderEditForm({
     );
 
     try {
-      await updateOrderItem(null, { id: itemId, quantity });
-      toast.success("Кількість оновлено");
+      const result = await updateOrderItem(null, { id: itemId, quantity });
+      if (result.success && result.data) {
+        const updated = result.data;
+        setLocalItems((items) =>
+          items.map((i) => (i.id === itemId ? updated : i)),
+        );
+        toast.success("Кількість оновлено");
+      } else if (!result.success && result.error) {
+        setLocalItems(previousItems);
+        toast.error(result.error);
+      }
     } catch (err: unknown) {
       setLocalItems(previousItems);
       toast.error(
@@ -116,8 +118,13 @@ export default function OrderEditForm({
     setLocalItems((prev) => prev.filter((i) => i.id !== itemId));
 
     try {
-      await deleteOrderItem(null, { id: itemId });
-      toast.success("Позицію видалено");
+      const result = await deleteOrderItem(null, { id: itemId });
+      if (result.success) {
+        toast.success("Позицію видалено");
+      } else if (!result.success && result.error) {
+        setLocalItems(previousItems);
+        toast.error(result.error);
+      }
     } catch (err: unknown) {
       setLocalItems(previousItems);
       toast.error(
@@ -126,94 +133,106 @@ export default function OrderEditForm({
     }
   };
 
-  const handleSaveOrder = () => {
-    startTransition(() => {
-      saveAction({ id: orderId, ...form.getValues() });
+  const handleSaveOrder = form.handleSubmit((data) => {
+    startSave(async () => {
+      const result = await updateOrder(null, {
+        id: orderId,
+        deliveryDate: data.deliveryDate,
+        comment: data.comment,
+      });
+
+      if (result?.success) {
+        toast.success("Замовлення збережено");
+        router.push("/school/orders");
+      } else {
+        toast.error(result?.error ?? "Не вдалося зберегти");
+        if (result?.fieldErrors) {
+          Object.entries(result.fieldErrors).forEach(([key, msg]) => {
+            form.setError(key as keyof createOrderInput, {
+              message: msg?.join(", "),
+            });
+          });
+        }
+      }
     });
-  };
+  });
 
   const handlePublishOrder = () => {
-    startTransition(() => {
-      publishAction({ id: orderId, status: "published" });
+    startPublish(async () => {
+      const result = await updateOrderStatus(null, {
+        id: orderId,
+        status: "published",
+      });
+
+      if (result?.success) {
+        toast.success("Замовлення опубліковано");
+        router.push("/school/orders");
+      } else {
+        toast.error(result?.error ?? "Не вдалося опублікувати");
+      }
     });
   };
 
   const handleDeleteOrder = () => {
-    startTransition(() => {
-      deleteOrderAction({ id: orderId });
+    startDelete(async () => {
+      const result = await deleteOrder(null, { id: orderId });
+
+      if (result?.success) {
+        toast.success("Замовлення повністю видалено");
+        router.push("/school/orders");
+      } else {
+        toast.error(result?.error ?? "Не вдалося видалити");
+      }
     });
   };
 
-  useEffect(() => {
-    if (saveState?.success) {
-      toast.success("Замовлення збережено!");
-      router.push("/school/orders");
-    } else if (saveState?.success === false && saveState.error) {
-      toast.error(saveState.error);
-    }
-  }, [saveState, router]);
-
-  useEffect(() => {
-    if (publishState?.success) {
-      toast.success("Замовлення опубліковано!");
-      router.push("/school/orders");
-    } else if (publishState?.success === false && publishState.error) {
-      toast.error(publishState.error);
-    }
-  }, [publishState, router]);
-
-  useEffect(() => {
-    if (deleteOrderState?.success) {
-      toast.success("Замовлення видалено");
-      router.push("/school/orders");
-    } else if (deleteOrderState?.success === false && deleteOrderState.error) {
-      toast.error(deleteOrderState.error);
-    }
-  }, [deleteOrderState, router]);
-
   return (
-    <div className="space-y-10">
-      <OrderHeader form={form} />
+    <FormProvider {...form}>
+      <div className="space-y-10">
+        <OrderHeader />
 
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h3 className="text-xl font-semibold">Позиції замовлення</h3>
-          <AddItemDialog menuItems={menuItems} onAdd={handleAddItem} />
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xl font-semibold">Позиції замовлення</h3>
+            <AddItemDialog menuItems={menuItems} onAdd={handleAddItem} />
+          </div>
+          {localItems.length === 0 ? (
+            <div className="border-2 border-dashed border-muted-foreground/50 rounded-xl p-12 text-center text-muted-foreground">
+              Замовлення порожнє. Натисніть «Додати страву», щоб розпочати.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {localItems.map((item) => (
+                <OrderItemRow
+                  key={item.id}
+                  item={item}
+                  onUpdateQuantity={(qty) => handleUpdateQuantity(item.id, qty)}
+                  onRemove={() => handleRemoveItem(item.id)}
+                />
+              ))}
+            </div>
+          )}
         </div>
-        {localItems.length === 0 ? (
-          <div className="border-2 border-dashed border-muted-foreground/50 rounded-xl p-12 text-center text-muted-foreground">
-            Замовлення порожнє. Натисніть «Додати страву», щоб розпочати.
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {localItems.map((item) => (
-              <OrderItemRow
-                key={item.id}
-                item={item}
-                onUpdateQuantity={(qty) => handleUpdateQuantity(item.id, qty)}
-                onRemove={() => handleRemoveItem(item.id)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-      <div className="flex flex-col sm:flex-row justify-between items-center py-6 px-6 bg-muted/40 rounded-xl border">
-        <span className="text-xl font-semibold">Загальна сума замовлення:</span>
-        <span className="text-3xl font-bold text-primary mt-2 sm:mt-0">
-          {totalPrice.toLocaleString("uk-UA", {
-            style: "currency",
-            currency: "UAH",
-          })}
-        </span>
-      </div>
+        <div className="flex flex-col sm:flex-row justify-between items-center py-6 px-6 bg-muted/40 rounded-xl border">
+          <span className="text-xl font-semibold">
+            Загальна сума замовлення:
+          </span>
+          <span className="text-3xl font-bold text-primary mt-2 sm:mt-0">
+            {totalPrice.toLocaleString("uk-UA", {
+              style: "currency",
+              currency: "UAH",
+            })}
+          </span>
+        </div>
 
-      <OrderActions
-        onSave={handleSaveOrder}
-        onPublish={handlePublishOrder}
-        onDelete={handleDeleteOrder}
-        isSubmitting={isSavePending || isPublishPending || isDeleteOrderPending}
-        disabled={localItems.length === 0}
-      />
-    </div>
+        <OrderActions
+          onSave={handleSaveOrder}
+          onPublish={handlePublishOrder}
+          onDelete={handleDeleteOrder}
+          isSubmitting={isSaving || isPublishing || isDeleting}
+          disabled={localItems.length === 0}
+        />
+      </div>
+    </FormProvider>
   );
 }
