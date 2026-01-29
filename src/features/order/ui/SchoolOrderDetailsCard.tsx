@@ -1,8 +1,6 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,45 +12,54 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { OrderInfo } from "../model/types";
-import { useTransition } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { CheckCircle2, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { deleteOrder, updateOrderStatus } from "../api/actions";
+import { toast } from "sonner";
+import { OrderInfo } from "../model/types";
+import {
+  deleteOrder,
+  updateOrderStatus,
+  updatePaymentStatus,
+} from "../api/actions";
+import { OrderInfoDisplay } from "./OrderInfoDisplay";
+import { useTransition } from "react";
 
 interface Props {
   order: OrderInfo;
 }
 
-export function OrderDetailsCard({ order }: Props) {
+export function SchoolOrderDetailsCard({ order }: Props) {
   const router = useRouter();
 
   const permissions = {
     canDelete: order.orderStatus === "new",
     canEdit: order.orderStatus === "new",
     canPublish: order.orderStatus === "new",
+    canMarkAsPaid:
+      order.paymentStatus === "unpaid" && order.orderStatus === "accepted",
+    canComplete: order.orderStatus === "in_progress",
     canCancel: order.orderStatus === "published",
   };
+
+  const hasAnyAction = Object.values(permissions).some(Boolean);
 
   const statusLabels: Record<OrderInfo["orderStatus"], string> = {
     new: "Новий",
     published: "Опубліковано",
     accepted: "Прийнято",
-    in_progress: "В роботі",
+    in_progress: "В обробці",
     completed: "Завершено",
     cancelled: "Скасовано",
   };
 
-  const paymentStatusLabels: Record<OrderInfo["paymentStatus"], string> = {
-    unpaid: "Не оплачено",
-    paid: "Оплачено",
-    verified: "Підтверджено",
-  };
-
-  const [isPublishing, startPublish] = useTransition();
-  const [isCancelling, startCancel] = useTransition();
   const [isDeleting, startDelete] = useTransition();
+  const [isPublishing, startPublish] = useTransition();
+  const [isMarkingAsPaid, startMarkAsPaid] = useTransition();
+  const [isCompleting, startComplete] = useTransition();
+  const [isCancelling, startCancel] = useTransition();
 
   const handlePublish = () => {
     startPublish(async () => {
@@ -66,6 +73,38 @@ export function OrderDetailsCard({ order }: Props) {
         router.refresh();
       } else {
         toast.error(result?.error ?? "Не вдалося опублікувати");
+      }
+    });
+  };
+
+  const handleMarkAsPaid = () => {
+    startMarkAsPaid(async () => {
+      const result = await updatePaymentStatus(null, {
+        id: order.id,
+        status: "paid",
+      });
+
+      if (result?.success) {
+        toast.success("Замовлення позначено як оплачене");
+        router.refresh();
+      } else {
+        toast.error(result?.error ?? "Не вдалося позначити як оплачене");
+      }
+    });
+  };
+
+  const handleComplete = () => {
+    startComplete(async () => {
+      const result = await updateOrderStatus(null, {
+        id: order.id,
+        status: "completed",
+      });
+
+      if (result?.success) {
+        toast.success("Замовлення позначено як завершене");
+        router.refresh();
+      } else {
+        toast.error(result?.error ?? "Не вдалося позначити як завершене");
       }
     });
   };
@@ -118,62 +157,13 @@ export function OrderDetailsCard({ order }: Props) {
           </Badge>
         </CardTitle>
       </CardHeader>
-
-      <CardContent className="grid gap-6 md:grid-cols-2">
-        <div className="space-y-1">
-          <dt className="text-sm font-medium text-muted-foreground">
-            Дата поставки
-          </dt>
-          <dd className="text-lg font-medium">
-            {order.deliveryDate?.toLocaleDateString("uk-UA", {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </dd>
-        </div>
-
-        <div className="space-y-1">
-          <dt className="text-sm font-medium text-muted-foreground">
-            Статус оплати
-          </dt>
-          <dd>
-            <Badge
-              variant={order.paymentStatus === "paid" ? "default" : "secondary"}
-            >
-              {paymentStatusLabels[order.paymentStatus]}
-            </Badge>
-          </dd>
-        </div>
-
-        <div className="space-y-1 md:col-span-2">
-          <dt className="text-sm font-medium text-muted-foreground">
-            Коментар
-          </dt>
-          <dd className="text-base">
-            {order.comment || (
-              <span className="text-muted-foreground italic">
-                Немає коментаря
-              </span>
-            )}
-          </dd>
-        </div>
-
-        <div className="space-y-1 md:col-span-2">
-          <dt className="text-sm font-medium text-muted-foreground">
-            Загальна сума
-          </dt>
-          <dd className="text-2xl font-bold">{order.totalPrice} грн</dd>
-        </div>
-      </CardContent>
-
+      <OrderInfoDisplay order={order} />
       <div className="p-6 pt-0 flex flex-wrap gap-4">
         {permissions.canEdit && (
           <Button
             asChild
             variant="outline"
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto cursor-pointer"
             aria-label="Редагувати замовлення"
           >
             <Link href={`/school/orders/${order.id}/edit`}>
@@ -204,7 +194,10 @@ export function OrderDetailsCard({ order }: Props) {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Скасувати</AlertDialogCancel>
-                <AlertDialogAction onClick={handlePublish}>
+                <AlertDialogAction
+                  onClick={handlePublish}
+                  className="cursor-pointer"
+                >
                   Опублікувати
                 </AlertDialogAction>
               </AlertDialogFooter>
@@ -212,35 +205,72 @@ export function OrderDetailsCard({ order }: Props) {
           </AlertDialog>
         )}
 
-        {permissions.canDelete && (
+        {permissions.canMarkAsPaid && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
-                variant="destructive"
-                disabled={isDeleting}
+                variant="default"
+                disabled={isMarkingAsPaid}
                 className="w-full sm:w-auto cursor-pointer"
-                aria-label="Видалити замовлення"
+                aria-label="Позначити замовлення як сплачене"
               >
-                {isDeleting ? "Видаляємо..." : "Видалити замовлення"}
+                {isMarkingAsPaid
+                  ? "Позначаємо як сплачене..."
+                  : "Позначити як сплачене"}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>
-                  Видалити замовлення назавжди?
+                  Позначити замовлення як сплачене?
                 </AlertDialogTitle>
                 <AlertDialogDescription>
-                  Замовлення буде повністю видалено з бази даних. Цю дію
-                  неможливо скасувати.
+                  Після позначення замовлення як сплачене, статус оплати буде
+                  оновлено. Натискайте &quot;Позначити як сплачене&quot;, лише
+                  якщо ви впевнені, що оплата була виконана.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Скасувати</AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={handleDelete}
-                  className="bg-destructive hover:bg-destructive/90"
+                  onClick={handleMarkAsPaid}
+                  className="cursor-pointer"
                 >
-                  Видалити
+                  Позначити як сплачене
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+
+        {permissions.canComplete && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                disabled={isCompleting}
+                className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
+                aria-label="Завершити замовлення"
+              >
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                {isCompleting ? "Завершуємо..." : "Завершити замовлення"}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Завершити замовлення?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Після завершення будь-які подальші зміни будуть заборонені.
+                  Натискайте &quot;Завершити&quot;, лише якщо ви впевнені, що
+                  всі поставки виконані.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Скасувати</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleComplete}
+                  className="cursor-pointer"
+                >
+                  Завершити
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -253,7 +283,7 @@ export function OrderDetailsCard({ order }: Props) {
               <Button
                 variant="outline"
                 disabled={isCancelling}
-                className="w-full sm:w-auto border-destructive text-destructive hover:bg-destructive/10"
+                className="w-full sm:w-auto border-destructive text-destructive hover:bg-destructive/10 cursor-pointer"
                 aria-label="Скасувати замовлення"
               >
                 {isCancelling ? "Скасовуємо..." : "Скасувати замовлення"}
@@ -272,7 +302,7 @@ export function OrderDetailsCard({ order }: Props) {
                 <AlertDialogCancel>Залишити</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={handleCancel}
-                  className="bg-destructive hover:bg-destructive/90"
+                  className="bg-destructive hover:bg-destructive/90 cursor-pointer"
                 >
                   Скасувати
                 </AlertDialogAction>
@@ -281,7 +311,43 @@ export function OrderDetailsCard({ order }: Props) {
           </AlertDialog>
         )}
 
-        {!permissions.canDelete && !permissions.canCancel && (
+        {permissions.canDelete && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="destructive"
+                disabled={isDeleting}
+                className="w-full sm:w-auto cursor-pointer"
+                aria-label="Видалити замовлення"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                {isDeleting ? "Видаляємо..." : "Видалити замовлення"}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  Видалити замовлення назавжди?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  Замовлення буде повністю видалено з бази даних. Цю дію
+                  неможливо скасувати.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Скасувати</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  className="bg-destructive hover:bg-destructive/90 cursor-pointer"
+                >
+                  Видалити
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+
+        {!hasAnyAction && (
           <p className="text-sm text-muted-foreground italic">Дії недоступні</p>
         )}
       </div>

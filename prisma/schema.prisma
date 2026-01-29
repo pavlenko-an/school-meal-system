@@ -135,6 +135,7 @@ model Order {
   orderItems           OrderItem[]          @relation("OrderOrderItems")
   orderStatusHistories OrderStatusHistory[] @relation("OrderStatusHistoryOrders")
   createdAt            DateTime             @default(now()) @map("created_at")
+  publishedAt          DateTime?            @map("published_at")
   updatedAt            DateTime             @updatedAt @map("updated_at")
 
   @@index([orderStatus])

@@ -39,6 +39,7 @@ export const OrderService = {
         paymentStatus: true,
         totalPrice: true,
         createdAt: true,
+        publishedAt: true,
         school: {
           select: {
             id: true,
@@ -102,6 +103,7 @@ export const OrderService = {
         paymentStatus: true,
         totalPrice: true,
         createdAt: true,
+        publishedAt: true,
         school: {
           select: {
             id: true,
@@ -161,6 +163,7 @@ export const OrderService = {
           paymentStatus: true,
           totalPrice: true,
           createdAt: true,
+          publishedAt: true,
           school: {
             select: {
               id: true,
@@ -228,6 +231,7 @@ export const OrderService = {
           paymentStatus: true,
           totalPrice: true,
           createdAt: true,
+          publishedAt: true,
           school: {
             select: {
               id: true,

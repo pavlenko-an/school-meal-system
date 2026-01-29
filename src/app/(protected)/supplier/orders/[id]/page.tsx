@@ -3,8 +3,8 @@ import { OrderItemInfo } from "@/features/order-item/model/types";
 import { OrderItemsTable } from "@/features/order-item/ui/OrderItemsTable";
 import { getOrderById, getOrderHistory } from "@/features/order/model/queries";
 import { OrderHistory, OrderInfo } from "@/features/order/model/types";
-import { SchoolOrderDetailsCard } from "@/features/order/ui/SchoolOrderDetailsCard";
 import StatusHistory from "@/features/order/ui/StatusHistory";
+import { SupplierOrderDetailsCard } from "@/features/order/ui/SupplierOrderDetailsCard";
 import { getCurrentUser } from "@/shared/auth/current-user";
 import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 
@@ -12,7 +12,7 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
-export default async function SchoolOrderDetailPage({ params }: Props) {
+export default async function SupplierOrderDetailPage({ params }: Props) {
   const { id } = await params;
   const currentUser = await getCurrentUser();
   if (!currentUser) {
@@ -33,13 +33,16 @@ export default async function SchoolOrderDetailPage({ params }: Props) {
             Замовлення #{id.slice(0, 8)}
           </h1>
           <p className="text-muted-foreground mt-2">
-            Створено: {new Date(order.createdAt).toLocaleString("uk-UA")}
+            Опубліковано:{" "}
+            {order.publishedAt
+              ? new Date(order.publishedAt).toLocaleString("uk-UA")
+              : "Не опубліковано"}
           </p>
         </div>
       </div>
 
       <div className="space-y-8">
-        <SchoolOrderDetailsCard order={order} />
+        <SupplierOrderDetailsCard order={order} />
         <OrderItemsTable items={orderItems} />
         <StatusHistory history={statusHistory} />
       </div>

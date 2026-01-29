@@ -151,8 +151,8 @@ async function main() {
   } else {
     const additionalOrders = [
       {
-        comment: "New draft order - January",
-        deliveryDate: new Date("2026-03-10"),
+        comment: "New draft order - April",
+        deliveryDate: new Date("2026-04-10"),
         status: "new" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         history: [],
@@ -163,18 +163,19 @@ async function main() {
 
       {
         comment: "Published for bidding",
-        deliveryDate: new Date("2026-02-10"),
+        deliveryDate: new Date("2026-03-10"),
         status: "published" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         history: [{ from: "new", to: "published" }],
         items: [{ name: "Вегетаріанська паста", qty: 15 }],
         schoolActor: true,
         supplierActor: false,
+        published: new Date(),
       },
 
       {
         comment: "Accepted by supplier",
-        deliveryDate: new Date("2026-01-10"),
+        deliveryDate: new Date("2026-02-10"),
         status: "accepted" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         history: [
@@ -187,11 +188,12 @@ async function main() {
         ],
         schoolActor: true,
         supplierActor: true,
+        published: new Date(),
       },
 
       {
         comment: "In progress - being prepared",
-        deliveryDate: new Date("2025-12-10"),
+        deliveryDate: new Date("2026-01-10"),
         status: "in_progress" as OrderStatus,
         payment: "verified" as PaymentStatus,
         history: [
@@ -202,11 +204,12 @@ async function main() {
         items: [{ name: "Апельсиновий сік", qty: 60 }],
         schoolActor: true,
         supplierActor: true,
+        published: new Date(),
       },
 
       {
         comment: "Completed & delivered",
-        deliveryDate: new Date("2025-11-10"),
+        deliveryDate: new Date("2025-12-10"),
         status: "completed" as OrderStatus,
         payment: "verified" as PaymentStatus,
         history: [
@@ -218,11 +221,12 @@ async function main() {
         items: [{ name: "Шоколадний брауні", qty: 30 }],
         schoolActor: true,
         supplierActor: true,
+        published: new Date(),
       },
 
       {
         comment: "Cancelled by school - no longer needed",
-        deliveryDate: new Date("2025-10-10"),
+        deliveryDate: new Date("2025-11-10"),
         status: "cancelled" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         history: [
@@ -232,11 +236,12 @@ async function main() {
         items: [{ name: "Салат з овочів", qty: 10 }],
         schoolActor: true,
         supplierActor: false,
+        published: new Date(),
       },
 
       {
         comment: "Cancelled by supplier - out of stock",
-        deliveryDate: new Date("2025-09-10"),
+        deliveryDate: new Date("2025-10-10"),
         status: "cancelled" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         history: [
@@ -247,6 +252,7 @@ async function main() {
         items: [{ name: "Картопляне пюре", qty: 18 }],
         schoolActor: true,
         supplierActor: true,
+        published: new Date(),
       },
     ];
 
@@ -261,6 +267,7 @@ async function main() {
             paymentStatus: ord.payment,
             totalPrice: 0,
             comment: ord.comment,
+            publishedAt: ord.published,
           },
         });
 

@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const secret = process.env.NEXTAUTH_SECRET;
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const token = await getToken({
     req: request,
     secret,
@@ -40,14 +40,14 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/school") &&
     (role !== "employee" || organizationType !== "school")
   ) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(new URL("/supplier/dashboard", request.url));
   }
 
   if (
     pathname.startsWith("/supplier") &&
     (role !== "employee" || organizationType !== "supplier")
   ) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(new URL("/school/dashboard", request.url));
   }
 
   return NextResponse.next();

@@ -1,36 +1,26 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { format } from "date-fns";
+import { uk } from "date-fns/locale";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { uk } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 interface Props {
   currentParams: {
-    orderStatus?: string;
-    paymentStatus?: string;
     dateFrom?: string;
     dateTo?: string;
   };
-  allowedOrderStatuses?: { value: string; label: string }[];
 }
 
-export default function OrdersFilters({ currentParams, allowedOrderStatuses }: Props) {
+export default function DateRangeFilters({ currentParams }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -46,54 +36,8 @@ export default function OrdersFilters({ currentParams, allowedOrderStatuses }: P
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  const orderOptions =
-    allowedOrderStatuses ?? [
-      { value: "all", label: "Всі" },
-      { value: "new", label: "Нові" },
-      { value: "published", label: "Опубліковані" },
-      { value: "accepted", label: "Прийняті" },
-      { value: "in_progress", label: "В обробці" },
-      { value: "completed", label: "Завершені" },
-      { value: "cancelled", label: "Скасовані" },
-    ];
-
   return (
-    <div className="space-y-4 flex flex-wrap md:flex-nowrap md:items-center md:justify-center md:space-y-0 gap-2 md:gap-4">
-      <Select
-        value={currentParams.orderStatus || "all"}
-        onValueChange={(value) =>
-          updateFilter("orderStatus", value === "all" ? undefined : value)
-        }
-      >
-        <SelectTrigger className="w-45">
-          <SelectValue placeholder="Статус замовлення" />
-        </SelectTrigger>
-        <SelectContent position="popper">
-          {orderOptions.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>
-              {opt.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select
-        value={currentParams.paymentStatus || "all"}
-        onValueChange={(value) =>
-          updateFilter("paymentStatus", value === "all" ? undefined : value)
-        }
-      >
-        <SelectTrigger className="w-45">
-          <SelectValue placeholder="Статус оплати" />
-        </SelectTrigger>
-        <SelectContent position="popper">
-          <SelectItem value="all">Всі оплати</SelectItem>
-          <SelectItem value="unpaid">Неоплачені</SelectItem>
-          <SelectItem value="paid">Оплачені</SelectItem>
-          <SelectItem value="verified">Підтверджені</SelectItem>
-        </SelectContent>
-      </Select>
-
+    <div className="space-y-4 flex flex-wrap gap-2 mb-2 md:flex-nowrap md:items-center md:justify-center md:space-y-0  md:gap-4">
       <Popover>
         <PopoverTrigger asChild>
           <Button

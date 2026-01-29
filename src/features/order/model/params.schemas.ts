@@ -22,18 +22,17 @@ export const getMyOrganizationOrdersSchema = z.object({
   from: z.coerce.date().optional(),
   to: z.coerce.date().optional(),
   orderStatus: z
-    .enum(
-      [
-        "all",
-        "new",
-        "published",
-        "accepted",
-        "in_progress",
-        "completed",
-        "cancelled",
-      ],
-      "Invalid order status",
-    )
+    .union([
+      z.array(
+        z.enum(
+          ["new", "published", "accepted", "in_progress", "completed", "cancelled"],
+        ),
+      ),
+      z.enum(
+        ["all", "new", "published", "accepted", "in_progress", "completed", "cancelled"],
+      ),
+    ])
+    .optional()
     .default("all"),
   paymentStatus: z
     .enum(["all", "unpaid", "paid", "verified"], "Invalid payment status")
@@ -45,6 +44,19 @@ export const getMyOrganizationOrdersSchema = z.object({
 export const getMyOrganizationStatsSchema = z.object({
   from: z.coerce.date().optional(),
   to: z.coerce.date().optional(),
+  statuses: z
+    .array(
+      z.enum([
+        "new",
+        "published",
+        "accepted",
+        "in_progress",
+        "completed",
+        "cancelled",
+      ]),
+    )
+    .optional()
+    .default(["accepted", "in_progress", "completed", "cancelled"]),
 });
 
 export const getOrderByIdSchema = z.object({

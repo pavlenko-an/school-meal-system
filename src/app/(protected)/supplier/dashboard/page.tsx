@@ -19,7 +19,7 @@ interface Props {
   }>;
 }
 
-export default async function SchoolDashboard({ searchParams }: Props) {
+export default async function SupplierDashboard({ searchParams }: Props) {
   const paramsResolved = await searchParams;
 
   const filters = {
@@ -31,8 +31,6 @@ export default async function SchoolDashboard({ searchParams }: Props) {
     from: filters.from,
     to: filters.to,
     statuses: [
-      "new",
-      "published",
       "accepted",
       "in_progress",
       "completed",
@@ -49,6 +47,7 @@ export default async function SchoolDashboard({ searchParams }: Props) {
   if (!currentUser) {
     throw new UnauthorizedError("Unauthorized");
   }
+  const userOrganization = currentUser.organizationType;
   const data: OrdersStats = await getMyOrganizationStats(query, currentUser);
   const stats = {
     totalOrders: data.stats?.totalOrders ?? 0,
@@ -70,16 +69,18 @@ export default async function SchoolDashboard({ searchParams }: Props) {
         upcomingDelivery={stats.upcomingDelivery}
         totalUnpaid={stats.totalUnpaid}
       />
-      <UpcomingOrdersCard orders={data.upcoming ?? []} />
-      <RecentOrdersCard orders={data.recent ?? []} />
+      <UpcomingOrdersCard orders={data.upcoming ?? []} organizationType={userOrganization}/>
+      <RecentOrdersCard orders={data.recent ?? []} organizationType={userOrganization}/>
       <div className="flex justify-center md:justify-start pt-4">
         <Button
           asChild
           size="lg"
           className="w-full sm:w-auto"
-          aria-label="Створити нове замовлення"
+          aria-label="Переглянути опубліковані замовлення"
         >
-          <Link href="/school/orders/new">Створити нове замовлення</Link>
+          <Link href="/supplier/orders/published">
+            Переглянути опубліковані замовлення
+          </Link>
         </Button>
       </div>
     </div>

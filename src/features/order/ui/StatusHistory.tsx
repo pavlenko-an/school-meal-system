@@ -14,7 +14,7 @@ const statusLabels: Record<string, string> = {
   new: "Новий",
   published: "Опубліковано",
   accepted: "Прийнято",
-  in_progress: "В роботі",
+  in_progress: "В обробці",
   completed: "Завершено",
   cancelled: "Скасовано",
 };

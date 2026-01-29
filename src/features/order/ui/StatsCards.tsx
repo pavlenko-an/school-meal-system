@@ -1,73 +1,97 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, DollarSign, Package } from "lucide-react";
+import { CalendarDays, DollarSign, PackageCheck } from "lucide-react";
+import { format } from "date-fns";
+import { uk } from "date-fns/locale";
 
 interface Props {
-  ordersCount: number;
-  nextDelivery: {
+  totalOrders: number;
+  activeOrders: number;
+  upcomingDelivery: {
     deliveryDate: Date | null;
+    organizationName: string | null;
     comment: string | null;
   } | null;
-  unpaidAmount: number;
+  totalUnpaid: number;
 }
 
 export default function StatsCards({
-  ordersCount,
-  nextDelivery,
-  unpaidAmount,
+  totalOrders,
+  activeOrders,
+  upcomingDelivery,
+  totalUnpaid,
 }: Props) {
   return (
-    <div className="grid gap-6 md:grid-cols-3 mb-2">
+    <div className="grid gap-6 md:grid-cols-4 mb-2">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">
-            Замовлень за обраний період
+            Усього замовлень
           </CardTitle>
-          <Package className="h-4 w-4 text-muted-foreground" />
+          <PackageCheck className="h-5 w-5 text-green-600" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{ordersCount}</div>
-          <p className="text-xs text-muted-foreground">
-            +3 порівняно з минулим місяцем (необхідно змінити статичне значення)
-          </p>
+          <div className="text-2xl font-bold">{totalOrders}</div>
+          <p className="text-xs text-muted-foreground">за обраний період</p>
         </CardContent>
       </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">
+            Активних замовлень
+          </CardTitle>
+          <PackageCheck className="h-5 w-5 text-blue-600" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{activeOrders}</div>
+          <p className="text-xs text-muted-foreground">за обраний період</p>
+        </CardContent>
+      </Card>
+
+      {upcomingDelivery && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Наступна поставка
+            </CardTitle>
+            <CalendarDays className="h-5 w-5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-xl font-bold">
+                  {format(upcomingDelivery.deliveryDate!, "dd MMMM yyyy", {
+                    locale: uk,
+                  })}
+                </p>
+                <p className="text-md mt-1">
+                  {upcomingDelivery.organizationName}
+                </p>
+                {upcomingDelivery.comment && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Коментар: {upcomingDelivery.comment}
+                  </p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">
-            Наступна поставка
+            Неоплачених замовлень
           </CardTitle>
-          <CalendarDays className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {nextDelivery
-              ? nextDelivery.deliveryDate?.toLocaleDateString("uk-UA")
-              : "—"}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {nextDelivery?.comment ?? "—"}
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
-            Сума неоплачених за обраний період
-          </CardTitle>
-          <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <DollarSign className="h-5 w-5 text-amber-600" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
             {new Intl.NumberFormat("uk-UA", {
               style: "currency",
               currency: "UAH",
-            }).format(unpaidAmount)}
+            }).format(totalUnpaid)}{" "}
           </div>
-          <p className="text-xs text-muted-foreground">
-            {ordersCount} замовлення
-          </p>
+          <p className="text-xs text-muted-foreground">за обраний період</p>
         </CardContent>
       </Card>
     </div>

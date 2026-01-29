@@ -16,6 +16,7 @@ import { OrderInfo } from "../model/types";
 
 interface Props {
   orders: OrderInfo[];
+  organizationType?: "school" | "supplier";
   isLoading?: boolean;
 }
 
@@ -28,7 +29,11 @@ const statusColors: Record<OrderInfo["orderStatus"], string> = {
   cancelled: "bg-red-100 text-red-800",
 };
 
-export default function OrderTable({ orders, isLoading = false }: Props) {
+export default function OrderTable({
+  orders,
+  organizationType,
+  isLoading = false,
+}: Props) {
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -51,14 +56,14 @@ export default function OrderTable({ orders, isLoading = false }: Props) {
     new: "Новий",
     published: "Опубліковано",
     accepted: "Прийнято",
-    in_progress: "В роботі",
+    in_progress: "В обробці",
     completed: "Завершено",
     cancelled: "Скасовано",
   };
 
   const paymentStatusLabels: Record<OrderInfo["paymentStatus"], string> = {
-    unpaid: "Не оплачено",
-    paid: "Оплачено",
+    unpaid: "Не сплачено",
+    paid: "Сплачено",
     verified: "Підтверджено",
   };
 
@@ -102,7 +107,7 @@ export default function OrderTable({ orders, isLoading = false }: Props) {
               </TableCell>
               <TableCell className="text-right">
                 <Button variant="ghost" size="icon" asChild>
-                  <Link href={`/school/orders/${order.id}`}>
+                  <Link href={`/${organizationType}/orders/${order.id}`}>
                     <Eye
                       className="h-4 w-4"
                       aria-label="Переглянути замовлення"

@@ -14,7 +14,6 @@ import {
   updatePaymentStatusSchema,
 } from "./input.schemas";
 
-
 export type getAllOrdersInput = z.infer<typeof getAllOrdersSchema>;
 export type getOrderByIdInput = z.infer<typeof getOrderByIdSchema>;
 export type getMyOrganizationStatsInput = z.infer<
@@ -32,7 +31,6 @@ export type updatePaymentStatusInput = z.infer<
 >;
 export type deleteOrderInput = z.infer<typeof deleteOrderSchema>;
 
-
 export type OrderInfo = {
   id: string;
   deliveryDate: Date | null;
@@ -47,6 +45,7 @@ export type OrderInfo = {
   paymentStatus: "unpaid" | "paid" | "verified";
   totalPrice: number;
   createdAt: Date;
+  publishedAt: Date | null;
   school: {
     id: string;
     name: string;
@@ -68,12 +67,14 @@ export type OrdersStats = {
   recent: OrderInfo[];
   upcoming: OrderInfo[];
   stats: {
-    ordersCount: number;
-    nextDelivery: {
+    totalOrders: number;
+    activeOrders: number;
+    upcomingDelivery: {
       deliveryDate: Date | null;
+      organizationName: string | null;
       comment: string | null;
-    };
-    unpaidAmount: number;
+    } | null;
+    totalUnpaid: number;
   };
 };
 

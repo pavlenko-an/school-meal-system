@@ -6,9 +6,15 @@ import { Eye } from "lucide-react";
 
 interface Props {
   orders: OrderInfo[];
+  organizationType?: "school" | "supplier";
 }
 
-export default function RecentOrdersHistoryCard({ orders }: Props) {
+export default function RecentOrdersHistoryCard({
+  orders,
+  organizationType,
+}: Props) {
+  const today = new Date().toISOString().split("T")[0];
+
   return (
     <Card>
       <CardHeader>
@@ -20,7 +26,7 @@ export default function RecentOrdersHistoryCard({ orders }: Props) {
             asChild
             aria-label="Переглянути всі минулі поставки"
           >
-            <Link href="/school/orders?dateTo=today">Усі минулі</Link>
+            <Link href={`/${organizationType}/orders?dateTo=${today}`}>Усі минулі</Link>
           </Button>
         </div>
       </CardHeader>
@@ -51,7 +57,7 @@ export default function RecentOrdersHistoryCard({ orders }: Props) {
                       currency: "UAH",
                     }).format(order.totalPrice)}
                   </p>
-                  <Link href={`/school/orders/${order.id}`}>
+                  <Link href={`/${organizationType}/orders/${order.id}`}>
                     <Eye
                       className="h-4 w-4"
                       aria-label="Переглянути замовлення"

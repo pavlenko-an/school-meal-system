@@ -50,7 +50,7 @@ const navItems: NavItem[] = [
     orgTypes: ["school"],
   },
   {
-    label: "Вхідні замовлення",
+    label: "Замовлення",
     href: "/supplier/orders",
     icon: ShoppingCart,
     roles: ["employee"],
