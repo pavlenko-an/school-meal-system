@@ -46,7 +46,7 @@ export default async function SchoolOrdersPage({ searchParams }: Props) {
   });
 
   const currentUser = await getCurrentUser();
-  if (!currentUser) {
+  if (!currentUser || currentUser.organizationType !== "school") {
     throw new UnauthorizedError("Unauthorized");
   }
 
@@ -68,7 +68,10 @@ export default async function SchoolOrdersPage({ searchParams }: Props) {
       >
         <OrdersFilters currentParams={paramsResolved} />
       </Suspense>
-      <OrderTable orders={data.orders} />
+      <OrderTable
+        orders={data.orders}
+        organizationType={currentUser.organizationType}
+      />
       <Pagination
         currentPage={data.page}
         totalPages={data.totalPages}

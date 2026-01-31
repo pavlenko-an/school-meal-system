@@ -36,6 +36,13 @@ const navItems: NavItem[] = [
     icon: LayoutDashboard,
   },
   {
+    label: "Меню",
+    href: "/school/menu",
+    icon: UtensilsCrossed,
+    roles: ["employee"],
+    orgTypes: ["school"],
+  },
+  {
     label: "Замовлення",
     href: "/school/orders",
     icon: ShoppingCart,
@@ -43,8 +50,15 @@ const navItems: NavItem[] = [
     orgTypes: ["school"],
   },
   {
-    label: "Створити замовлення",
+    label: "Чорновики",
     href: "/school/orders/new",
+    icon: ShoppingCart,
+    roles: ["employee"],
+    orgTypes: ["school"],
+  },
+  {
+    label: "Створити замовлення",
+    href: "/school/orders/create",
     icon: UtensilsCrossed,
     roles: ["employee"],
     orgTypes: ["school"],
@@ -57,11 +71,11 @@ const navItems: NavItem[] = [
     orgTypes: ["supplier"],
   },
   {
-    label: "Меню",
-    href: "/school/menu",
-    icon: UtensilsCrossed,
+    label: "Опубліковані",
+    href: "/supplier/orders/published",
+    icon: ShoppingCart,
     roles: ["employee"],
-    orgTypes: ["school"],
+    orgTypes: ["supplier"],
   },
   {
     label: "Організації",
@@ -161,7 +175,7 @@ export default function Sidebar() {
           <ScrollArea className="flex-1 px-3">
             <nav className="space-y-1">
               {visibleItems.map((item) => {
-                const isActive = pathname.startsWith(item.href);
+                const isActive = pathname === item.href;
                 return (
                   <Link
                     key={item.href}
@@ -215,7 +229,7 @@ export default function Sidebar() {
 
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {visibleItems.map((item) => {
-            const isActive = pathname.startsWith(item.href);
+            const isActive = pathname === item.href;
             return (
               <Link
                 key={item.href}

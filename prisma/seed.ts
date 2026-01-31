@@ -162,6 +162,17 @@ async function main() {
       },
 
       {
+        comment: "New draft order - April",
+        deliveryDate: new Date("2026-04-20"),
+        status: "new" as OrderStatus,
+        payment: "unpaid" as PaymentStatus,
+        history: [],
+        items: [{ name: "Смажена куряча грудка", qty: 8 }],
+        schoolActor: false,
+        supplierActor: false,
+      },
+
+      {
         comment: "Published for bidding",
         deliveryDate: new Date("2026-03-10"),
         status: "published" as OrderStatus,
@@ -174,8 +185,38 @@ async function main() {
       },
 
       {
+        comment: "Published for bidding",
+        deliveryDate: new Date("2026-03-20"),
+        status: "published" as OrderStatus,
+        payment: "unpaid" as PaymentStatus,
+        history: [{ from: "new", to: "published" }],
+        items: [{ name: "Вегетаріанська паста", qty: 15 }],
+        schoolActor: true,
+        supplierActor: false,
+        published: new Date(),
+      },
+
+      {
         comment: "Accepted by supplier",
         deliveryDate: new Date("2026-02-10"),
+        status: "accepted" as OrderStatus,
+        payment: "unpaid" as PaymentStatus,
+        history: [
+          { from: "new", to: "published" },
+          { from: "published", to: "accepted" },
+        ],
+        items: [
+          { name: "Бургер з яловичини", qty: 25 },
+          { name: "Картопля фрі", qty: 40 },
+        ],
+        schoolActor: true,
+        supplierActor: true,
+        published: new Date(),
+      },
+
+      {
+        comment: "Accepted by supplier",
+        deliveryDate: new Date("2026-02-20"),
         status: "accepted" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         history: [
@@ -208,8 +249,41 @@ async function main() {
       },
 
       {
+        comment: "In progress - being prepared",
+        deliveryDate: new Date("2026-01-20"),
+        status: "in_progress" as OrderStatus,
+        payment: "verified" as PaymentStatus,
+        history: [
+          { from: "new", to: "published" },
+          { from: "published", to: "accepted" },
+          { from: "accepted", to: "in_progress" },
+        ],
+        items: [{ name: "Апельсиновий сік", qty: 60 }],
+        schoolActor: true,
+        supplierActor: true,
+        published: new Date(),
+      },
+
+      {
         comment: "Completed & delivered",
         deliveryDate: new Date("2025-12-10"),
+        status: "completed" as OrderStatus,
+        payment: "verified" as PaymentStatus,
+        history: [
+          { from: "new", to: "published" },
+          { from: "published", to: "accepted" },
+          { from: "accepted", to: "in_progress" },
+          { from: "in_progress", to: "completed" },
+        ],
+        items: [{ name: "Шоколадний брауні", qty: 30 }],
+        schoolActor: true,
+        supplierActor: true,
+        published: new Date(),
+      },
+
+      {
+        comment: "Completed & delivered",
+        deliveryDate: new Date("2025-12-20"),
         status: "completed" as OrderStatus,
         payment: "verified" as PaymentStatus,
         history: [
@@ -240,8 +314,39 @@ async function main() {
       },
 
       {
+        comment: "Cancelled by school - no longer needed",
+        deliveryDate: new Date("2025-11-20"),
+        status: "cancelled" as OrderStatus,
+        payment: "unpaid" as PaymentStatus,
+        history: [
+          { from: "new", to: "published" },
+          { from: "published", to: "cancelled" },
+        ],
+        items: [{ name: "Салат з овочів", qty: 10 }],
+        schoolActor: true,
+        supplierActor: false,
+        published: new Date(),
+      },
+
+      {
         comment: "Cancelled by supplier - out of stock",
         deliveryDate: new Date("2025-10-10"),
+        status: "cancelled" as OrderStatus,
+        payment: "unpaid" as PaymentStatus,
+        history: [
+          { from: "new", to: "published" },
+          { from: "published", to: "accepted" },
+          { from: "accepted", to: "cancelled" },
+        ],
+        items: [{ name: "Картопляне пюре", qty: 18 }],
+        schoolActor: true,
+        supplierActor: true,
+        published: new Date(),
+      },
+
+      {
+        comment: "Cancelled by supplier - out of stock",
+        deliveryDate: new Date("2025-10-20"),
         status: "cancelled" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         history: [

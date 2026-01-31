@@ -62,6 +62,26 @@ export async function getAllUsers(
   return users;
 }
 
+export async function getAllUsersStats() {
+  const [total, admins, employees, withOrg, withoutOrg] = await Promise.all([
+    prisma.user.count(),
+    prisma.user.count({ where: { role: "admin" } }),
+    prisma.user.count({ where: { role: "employee" } }),
+    prisma.user.count({ where: { organizationId: { not: null } } }),
+    prisma.user.count({ where: { organizationId: null } }),
+  ]);
+
+  return {
+    total,
+    admins,
+    employees,
+    withOrg,
+    withoutOrg,
+    adminsPercentage: total > 0 ? Math.round((admins / total) * 100) : 0,
+    employeesPercentage: total > 0 ? Math.round((employees / total) * 100) : 0,
+  };
+}
+
 export async function getUserById(
   data: getUserByIdInput,
   currentUser: CurrentUser,

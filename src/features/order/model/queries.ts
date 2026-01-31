@@ -90,6 +90,89 @@ export async function getAllOrders(
   }));
 }
 
+export async function getAllOrdersStats() {
+  const [
+    total,
+    byStatus,
+    totalValue,
+    unpaidValue,
+    completedValue,
+    upcomingCount,
+  ] = await Promise.all([
+    prisma.order.count(),
+
+    prisma.order.groupBy({
+      by: ["orderStatus"],
+      _count: { id: true },
+    }),
+
+    prisma.order
+      .aggregate({
+        _sum: { totalPrice: true },
+      })
+      .then((r) => Number(r._sum.totalPrice ?? 0)),
+
+    prisma.order
+      .aggregate({
+        _sum: { totalPrice: true },
+        where: {
+          paymentStatus: "unpaid",
+          orderStatus: { not: "cancelled" },
+        },
+      })
+      .then((r) => Number(r._sum.totalPrice ?? 0)),
+
+    prisma.order
+      .aggregate({
+        _sum: { totalPrice: true },
+        where: { orderStatus: "completed" },
+      })
+      .then((r) => Number(r._sum.totalPrice ?? 0)),
+
+    prisma.order.count({
+      where: {
+        deliveryDate: { gte: new Date() },
+        orderStatus: { in: ["in_progress"] },
+      },
+    }),
+  ]);
+
+  const statusCounts = Object.fromEntries(
+    byStatus.map((item) => [item.orderStatus, item._count.id]),
+  );
+
+  return {
+    total,
+    statusCounts: {
+      new: statusCounts.new ?? 0,
+      published: statusCounts.published ?? 0,
+      accepted: statusCounts.accepted ?? 0,
+      in_progress: statusCounts.in_progress ?? 0,
+      completed: statusCounts.completed ?? 0,
+      cancelled: statusCounts.cancelled ?? 0,
+    },
+    totalValue,
+    unpaidValue,
+    completedValue,
+    upcomingActiveDeliveries: upcomingCount,
+  };
+}
+
+export async function getRecentOrders(limit = 5) {
+  return prisma.order.findMany({
+    take: limit,
+    orderBy: { deliveryDate: "desc" },
+    select: {
+      id: true,
+      createdAt: true,
+      totalPrice: true,
+      orderStatus: true,
+      school: { select: { name: true } },
+      supplier: { select: { name: true } },
+    },
+  });
+}
+
 export async function getMyOrganizationOrders(
   data: getMyOrganizationOrdersInput,
   currentUser: CurrentUser,

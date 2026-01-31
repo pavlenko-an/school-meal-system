@@ -15,7 +15,7 @@ interface Props {
 export default async function SupplierOrderDetailPage({ params }: Props) {
   const { id } = await params;
   const currentUser = await getCurrentUser();
-  if (!currentUser) {
+  if (!currentUser || currentUser.organizationType !== "supplier") {
     throw new UnauthorizedError("Unauthorized");
   }
   const order: OrderInfo = await getOrderById({ id }, currentUser);

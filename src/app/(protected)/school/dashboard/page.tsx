@@ -1,16 +1,15 @@
 import StatsCards from "@/features/order/ui/StatsCards";
-import UpcomingOrdersCard from "@/features/order/ui/UpcomingOrdersCard";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { getCurrentUser } from "@/shared/auth/current-user";
 import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
-import RecentOrdersCard from "@/features/order/ui/RecentOrdersCard";
 import { getMyOrganizationStatsSchema } from "@/features/order/model/params.schemas";
 import { getMyOrganizationStats } from "@/features/order/model/queries";
 import { OrdersStats } from "@/features/order/model/types";
-import { Suspense } from "react";
+import { cache, Suspense } from "react";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import DateRangeFilters from "@/features/order/ui/DateRangeFilter";
+import OrdersPeriodCard from "@/features/order/ui/OrdersPeriodCard";
 
 interface Props {
   searchParams: Promise<{
@@ -49,7 +48,12 @@ export default async function SchoolDashboard({ searchParams }: Props) {
   if (!currentUser) {
     throw new UnauthorizedError("Unauthorized");
   }
-  const data: OrdersStats = await getMyOrganizationStats(query, currentUser);
+
+  const getMyOrganizationStatsCached = cache(async () => {
+    return await getMyOrganizationStats(query, currentUser);
+  });
+
+  const data: OrdersStats = await getMyOrganizationStatsCached();
   const stats = {
     totalOrders: data.stats?.totalOrders ?? 0,
     activeOrders: data.stats?.activeOrders ?? 0,
@@ -70,8 +74,24 @@ export default async function SchoolDashboard({ searchParams }: Props) {
         upcomingDelivery={stats.upcomingDelivery}
         totalUnpaid={stats.totalUnpaid}
       />
-      <UpcomingOrdersCard orders={data.upcoming ?? []} />
-      <RecentOrdersCard orders={data.recent ?? []} />
+      <div className="flex flex-col gap-2">
+        <OrdersPeriodCard
+          title="Майбутні замовлення"
+          emptyText="Наразі немає запланованих замовлень"
+          orders={data.upcoming ?? []}
+          organizationType={currentUser.organizationType}
+          filterParam="dateFrom"
+          allLinkText="Усі майбутні"
+        />
+        <OrdersPeriodCard
+          title="Минулі замовлення"
+          emptyText="Наразі немає минулих замовлень"
+          orders={data.recent ?? []}
+          organizationType={currentUser.organizationType}
+          filterParam="dateTo"
+          allLinkText="Усі минулі"
+        />
+      </div>
       <div className="flex justify-center md:justify-start pt-4">
         <Button
           asChild
@@ -79,7 +99,7 @@ export default async function SchoolDashboard({ searchParams }: Props) {
           className="w-full sm:w-auto"
           aria-label="Створити нове замовлення"
         >
-          <Link href="/school/orders/new">Створити нове замовлення</Link>
+          <Link href="/school/orders/create">Створити нове замовлення</Link>
         </Button>
       </div>
     </div>

@@ -24,7 +24,6 @@ export default async function SupplierOrdersPage({ searchParams }: Props) {
   const paramsResolved = await searchParams;
 
   const supplierAllStatuses = [
-    "published",
     "accepted",
     "in_progress",
     "completed",
@@ -33,7 +32,7 @@ export default async function SupplierOrdersPage({ searchParams }: Props) {
 
   const query = {
     orderStatus:
-      paramsResolved.orderStatus === "all"
+      !paramsResolved.orderStatus || paramsResolved.orderStatus === "all"
         ? supplierAllStatuses
         : paramsResolved.orderStatus,
     paymentStatus:
@@ -54,10 +53,9 @@ export default async function SupplierOrdersPage({ searchParams }: Props) {
   });
 
   const currentUser = await getCurrentUser();
-  if (!currentUser) {
+  if (!currentUser || currentUser.organizationType !== "supplier") {
     throw new UnauthorizedError("Unauthorized");
   }
-  const userOrganization = currentUser.organizationType;
 
   const data: OrdersList = await getMyOrganizationOrders(
     parsedQuery,
@@ -86,7 +84,10 @@ export default async function SupplierOrdersPage({ searchParams }: Props) {
           ]}
         />
       </Suspense>
-      <OrderTable orders={data.orders} organizationType={userOrganization} />
+      <OrderTable
+        orders={data.orders}
+        organizationType={currentUser.organizationType}
+      />
       <Pagination
         currentPage={data.page}
         totalPages={data.totalPages}
