@@ -1,8 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useTransition } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,22 +18,19 @@ import { signOut } from "next-auth/react";
 import { deleteUser } from "../api/actions";
 
 export default function DeleteAccountSection() {
-  const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [state, formAction, isPending] = useActionState(deleteUser, null);
+  const [isDeleting, startDelete] = useTransition();
 
-  useEffect(() => {
-    if (state?.success) {
-      toast.success("Обліковий запис видалено");
-      signOut({ redirect: false }).then(() => {
-        router.push("/auth/login");
-      });
-    }
-    if (state?.success === false && state.error) {
-      toast.error(state.error);
-      setTimeout(() => setOpen(false), 0);
-    }
-  }, [state, router]);
+  const handleDelete = () => {
+    startDelete(async () => {
+      const result = await deleteUser();
+      if (result?.success) {
+        toast.success("Обліковий запис видалено");
+        await signOut({ callbackUrl: "/" });
+      } else {
+        toast.error(result?.error ?? "Не вдалося видалити обліковий запис");
+      }
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -43,14 +39,14 @@ export default function DeleteAccountSection() {
         буде безповоротно втрачено.
       </p>
 
-      <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button
             variant="destructive"
-            disabled={isPending}
+            disabled={isDeleting}
             aria-label="Видалити обліковий запис"
           >
-            {isPending ? "Видалення..." : "Видалити обліковий запис"}
+            {isDeleting ? "Видалення..." : "Видалити обліковий запис"}
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent>
@@ -63,18 +59,16 @@ export default function DeleteAccountSection() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>
+            <AlertDialogCancel disabled={isDeleting}>
               Скасувати
             </AlertDialogCancel>
-            <form action={formAction}>
-              <AlertDialogAction
-                type="submit"
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                disabled={isPending}
-              >
-                {isPending ? "Видаляємо..." : "Видалити назавжди"}
-              </AlertDialogAction>
-            </form>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Видаляємо..." : "Видалити назавжди"}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

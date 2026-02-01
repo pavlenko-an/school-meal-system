@@ -7,9 +7,9 @@ export const getAllMenuItemsSchema = z.object({
     .trim()
     .max(100, "Name cannot exceed 100 characters")
     .optional(),
-  isAvailable: z.boolean().optional(),
-  limit: z.coerce.number().int().min(1).max(100).optional(),
-  offset: z.coerce.number().int().min(0).optional(),
+  isAvailable: z.coerce.boolean().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
 export const getMenuItemByIdSchema = z.object({

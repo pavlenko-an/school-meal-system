@@ -24,3 +24,10 @@ export type OrganizationInfo = {
   contactEmail: string | null;
   contactPhone: string | null;
 };
+
+export type OrganizationsList = {
+  organizations: OrganizationInfo[];
+  total: number;
+  page: number;
+  totalPages: number;
+};

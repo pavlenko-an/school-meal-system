@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { OrgType, Role } from "@/generated/prisma/enums";
+import { Role } from "@/generated/prisma/enums";
 import {
   deleteUserSchema,
   getAllUsersSchema,
@@ -21,8 +21,15 @@ export type UserInfo = {
   organization: {
     id: string;
     name: string;
-    type: OrgType;
+    type: string;
     contactEmail: string | null;
     contactPhone: string | null;
   } | null;
+};
+
+export type UsersList = {
+  users: UserInfo[];
+  total: number;
+  page: number;
+  totalPages: number;
 };

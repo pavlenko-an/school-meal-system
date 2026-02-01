@@ -1,10 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import MenuCategoryTabs from "@/features/category/ui/MenuCategoryTabs";
 import MenuGrid from "@/features/menu-item/ui/MenuGrid";
-import { CategoryInfo, getAllCategories } from "@/features/category";
 import { getAllMenuItemsSchema } from "@/features/menu-item/model/schemas";
 import { MenuItemInfo } from "@/features/menu-item/model/types";
 import { getAllMenuItems } from "@/features/menu-item/model/queries";
+import { CategoryInfo } from "@/features/category/model/types";
+import { getAllCategories } from "@/features/category/model/queries";
 
 interface Props {
   searchParams?: Promise<{ categoryId?: string }>;

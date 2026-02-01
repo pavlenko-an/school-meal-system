@@ -3,14 +3,20 @@ import { Prisma } from "@/generated/prisma/client";
 import {
   getAllOrganizationsInput,
   getOrganizationByIdInput,
+  OrganizationsList,
 } from "../model/types";
 import {
   getAllOrganizationsSchema,
   getOrganizationByIdSchema,
 } from "./schemas";
 
-export async function getAllOrganizations(data: getAllOrganizationsInput) {
+export async function getAllOrganizations(
+  data: getAllOrganizationsInput,
+): Promise<OrganizationsList> {
   const validated = getAllOrganizationsSchema.parse(data);
+  const page = validated.page && validated.page > 0 ? validated.page : 1;
+  const limit = validated.limit && validated.limit > 0 ? validated.limit : 10;
+  const skip = (page - 1) * limit;
   const filters: Prisma.OrganizationWhereInput[] = [];
   if (validated.name) {
     filters.push({ name: { contains: validated.name, mode: "insensitive" } });
@@ -18,12 +24,23 @@ export async function getAllOrganizations(data: getAllOrganizationsInput) {
   if (validated.type) {
     filters.push({ type: validated.type });
   }
-  const organizations = await prisma.organization.findMany({
-    where: filters.length > 0 ? { AND: filters } : undefined,
-    take: validated.limit ?? 20,
-    skip: validated.offset ?? 0,
-  });
-  return organizations;
+  const [organizations, total] = await Promise.all([
+    prisma.organization.findMany({
+      where: filters.length > 0 ? { AND: filters } : undefined,
+      skip: skip,
+      take: limit,
+    }),
+    prisma.organization.count({
+      where: filters.length > 0 ? { AND: filters } : undefined,
+    }),
+  ]);
+  const totalPages = Math.ceil(total / limit);
+  return {
+    organizations,
+    total,
+    page,
+    totalPages,
+  };
 }
 
 export async function getAllOrganizationsStats() {

@@ -22,6 +22,7 @@ export type MenuItemInfo = {
   category: {
     id: string;
     name: string;
+    description: string | null;
   } | null;
   images:
     | {
@@ -30,4 +31,11 @@ export type MenuItemInfo = {
         isPrimary: boolean;
       }[]
     | null;
+};
+
+export type MenuItemsList = {
+  items: MenuItemInfo[];
+  total: number;
+  page: number;
+  totalPages: number;
 };

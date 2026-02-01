@@ -90,8 +90,14 @@ const navItems: NavItem[] = [
     roles: ["admin"],
   },
   {
-    label: "Управління меню",
-    href: "/admin/menu",
+    label: "Категорії",
+    href: "/admin/categories",
+    icon: UtensilsCrossed,
+    roles: ["admin"],
+  },
+  {
+    label: "Позиції меню",
+    href: "/admin/menu-items",
     icon: UtensilsCrossed,
     roles: ["admin"],
   },

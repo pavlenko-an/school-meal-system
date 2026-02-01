@@ -2,7 +2,7 @@
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
-import { CategoryInfo } from "../model/category.types";
+import { CategoryInfo } from "../model/types";
 
 interface Props {
   categories: CategoryInfo[];

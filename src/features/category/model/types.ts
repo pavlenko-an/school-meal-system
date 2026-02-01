@@ -1,9 +1,11 @@
 import { z } from "zod";
-import { getAllCategoriesSchema } from "./get-all-categories.schema";
-import { getCategoryByIdSchema } from "./get-category-by-id.schema";
-import { createCategorySchema } from "./create-category.schema";
-import { updateCategorySchema } from "./update-category.schema";
-import { deleteCategorySchema } from "./delete-category.schema";
+import {
+  createCategorySchema,
+  deleteCategorySchema,
+  getAllCategoriesSchema,
+  getCategoryByIdSchema,
+  updateCategorySchema,
+} from "./schemas";
 
 export type getAllCategoriesInput = z.infer<typeof getAllCategoriesSchema>;
 export type getCategoryByIdInput = z.infer<typeof getCategoryByIdSchema>;
@@ -15,4 +17,11 @@ export interface CategoryInfo {
   id: string;
   name: string;
   description: string | null;
+}
+
+export interface CategoriesList {
+  categories: CategoryInfo[];
+  total: number;
+  page: number;
+  totalPages: number;
 }

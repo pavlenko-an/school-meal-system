@@ -5,13 +5,16 @@ import { getAllMenuItemsSchema, getMenuItemByIdSchema } from "./schemas";
 import {
   getAllMenuItemsInput,
   getMenuItemByIdInput,
-  MenuItemInfo,
+  MenuItemsList,
 } from "./types";
 
 export async function getAllMenuItems(
   data: getAllMenuItemsInput,
-): Promise<MenuItemInfo[]> {
+): Promise<MenuItemsList> {
   const validated = getAllMenuItemsSchema.parse(data);
+  const page = validated.page && validated.page > 0 ? validated.page : 1;
+  const limit = validated.limit && validated.limit > 0 ? validated.limit : 10;
+  const skip = (page - 1) * limit;
   const existingCategory = validated.categoryId
     ? await prisma.category.findUnique({
         where: { id: validated.categoryId },
@@ -34,8 +37,8 @@ export async function getAllMenuItems(
 
   const menuItems = await prisma.menuItem.findMany({
     where: filters.length > 0 ? { AND: filters } : undefined,
-    take: validated.limit ?? 20,
-    skip: validated.offset ?? 0,
+    take: limit,
+    skip: skip,
     select: {
       id: true,
       name: true,
@@ -46,6 +49,7 @@ export async function getAllMenuItems(
         select: {
           id: true,
           name: true,
+          description: true,
         },
       },
       images: {
@@ -57,10 +61,20 @@ export async function getAllMenuItems(
       },
     },
   });
-  return menuItems.map((item) => ({
-    ...item,
-    price: item.price.toNumber(),
-  }));
+  const total = await prisma.menuItem.count({
+    where: filters.length > 0 ? { AND: filters } : undefined,
+  });
+  const totalPages = Math.ceil(total / limit);
+
+  return {
+    items: menuItems.map((item) => ({
+      ...item,
+      price: item.price.toNumber(),
+    })),
+    total,
+    page,
+    totalPages,
+  };
 }
 
 export async function getMenuItemById(data: getMenuItemByIdInput) {
@@ -77,6 +91,7 @@ export async function getMenuItemById(data: getMenuItemByIdInput) {
         select: {
           id: true,
           name: true,
+          description: true,
         },
       },
       images: {

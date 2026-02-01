@@ -1,7 +1,12 @@
 import { prisma } from "@/shared/db/prisma";
 import { Prisma } from "@/generated/prisma/client";
 import { CurrentUser } from "@/shared/auth/current-user";
-import { getAllUsersInput, getUserByIdInput, UserInfo } from "../model/types";
+import {
+  getAllUsersInput,
+  getUserByIdInput,
+  UserInfo,
+  UsersList,
+} from "../model/types";
 import { AccessDeniedError } from "@/shared/errors/access-denied.error";
 import { NotFoundError } from "@/shared/errors/not-found.error";
 import { getAllUsersSchema, getUserByIdSchema } from "./schemas";
@@ -9,11 +14,14 @@ import { getAllUsersSchema, getUserByIdSchema } from "./schemas";
 export async function getAllUsers(
   data: getAllUsersInput,
   currentUser: CurrentUser,
-): Promise<UserInfo[]> {
-  const validated = getAllUsersSchema.parse(data);
+): Promise<UsersList> {
   if (currentUser.role !== "admin") {
     throw new AccessDeniedError("Access denied");
   }
+  const validated = getAllUsersSchema.parse(data);
+  const page = validated.page && validated.page > 0 ? validated.page : 1;
+  const limit = validated.limit && validated.limit > 0 ? validated.limit : 10;
+  const skip = (page - 1) * limit;
   const existingOrg = validated.organizationId
     ? await prisma.organization.findUnique({
         where: { id: validated.organizationId },
@@ -27,39 +35,53 @@ export async function getAllUsers(
   if (validated.organizationId) {
     filters.push({ organizationId: validated.organizationId });
   }
-  if (validated.firstName) {
+  if (validated.name) {
     filters.push({
-      firstName: { contains: validated.firstName, mode: "insensitive" },
-    });
-  }
-  if (validated.lastName) {
-    filters.push({
-      lastName: { contains: validated.lastName, mode: "insensitive" },
+      OR: [
+        {
+          firstName: {
+            contains: validated.name,
+            mode: "insensitive",
+          },
+        },
+        {
+          lastName: {
+            contains: validated.name,
+            mode: "insensitive",
+          },
+        },
+      ],
     });
   }
 
-  const users = await prisma.user.findMany({
-    where: filters.length > 0 ? { AND: filters } : undefined,
-    take: validated.limit ?? 20,
-    skip: validated.offset ?? 0,
-    select: {
-      id: true,
-      email: true,
-      firstName: true,
-      lastName: true,
-      role: true,
-      organization: {
-        select: {
-          id: true,
-          name: true,
-          type: true,
-          contactEmail: true,
-          contactPhone: true,
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      where: filters.length > 0 ? { AND: filters } : undefined,
+      skip: skip,
+      take: limit,
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        organization: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            contactEmail: true,
+            contactPhone: true,
+          },
         },
       },
-    },
-  });
-  return users;
+    }),
+    prisma.user.count({
+      where: filters.length > 0 ? { AND: filters } : undefined,
+    }),
+  ]);
+  const totalPages = Math.ceil(total / limit);
+  return { users, total, page, totalPages };
 }
 
 export async function getAllUsersStats() {

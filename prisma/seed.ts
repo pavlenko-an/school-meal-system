@@ -89,6 +89,7 @@ async function main() {
       create: {
         name: item.name,
         price: item.price,
+        description: item.description,
         categoryId: catId,
         isAvailable: true,
         createdAt: new Date(),
