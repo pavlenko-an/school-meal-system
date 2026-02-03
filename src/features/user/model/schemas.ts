@@ -46,6 +46,13 @@ export const updateUserSchema = z.object({
     .optional()
     .nullable()
     .transform((val) => (val === "" ? null : val)),
+  avatarUrl: z
+    .string()
+    .trim()
+    .optional()
+    .nullable()
+    .transform((val) => (val === "" ? null : val)),
+  organizationId: z.uuid("Invalid organization ID").optional().nullable(),
 });
 
 export const deleteUserSchema = z.object({

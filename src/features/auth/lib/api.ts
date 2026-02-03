@@ -1,13 +1,6 @@
-import { post } from "@/shared/api/client";
-import { LoginFormInput, RegisterInput } from "../model/auth.types";
 import { signIn } from "next-auth/react";
 import { Session } from "next-auth";
-
-export async function registerApi(data: RegisterInput): Promise<string> {
-  const result = await post<string, RegisterInput>("/api/auth/register", data);
-  if (result.error) throw new Error(result.error as string);
-  return result.data!;
-}
+import { LoginFormInput } from "../model/types";
 
 export async function loginApi(data: LoginFormInput): Promise<void> {
   const result = await signIn("credentials", {

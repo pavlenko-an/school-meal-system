@@ -13,14 +13,16 @@ export async function updateUser(
 ): Promise<ActionResult<UserInfo>> {
   try {
     const currentUser = await getCurrentUser();
-    if (currentUser.role !== "employee") {
-      return {
-        success: false,
-        error: "Лишe працівники можуть оновлювати свої дані",
-      };
-    }
     const rawData =
       formData instanceof FormData ? Object.fromEntries(formData) : formData;
+    const isAdmin = currentUser?.role === "admin";
+    const isSelfUpdate = currentUser?.id === rawData.id;
+    if (!isAdmin && !isSelfUpdate) {
+      return {
+        success: false,
+        error: "Ви не маєте прав оновлювати цього користувача",
+      };
+    }
     const result = updateUserSchema.safeParse(rawData);
     if (!result.success) {
       const flattened = z.flattenError(result.error);
@@ -32,7 +34,6 @@ export async function updateUser(
     }
     const updatedUser = await UserService.update({
       ...result.data,
-      id: currentUser.id,
     });
     return { success: true, data: updatedUser };
   } catch (error: unknown) {
@@ -57,7 +58,11 @@ export async function deleteUser(
     }
     const targetUserId =
       currentUser.role === "admin" && data?.id ? data.id : currentUser.id;
-    if (currentUser.role !== "admin" && data?.id && data.id !== currentUser.id) {
+    if (
+      currentUser.role !== "admin" &&
+      data?.id &&
+      data.id !== currentUser.id
+    ) {
       return {
         success: false,
         error: "Ви не маєте прав видаляти інших користувачів",

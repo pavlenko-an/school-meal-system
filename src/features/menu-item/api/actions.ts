@@ -1,6 +1,5 @@
 "use server";
 
-import { MenuItem } from "@/generated/prisma/client";
 import { getCurrentUser } from "@/shared/auth/current-user";
 import { ActionResult } from "@/shared/types/action-result";
 import {
@@ -12,14 +11,15 @@ import { MenuItemService } from "../model/services";
 import {
   createMenuItemInput,
   deleteMenuItemInput,
+  MenuItemInfo,
   updateMenuItemInput,
 } from "../model/types";
 import z from "zod";
 
 export async function createMenuItem(
-  prevState: ActionResult<MenuItem> | null = null,
+  prevState: ActionResult<MenuItemInfo> | null = null,
   formData: FormData | createMenuItemInput,
-): Promise<ActionResult<MenuItem>> {
+): Promise<ActionResult<MenuItemInfo>> {
   try {
     const currentUser = await getCurrentUser();
     if (currentUser.role !== "admin") {
@@ -51,9 +51,9 @@ export async function createMenuItem(
 }
 
 export async function updateMenuItem(
-  prevState: ActionResult<MenuItem> | null = null,
+  prevState: ActionResult<MenuItemInfo> | null = null,
   formData: FormData | updateMenuItemInput,
-): Promise<ActionResult<MenuItem>> {
+): Promise<ActionResult<MenuItemInfo>> {
   try {
     const currentUser = await getCurrentUser();
     if (currentUser.role !== "admin") {

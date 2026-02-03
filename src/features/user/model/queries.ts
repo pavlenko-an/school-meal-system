@@ -65,6 +65,7 @@ export async function getAllUsers(
         firstName: true,
         lastName: true,
         role: true,
+        avatarUrl: true,
         organization: {
           select: {
             id: true,
@@ -120,6 +121,7 @@ export async function getUserById(
       firstName: true,
       lastName: true,
       role: true,
+      avatarUrl: true,
       organization: {
         select: {
           id: true,

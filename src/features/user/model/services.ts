@@ -13,10 +13,15 @@ export const UserService = {
 
     const updateData: Record<string, unknown> = {};
     if (data.email !== undefined) {
-      const existingUser = await prisma.user.findUnique({
-        where: { email: data.email },
+      console.log("Checking existing for:", data);
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          email: data.email,
+          NOT: { id: data.id },
+        },
       });
-      if (existingUser && existingUser.id !== data.id) {
+      console.log("Existing user:", existingUser);
+      if (existingUser) {
         throw new Error("Email вже використовується");
       }
       updateData.email = data.email;
@@ -36,6 +41,7 @@ export const UserService = {
         firstName: true,
         lastName: true,
         role: true,
+        avatarUrl: true,
         organization: {
           select: {
             id: true,

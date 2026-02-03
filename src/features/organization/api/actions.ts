@@ -3,7 +3,10 @@
 import {
   createOrganizationInput,
   deleteOrganizationInput,
+  getAllOrganizationsInput,
+  getOrganizationByIdInput,
   OrganizationInfo,
+  OrganizationsList,
   updateOrganizationInput,
 } from "../model/types";
 import { getCurrentUser } from "@/shared/auth/current-user";
@@ -12,9 +15,65 @@ import { OrganizationService } from "../model/services";
 import {
   createOrganizationSchema,
   deleteOrganizationSchema,
+  getAllOrganizationsSchema,
+  getOrganizationByIdSchema,
   updateOrganizationSchema,
 } from "../model/schemas";
 import z from "zod";
+
+export async function getAllOrganizations(
+  prevState: ActionResult<OrganizationsList> | null = null,
+  data: getAllOrganizationsInput,
+): Promise<ActionResult<OrganizationsList>> {
+  try {
+    const result = getAllOrganizationsSchema.safeParse(data);
+    if (!result.success) {
+      const flattened = z.flattenError(result.error);
+      return {
+        success: false,
+        error: "Перевірте дані",
+        fieldErrors: flattened.fieldErrors,
+      };
+    }
+    const organizations = await OrganizationService.getAll(result.data);
+    return { success: true, data: organizations };
+  } catch (error: unknown) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Не вдалося отримати організації",
+    };
+  }
+}
+
+export async function getOrganizationById(
+  prevState: ActionResult<OrganizationInfo> | null = null,
+  data: getOrganizationByIdInput,
+): Promise<ActionResult<OrganizationInfo>> {
+  try {
+    const result = getOrganizationByIdSchema.safeParse(data);
+    if (!result.success) {
+      const flattened = z.flattenError(result.error);
+      return {
+        success: false,
+        error: "Перевірте дані",
+        fieldErrors: flattened.fieldErrors,
+      };
+    }
+    const organization = await OrganizationService.getById(result.data);
+    return { success: true, data: organization };
+  } catch (error: unknown) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Не вдалося отримати організацію",
+    };
+  }
+}
 
 export async function createOrganization(
   prevState: ActionResult<OrganizationInfo> | null = null,

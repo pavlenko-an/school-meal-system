@@ -25,14 +25,12 @@ export const createOrganizationSchema = z.object({
   ),
   contactEmail: z
     .email("Invalid email format")
-    .transform((v) => v.trim().toLowerCase())
-    .optional(),
+    .transform((v) => v.trim().toLowerCase()),
   contactPhone: z
     .string()
     .trim()
     .min(10, "Phone number must be at least 10 digits")
-    .max(15, "Phone number cannot exceed 15 digits")
-    .optional(),
+    .max(15, "Phone number cannot exceed 15 digits"),
 });
 
 export const updateOrganizationSchema = z.object({
@@ -55,7 +53,14 @@ export const updateOrganizationSchema = z.object({
     .optional()
     .nullable()
     .transform((val) => (val === "" ? null : val))
-    .pipe(z.string().min(10).max(15).nullable().optional()),
+    .pipe(
+      z
+        .string()
+        .min(10, "Phone number must be at least 10 digits")
+        .max(15, "Phone number cannot exceed 15 digits")
+        .nullable()
+        .optional(),
+    ),
 });
 
 export const deleteOrganizationSchema = z.object({

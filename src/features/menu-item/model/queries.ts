@@ -5,6 +5,7 @@ import { getAllMenuItemsSchema, getMenuItemByIdSchema } from "./schemas";
 import {
   getAllMenuItemsInput,
   getMenuItemByIdInput,
+  MenuItemInfo,
   MenuItemsList,
 } from "./types";
 
@@ -77,7 +78,9 @@ export async function getAllMenuItems(
   };
 }
 
-export async function getMenuItemById(data: getMenuItemByIdInput) {
+export async function getMenuItemById(
+  data: getMenuItemByIdInput,
+): Promise<MenuItemInfo> {
   const validated = getMenuItemByIdSchema.parse(data);
   const menuItem = await prisma.menuItem.findUnique({
     where: { id: validated.id },
@@ -106,5 +109,8 @@ export async function getMenuItemById(data: getMenuItemByIdInput) {
   if (!menuItem) {
     throw new NotFoundError("Menu item not found");
   }
-  return menuItem;
+  return {
+    ...menuItem,
+    price: menuItem.price.toNumber(),
+  };
 }

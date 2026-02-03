@@ -1,11 +1,61 @@
 import { prisma } from "@/shared/db/prisma";
+import { Prisma } from "@/generated/prisma/client";
 import {
   createOrganizationInput,
   deleteOrganizationInput,
+  getAllOrganizationsInput,
+  getOrganizationByIdInput,
   updateOrganizationInput,
 } from "./types";
 
 export const OrganizationService = {
+  async getAll(data: getAllOrganizationsInput) {
+    const page = data.page && data.page > 0 ? data.page : 1;
+    const limit = data.limit && data.limit > 0 ? data.limit : 10;
+    const skip = (page - 1) * limit;
+    const filters: Prisma.OrganizationWhereInput[] = [];
+    if (data.name) {
+      filters.push({ name: { contains: data.name, mode: "insensitive" } });
+    }
+    if (data.type) {
+      filters.push({ type: data.type });
+    }
+    const [organizations, total] = await Promise.all([
+      prisma.organization.findMany({
+        where: filters.length > 0 ? { AND: filters } : undefined,
+        skip: skip,
+        take: limit,
+      }),
+      prisma.organization.count({
+        where: filters.length > 0 ? { AND: filters } : undefined,
+      }),
+    ]);
+    const totalPages = Math.ceil(total / limit);
+    return {
+      organizations,
+      total,
+      page,
+      totalPages,
+    };
+  },
+
+  async getById(data: getOrganizationByIdInput) {
+    const organization = await prisma.organization.findUnique({
+      where: { id: data.id },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        contactEmail: true,
+        contactPhone: true,
+      },
+    });
+    if (!organization) {
+      throw new Error("Організація не знайдена");
+    }
+    return organization;
+  },
+
   async create(data: createOrganizationInput) {
     const [existingName, existingEmail, existingPhone] = await Promise.all([
       prisma.organization.findUnique({

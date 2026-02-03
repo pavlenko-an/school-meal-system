@@ -17,6 +17,7 @@ export type UserInfo = {
   email: string;
   firstName: string | null;
   lastName: string | null;
+  avatarUrl: string | null;
   role: Role;
   organization: {
     id: string;

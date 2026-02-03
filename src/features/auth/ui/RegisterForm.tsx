@@ -1,11 +1,9 @@
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { RegisterInput } from "../model/auth.types";
-import { registerApi } from "../lib/api";
-import { registerSchema } from "../model/register.schema";
+import { RegisterInput } from "../model/types";
 import {
   Form,
   FormControl,
@@ -17,6 +15,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { registerSchema } from "../model/schemas";
+import { registerUser } from "../api/actions";
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -35,30 +35,38 @@ export default function RegisterForm() {
     },
   });
 
-  const onSubmit = async (data: RegisterInput) => {
-    try {
-      await registerApi(data);
+  const { setError, reset } = form;
+
+  const [state, formAction, isPending] = useActionState(registerUser, null);
+
+  useEffect(() => {
+    if (!state) return;
+    if (state.success) {
       toast.success("Аккаунт успішно створений!", {
         description: "Зачекайте, ми перенаправляємо вас на сторінку входу",
       });
-      form.reset();
+      reset();
       setTimeout(() => {
         router.push("/auth/login");
       }, 2000);
-    } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "Не вдалося підключитися до сервера";
-      toast.error("Помилка реєстрації", {
-        description: errorMessage,
-      });
+    } else if (state?.success === false && state.error) {
+      toast.error(
+        state.error ?? "Не вдалося створити аккаунт. Спробуйте пізніше.",
+      );
+      if (state.fieldErrors) {
+        Object.entries(state.fieldErrors).forEach(([field, messages]) => {
+          setError(field as keyof RegisterInput, {
+            type: "server",
+            message: messages?.join(", ") || "Помилка",
+          });
+        });
+      }
     }
-  };
+  }, [state, router, setError, reset]);
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 space-y-6">
+      <form action={formAction} className="mt-8 space-y-6">
         <div className="space-y-5">
           <FormField
             control={form.control}
@@ -185,10 +193,10 @@ export default function RegisterForm() {
 
         <Button
           type="submit"
-          disabled={form.formState.isSubmitting}
+          disabled={isPending}
           className="w-full bg-indigo-600 hover:bg-indigo-700"
         >
-          {form.formState.isSubmitting ? (
+          {isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Реєстрація...

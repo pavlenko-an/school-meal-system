@@ -13,15 +13,40 @@ export const MenuItemService = {
     if (existingMenuItem) {
       throw new Error("Позиція меню з такою назвою вже існує");
     }
-    return await prisma.menuItem.create({
+    const menuItem = await prisma.menuItem.create({
       data: {
         name: data.name,
         description: data.description || null,
         price: data.price,
         categoryId: data.categoryId,
-        isAvailable: data.isAvailable ?? true,
+        isAvailable: data.isAvailable,
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        price: true,
+        isAvailable: true,
+        category: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+          },
+        },
+        images: {
+          select: {
+            id: true,
+            imageUrl: true,
+            isPrimary: true,
+          },
+        },
       },
     });
+    return {
+      ...menuItem,
+      price: menuItem.price.toNumber(),
+    };
   },
 
   async update(data: updateMenuItemInput) {
@@ -61,10 +86,35 @@ export const MenuItemService = {
       updateData.isAvailable = data.isAvailable;
     }
 
-    return await prisma.menuItem.update({
+    const updatedMenuItem = await prisma.menuItem.update({
       where: { id: data.id },
       data: updateData,
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        price: true,
+        isAvailable: true,
+        category: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+          },
+        },
+        images: {
+          select: {
+            id: true,
+            imageUrl: true,
+            isPrimary: true,
+          },
+        },
+      },
     });
+    return {
+      ...updatedMenuItem,
+      price: updatedMenuItem.price.toNumber(),
+    };
   },
 
   async delete(data: deleteMenuItemInput) {

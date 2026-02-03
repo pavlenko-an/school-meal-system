@@ -1,10 +1,8 @@
 import { useState } from "react";
-import { loginSchema } from "../model/login.schema";
 import { useForm } from "react-hook-form";
-import { LoginFormInput } from "../model/auth.types";
+import { LoginFormInput } from "../model/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { loginApi } from "../lib/api";
 import { toast } from "sonner";
 import {
   Form,
@@ -16,6 +14,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { loginSchema } from "../model/schemas";
+import { loginApi } from "../lib/api";
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);

@@ -26,9 +26,15 @@ export const createMenuItemSchema = z.object({
     .trim()
     .max(500, "Description cannot exceed 500 characters")
     .optional(),
-  price: z.number("Price must be a number").positive("Price must be positive"),
+  price: z.preprocess(
+    (val) => (typeof val === "string" ? parseFloat(val) : val),
+    z.number().positive("Price must be positive"),
+  ),
   categoryId: z.uuid("Invalid category ID").optional(),
-  isAvailable: z.boolean().optional().default(true),
+  isAvailable: z.preprocess((val) => {
+    if (typeof val === "string") return val === "true";
+    return val;
+  }, z.boolean().default(true)),
 });
 
 export const updateMenuItemSchema = z.object({
@@ -43,12 +49,15 @@ export const updateMenuItemSchema = z.object({
     .trim()
     .max(500, "Description cannot exceed 500 characters")
     .optional(),
-  price: z
-    .number("Price must be a number")
-    .positive("Price must be positive")
-    .optional(),
+  price: z.preprocess(
+    (val) => (typeof val === "string" ? parseFloat(val) : val),
+    z.number().positive("Price must be positive").optional(),
+  ),
   categoryId: z.uuid("Invalid category ID").optional(),
-  isAvailable: z.boolean().optional(),
+  isAvailable: z.preprocess((val) => {
+    if (typeof val === "string") return val === "true";
+    return val;
+  }, z.boolean().optional()),
 });
 
 export const deleteMenuItemSchema = z.object({

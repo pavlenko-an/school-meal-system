@@ -40,7 +40,7 @@ export const menuImages = [
     isPrimary: true,
   },
   {
-    itemName: "Бутильована вода",
+    itemName: "Мінеральна вода",
     fileName: "bottled-water.jpg",
     isPrimary: true,
   },
