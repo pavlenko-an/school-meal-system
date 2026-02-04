@@ -23,13 +23,14 @@ export default async function EditMenuItemPage({ params }: Props) {
     throw new UnauthorizedError("Unauthorized");
   }
   const menuItem = await getMenuItemById({ id });
-  const defaultValues: Partial<updateMenuItemInput> = {
+  const defaultValues = {
     id: menuItem?.id,
     name: menuItem?.name,
     description: menuItem?.description || "",
     price: menuItem?.price || 0,
     isAvailable: menuItem?.isAvailable,
     categoryId: menuItem?.category?.id || "",
+    imageUrl: menuItem?.imageUrl || null,
   };
   const data = await getAllCategories({
     limit: 100,

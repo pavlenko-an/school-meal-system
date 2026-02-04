@@ -33,21 +33,21 @@ export async function proxy(request: NextRequest) {
   const organizationType = token.organizationType as string | null;
 
   if (pathname.startsWith("/admin") && role !== "admin") {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(new URL("/profile", request.url));
   }
 
   if (
     pathname.startsWith("/school") &&
     (role !== "employee" || organizationType !== "school")
   ) {
-    return NextResponse.redirect(new URL("/supplier/dashboard", request.url));
+    return NextResponse.redirect(new URL("/profile", request.url));
   }
 
   if (
     pathname.startsWith("/supplier") &&
     (role !== "employee" || organizationType !== "supplier")
   ) {
-    return NextResponse.redirect(new URL("/school/dashboard", request.url));
+    return NextResponse.redirect(new URL("/profile", request.url));
   }
 
   return NextResponse.next();

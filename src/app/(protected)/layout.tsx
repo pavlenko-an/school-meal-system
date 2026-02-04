@@ -1,10 +1,10 @@
 import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
-import { authOptions } from "@/features/auth";
 import Header from "@/components/common/Header";
 import Footer from "@/components/common/Footer";
 import Sidebar from "@/components/common/Sidebar";
 import { Toaster } from "@/components/ui/sonner";
+import { authOptions } from "@/lib/auth";
 
 export default async function ProtectedLayout({
   children,

@@ -5,7 +5,6 @@ import { organizations } from "./seeds/organizations";
 import { users } from "./seeds/users";
 import { categories } from "./seeds/categories";
 import { menuItems } from "./seeds/menu-items";
-import { menuImages } from "./seeds/menu-images";
 import { Prisma } from "@/generated/prisma/client";
 
 async function main() {
@@ -13,7 +12,6 @@ async function main() {
 
   await prisma.orderItem.deleteMany({});
   await prisma.order.deleteMany({});
-  await prisma.menuImage.deleteMany({});
   await prisma.menuItem.deleteMany({});
   await prisma.category.deleteMany({});
   await prisma.user.deleteMany({});
@@ -44,6 +42,7 @@ async function main() {
         passwordHash: hashed,
         role: u.role,
         organizationId: u.organizationId,
+        avatarUrl: u.avatarUrl,
       },
       create: {
         email: u.email,
@@ -52,6 +51,7 @@ async function main() {
         lastName: u.lastName,
         role: u.role,
         organizationId: u.organizationId,
+        avatarUrl: u.avatarUrl,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -90,6 +90,7 @@ async function main() {
         name: item.name,
         price: item.price,
         description: item.description,
+        imageUrl: item.imageUrl,
         categoryId: catId,
         isAvailable: true,
         createdAt: new Date(),
@@ -98,35 +99,6 @@ async function main() {
     });
 
     menuItemMap.set(item.name, menuItem.id);
-  }
-
-  for (const img of menuImages) {
-    const menuItemId = menuItemMap.get(img.itemName);
-    if (!menuItemId) {
-      console.warn(`Missing menuItem for ${img.itemName}`);
-      continue;
-    }
-
-    const localPath = `/uploads/menu-images/${img.fileName}`;
-
-    await prisma.menuImage.upsert({
-      where: {
-        menuItemId_isPrimary: {
-          menuItemId,
-          isPrimary: img.isPrimary,
-        },
-      },
-      update: {
-        imageUrl: localPath,
-      },
-      create: {
-        menuItemId,
-        imageUrl: localPath,
-        isPrimary: img.isPrimary,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    });
   }
 
   const school = await prisma.organization.findUnique({

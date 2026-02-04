@@ -19,18 +19,12 @@ export type MenuItemInfo = {
   description: string | null;
   price: number;
   isAvailable: boolean;
+  imageUrl: string | null;
   category: {
     id: string;
     name: string;
     description: string | null;
   } | null;
-  images:
-    | {
-        id: string;
-        imageUrl: string;
-        isPrimary: boolean;
-      }[]
-    | null;
 };
 
 export type MenuItemsList = {

@@ -18,7 +18,7 @@ export const users = [
     lastName: "Johnson",
     role: Role.employee,
     organizationId: organizations[0].id,
-    avatarUrl: null,
+    avatarUrl: "/uploads/avatars/sarah-johnson.jpg",
   },
   {
     email: "bob.global@example.com",
@@ -27,7 +27,7 @@ export const users = [
     lastName: "Smith",
     role: Role.employee,
     organizationId: organizations[1].id,
-    avatarUrl: null,
+    avatarUrl: "/uploads/avatars/bob-smith.jpg",
   },
   {
     email: "michael.hollywood@example.com",
@@ -36,6 +36,6 @@ export const users = [
     lastName: "Davis",
     role: Role.employee,
     organizationId: organizations[2].id,
-    avatarUrl: null,
+    avatarUrl: "/uploads/avatars/michael-davis.jpg",
   },
 ];

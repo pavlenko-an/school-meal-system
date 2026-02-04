@@ -8,17 +8,12 @@ import {
   updateMenuItemSchema,
 } from "../model/schemas";
 import { MenuItemService } from "../model/services";
-import {
-  createMenuItemInput,
-  deleteMenuItemInput,
-  MenuItemInfo,
-  updateMenuItemInput,
-} from "../model/types";
+import { deleteMenuItemInput, MenuItemInfo } from "../model/types";
 import z from "zod";
 
 export async function createMenuItem(
   prevState: ActionResult<MenuItemInfo> | null = null,
-  formData: FormData | createMenuItemInput,
+  formData: FormData,
 ): Promise<ActionResult<MenuItemInfo>> {
   try {
     const currentUser = await getCurrentUser();
@@ -28,9 +23,14 @@ export async function createMenuItem(
         error: "Лише адміністратори можуть створювати позиції",
       };
     }
-    const rawData =
-      formData instanceof FormData ? Object.fromEntries(formData) : formData;
-    const result = createMenuItemSchema.safeParse(rawData);
+    const imageFile = formData.get("image");
+    let image: File | undefined;
+    if (imageFile instanceof File && imageFile.size > 0) {
+      image = imageFile;
+    }
+    const rawData = Object.fromEntries(formData);
+    const result = createMenuItemSchema.safeParse({ ...rawData, image });
+    console.log("Create MenuItem parse result:", result);
     if (!result.success) {
       const flattened = z.flattenError(result.error);
       return {
@@ -52,7 +52,7 @@ export async function createMenuItem(
 
 export async function updateMenuItem(
   prevState: ActionResult<MenuItemInfo> | null = null,
-  formData: FormData | updateMenuItemInput,
+  formData: FormData,
 ): Promise<ActionResult<MenuItemInfo>> {
   try {
     const currentUser = await getCurrentUser();
@@ -62,9 +62,13 @@ export async function updateMenuItem(
         error: "Лише адміністратори можуть оновлювати позиції меню",
       };
     }
-    const rawData =
-      formData instanceof FormData ? Object.fromEntries(formData) : formData;
-    const result = updateMenuItemSchema.safeParse(rawData);
+    const imageFile = formData.get("image");
+    let image: File | undefined;
+    if (imageFile instanceof File && imageFile.size > 0) {
+      image = imageFile;
+    }
+    const rawData = Object.fromEntries(formData);
+    const result = updateMenuItemSchema.safeParse({ ...rawData, image });
     if (!result.success) {
       const flattened = z.flattenError(result.error);
       return {

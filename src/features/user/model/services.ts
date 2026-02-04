@@ -1,6 +1,9 @@
 import { prisma } from "@/shared/db/prisma";
 import bcrypt from "bcryptjs";
 import { deleteUserInput, updateUserInput } from "./types";
+import path from "path";
+import { mkdir, writeFile } from "fs/promises";
+import { randomUUID } from "crypto";
 
 export const UserService = {
   async update(data: updateUserInput) {
@@ -13,14 +16,12 @@ export const UserService = {
 
     const updateData: Record<string, unknown> = {};
     if (data.email !== undefined) {
-      console.log("Checking existing for:", data);
       const existingUser = await prisma.user.findFirst({
         where: {
           email: data.email,
           NOT: { id: data.id },
         },
       });
-      console.log("Existing user:", existingUser);
       if (existingUser) {
         throw new Error("Email вже використовується");
       }
@@ -31,6 +32,25 @@ export const UserService = {
     }
     if (data.firstName !== undefined) updateData.firstName = data.firstName;
     if (data.lastName !== undefined) updateData.lastName = data.lastName;
+    if (data.avatar !== undefined) {
+      let avatarUrl: string | null = null;
+      if (data.avatar && data.avatar.size > 0) {
+        const file = data.avatar;
+        const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
+        const fileName = `${randomUUID()}.${fileExt}`;
+        const filePath = path.join(
+          process.cwd(),
+          "public/uploads/avatars",
+          fileName,
+        );
+
+        const buffer = Buffer.from(await file.arrayBuffer());
+        await mkdir(path.dirname(filePath), { recursive: true });
+        await writeFile(filePath, buffer);
+        avatarUrl = `/uploads/avatars/${fileName}`;
+      }
+      updateData.avatarUrl = avatarUrl;
+    }
 
     return await prisma.user.update({
       where: { id: data.id },

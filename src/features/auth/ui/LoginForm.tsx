@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { LoginFormInput } from "../model/types";
@@ -15,9 +17,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { loginSchema } from "../model/schemas";
-import { loginApi } from "../lib/api";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<LoginFormInput>({
@@ -29,23 +33,27 @@ export default function LoginForm() {
     },
   });
 
-  const onSubmit = async (data: LoginFormInput) => {
-    try {
-      await loginApi(data);
-    } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "Не вдалося підключитися до сервера";
-      toast.error("Помилка реєстрації", {
-        description: errorMessage,
+  const onSubmit = form.handleSubmit(async (data: LoginFormInput) => {
+    const res = await signIn("credentials", {
+      email: data.email,
+      password: data.password,
+      redirect: false,
+    });
+    if (res?.ok) {
+      toast.success("Успішний вхід");
+      router.push("/profile");
+      router.refresh();
+    } else if (res?.error) {
+      toast.error("Невірний email або пароль");
+      form.setError("root", {
+        message: "Невірні дані для входу",
       });
     }
-  };
+  });
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 space-y-6">
+      <form onSubmit={onSubmit} className="mt-8 space-y-6">
         <div className="space-y-5">
           <FormField
             control={form.control}
@@ -103,7 +111,7 @@ export default function LoginForm() {
         <Button
           type="submit"
           disabled={form.formState.isSubmitting}
-          className="w-full bg-indigo-600 hover:bg-indigo-700"
+          className="w-full bg-indigo-600 hover:bg-indigo-700 cursor-pointer"
         >
           {form.formState.isSubmitting ? (
             <>

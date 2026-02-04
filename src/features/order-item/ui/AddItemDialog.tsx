@@ -70,15 +70,13 @@ export default function AddItemDialog({ menuItems, onAdd }: Props) {
               }}
             >
               <div className="aspect-square relative mb-3 rounded-lg overflow-hidden bg-muted">
-                {item.images && item.images.length > 0 ? (
+                {item.imageUrl ? (
                   <Image
-                    src={
-                      item.images.find((img) => img.isPrimary)?.imageUrl ||
-                      item.images[0].imageUrl
-                    }
+                    src={item.imageUrl}
                     alt={item.name}
                     fill
                     className="object-cover"
+                    unoptimized
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full text-muted-foreground text-sm">

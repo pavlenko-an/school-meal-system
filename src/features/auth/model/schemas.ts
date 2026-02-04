@@ -16,6 +16,7 @@ export const registerSchema = z
     lastName: z.string().trim().optional(),
     organizationId: z.uuid("Invalid organization ID"),
     confirmPassword: z.string().optional(),
+    avatar: z.instanceof(File).optional(),
   })
   .refine(
     (data) => {

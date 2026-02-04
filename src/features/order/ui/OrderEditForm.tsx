@@ -218,10 +218,7 @@ export default function OrderEditForm({
             Загальна сума замовлення:
           </span>
           <span className="text-3xl font-bold text-primary mt-2 sm:mt-0">
-            {totalPrice.toLocaleString("uk-UA", {
-              style: "currency",
-              currency: "UAH",
-            })}
+            {totalPrice.toFixed(2)} грн
           </span>
         </div>
 

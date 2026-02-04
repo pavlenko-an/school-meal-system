@@ -46,18 +46,12 @@ export async function getAllMenuItems(
       description: true,
       price: true,
       isAvailable: true,
+      imageUrl: true,
       category: {
         select: {
           id: true,
           name: true,
           description: true,
-        },
-      },
-      images: {
-        select: {
-          id: true,
-          imageUrl: true,
-          isPrimary: true,
         },
       },
     },
@@ -90,18 +84,12 @@ export async function getMenuItemById(
       description: true,
       price: true,
       isAvailable: true,
+      imageUrl: true,
       category: {
         select: {
           id: true,
           name: true,
           description: true,
-        },
-      },
-      images: {
-        select: {
-          id: true,
-          imageUrl: true,
-          isPrimary: true,
         },
       },
     },

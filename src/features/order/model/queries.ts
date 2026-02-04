@@ -26,12 +26,16 @@ import { NotFoundError } from "@/shared/errors/not-found.error";
 export async function getAllOrders(
   data: getAllOrdersInput,
   currentUser: CurrentUser,
-): Promise<OrderInfo[]> {
+): Promise<OrdersList> {
   const permission = OrderPermissionPolicy.canViewAllOrders(currentUser);
   if (!permission.allowed) {
     throw new AccessDeniedError(permission.reason || "Відмовлено в доступі");
   }
   const validated = getAllOrdersSchema.parse(data);
+
+  const page = validated.page && validated.page > 0 ? validated.page : 1;
+  const limit = validated.limit && validated.limit > 0 ? validated.limit : 10;
+  const skip = (page - 1) * limit;
 
   if (validated.schoolId) {
     const school = await prisma.organization.findUnique({
@@ -57,37 +61,48 @@ export async function getAllOrders(
   if (validated.paymentStatus)
     filters.push({ paymentStatus: validated.paymentStatus });
 
-  const orders = await prisma.order.findMany({
-    where: filters.length > 0 ? { AND: filters } : {},
-    skip: (validated.page - 1) * validated.limit,
-    take: validated.limit,
-    select: {
-      id: true,
-      deliveryDate: true,
-      comment: true,
-      orderStatus: true,
-      paymentStatus: true,
-      totalPrice: true,
-      createdAt: true,
-      publishedAt: true,
-      school: {
-        select: {
-          id: true,
-          name: true,
+  const [orders, total] = await Promise.all([
+    prisma.order.findMany({
+      where: filters.length > 0 ? { AND: filters } : {},
+      skip: skip,
+      take: limit,
+      select: {
+        id: true,
+        deliveryDate: true,
+        comment: true,
+        orderStatus: true,
+        paymentStatus: true,
+        totalPrice: true,
+        createdAt: true,
+        publishedAt: true,
+        school: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        supplier: {
+          select: {
+            id: true,
+            name: true,
+          },
         },
       },
-      supplier: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-    },
-  });
-  return orders.map((order) => ({
-    ...order,
-    totalPrice: Number(order.totalPrice),
-  }));
+    }),
+    prisma.order.count({
+      where: filters.length > 0 ? { AND: filters } : {},
+    }),
+  ]);
+  const totalPages = Math.ceil(total / limit);
+  return {
+    orders: orders.map((order) => ({
+      ...order,
+      totalPrice: Number(order.totalPrice),
+    })),
+    page,
+    totalPages,
+    total,
+  };
 }
 
 export async function getAllOrdersStats() {

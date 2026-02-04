@@ -1,3 +1,5 @@
+"use client";
+
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";

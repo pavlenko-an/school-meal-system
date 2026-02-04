@@ -35,6 +35,7 @@ export const createMenuItemSchema = z.object({
     if (typeof val === "string") return val === "true";
     return val;
   }, z.boolean().default(true)),
+  image: z.instanceof(File).optional(),
 });
 
 export const updateMenuItemSchema = z.object({
@@ -58,6 +59,7 @@ export const updateMenuItemSchema = z.object({
     if (typeof val === "string") return val === "true";
     return val;
   }, z.boolean().optional()),
+  image: z.instanceof(File).optional(),
 });
 
 export const deleteMenuItemSchema = z.object({

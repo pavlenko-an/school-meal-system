@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -8,20 +8,33 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { updateUserInput } from "../model/types";
 import { updateUserSchema } from "../model/schemas";
 import { updateUser } from "../api/actions";
 import { OrganizationSearchSelect } from "@/features/organization/ui/OrganizationSearchSelect";
+import { Upload, X } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+const MAX_SIZE = 1024 * 1024;
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 type Props = {
-  defaultValues: Partial<updateUserInput>;
+  defaultValues: {
+    id: string;
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+    avatarUrl: string | null;
+    organizationId: string | null;
+  };
 };
 
 export default function EditUserForm({ defaultValues }: Props) {
@@ -35,11 +48,62 @@ export default function EditUserForm({ defaultValues }: Props) {
       email: defaultValues.email ?? "",
       firstName: defaultValues.firstName ?? "",
       lastName: defaultValues.lastName ?? "",
-      avatarUrl: defaultValues.avatarUrl ?? "",
+      avatar: undefined,
       organizationId: defaultValues.organizationId ?? "",
-      password: "",
     },
   });
+
+  const avatarFile = useWatch({ control: form.control, name: "avatar" }) as
+    | File
+    | undefined;
+  const firstName = useWatch({
+    control: form.control,
+    name: "firstName",
+  }) as string | undefined;
+  const [preview, setPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > MAX_SIZE) {
+      toast.error("Файл занадто великий (макс. 1 МБ)");
+      e.target.value = "";
+      return;
+    }
+
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      toast.error("Тільки JPG, PNG, WebP");
+      e.target.value = "";
+      return;
+    }
+
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+
+    form.setValue("avatar", file, { shouldValidate: true });
+  };
+
+  const handleRemove = () => {
+    form.setValue("avatar", undefined);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+
+    if (preview) {
+      URL.revokeObjectURL(preview);
+      setPreview(null);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (preview) {
+        URL.revokeObjectURL(preview);
+      }
+    };
+  }, [preview]);
 
   const { setError } = form;
 
@@ -65,11 +129,65 @@ export default function EditUserForm({ defaultValues }: Props) {
     }
   }, [state, router, setError]);
 
+  console.log("Default Values:", defaultValues);
+
   return (
     <Form {...form}>
       <form action={formAction} className="space-y-6">
         <div className="flex flex-col gap-6">
           <input type="hidden" {...form.register("id")} />
+          <FormItem>
+            <FormLabel>Зображення</FormLabel>
+            <div className="flex items-center gap-6">
+              <Avatar className="h-20 w-20">
+                <AvatarImage
+                  src={preview ?? defaultValues.avatarUrl ?? undefined}
+                  alt={firstName || "Користувач"}
+                />
+                <AvatarFallback>{firstName?.[0] || "M"}</AvatarFallback>
+              </Avatar>
+
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    {avatarFile ? "Змінити фото" : "Обрати фото"}
+                  </Button>
+
+                  <Input
+                    ref={fileInputRef}
+                    name="avatar"
+                    type="file"
+                    accept={ACCEPTED_TYPES.join(",")}
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                </div>
+
+                {avatarFile && (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleRemove}
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    Видалити зображення
+                  </Button>
+                )}
+              </div>
+            </div>
+            <FormDescription>
+              Рекомендований розмір: 200x200 пікселів. Макс. 5 МБ. Формати: JPG,
+              PNG, WebP.
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
           <FormField
             control={form.control}
             name="email"
@@ -78,7 +196,6 @@ export default function EditUserForm({ defaultValues }: Props) {
                 <FormLabel>Електронна пошта</FormLabel>
                 <FormControl>
                   <Input
-                    type="email"
                     autoComplete="email"
                     placeholder="example@example.com"
                     {...field}
@@ -97,7 +214,6 @@ export default function EditUserForm({ defaultValues }: Props) {
                 <FormLabel>Ім&apos;я</FormLabel>
                 <FormControl>
                   <Input
-                    type="text"
                     autoComplete="given-name"
                     placeholder="Петро"
                     {...field}
@@ -116,7 +232,6 @@ export default function EditUserForm({ defaultValues }: Props) {
                 <FormLabel>Прізвище</FormLabel>
                 <FormControl>
                   <Input
-                    type="text"
                     autoComplete="family-name"
                     placeholder="Петренко"
                     {...field}
@@ -135,7 +250,6 @@ export default function EditUserForm({ defaultValues }: Props) {
                 <FormLabel>Пароль</FormLabel>
                 <FormControl>
                   <Input
-                    type="password"
                     autoComplete="new-password"
                     placeholder="********"
                     {...field}

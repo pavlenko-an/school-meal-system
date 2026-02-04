@@ -46,12 +46,7 @@ export const updateUserSchema = z.object({
     .optional()
     .nullable()
     .transform((val) => (val === "" ? null : val)),
-  avatarUrl: z
-    .string()
-    .trim()
-    .optional()
-    .nullable()
-    .transform((val) => (val === "" ? null : val)),
+  avatar: z.instanceof(File).optional(),
   organizationId: z.uuid("Invalid organization ID").optional().nullable(),
 });
 

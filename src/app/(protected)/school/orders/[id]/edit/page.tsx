@@ -21,7 +21,10 @@ export default async function EditOrderPage({ params }: Props) {
     redirect(`/school/orders/${id}`);
   }
   const orderItems = await getAllOrderItems({ orderId: id });
-  const menuItems = await getAllMenuItems({});
+  const data = await getAllMenuItems({
+    limit: 100,
+    page: 1,
+  });
   return (
     <div className="container max-w-5xl mx-auto py-10 px-4">
       <h1 className="text-3xl font-bold tracking-tight mb-8">
@@ -32,7 +35,7 @@ export default async function EditOrderPage({ params }: Props) {
         orderId={id}
         initialOrder={order}
         initialItems={orderItems ?? []}
-        menuItems={menuItems}
+        menuItems={data.items}
       />
     </div>
   );

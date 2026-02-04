@@ -56,20 +56,16 @@ export default function OrderItemRow({
     }, 500);
   };
 
-  const primaryImage = item.menuItem?.images?.find(
-    (img) => img.isPrimary,
-  )?.imageUrl;
-
   return (
     <div
       className={cn(
         "flex flex-col sm:flex-row gap-4 items-start sm:items-center border rounded-lg p-4 bg-card transition-opacity",
       )}
     >
-      {primaryImage ? (
+      {item.menuItem?.imageUrl ? (
         <div className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-lg overflow-hidden bg-muted">
           <Image
-            src={primaryImage}
+            src={item.menuItem?.imageUrl || ""}
             alt={item.menuItem?.name || "Страва"}
             width={96}
             height={96}

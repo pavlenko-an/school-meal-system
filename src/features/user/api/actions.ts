@@ -1,7 +1,7 @@
 "use server";
 
 import { ActionResult } from "@/shared/types/action-result";
-import { deleteUserInput, updateUserInput, UserInfo } from "../model/types";
+import { deleteUserInput, UserInfo } from "../model/types";
 import { getCurrentUser } from "@/shared/auth/current-user";
 import { updateUserSchema } from "../model/schemas";
 import { UserService } from "../model/services";
@@ -9,21 +9,25 @@ import z from "zod";
 
 export async function updateUser(
   prevState: ActionResult<UserInfo> | null = null,
-  formData: FormData | updateUserInput,
+  formData: FormData,
 ): Promise<ActionResult<UserInfo>> {
   try {
     const currentUser = await getCurrentUser();
-    const rawData =
-      formData instanceof FormData ? Object.fromEntries(formData) : formData;
     const isAdmin = currentUser?.role === "admin";
-    const isSelfUpdate = currentUser?.id === rawData.id;
+    const isSelfUpdate = currentUser?.id === formData.get("id");
     if (!isAdmin && !isSelfUpdate) {
       return {
         success: false,
         error: "Ви не маєте прав оновлювати цього користувача",
       };
     }
-    const result = updateUserSchema.safeParse(rawData);
+    const avatarFile = formData.get("avatar");
+    let avatar: File | undefined;
+    if (avatarFile instanceof File && avatarFile.size > 0) {
+      avatar = avatarFile;
+    }
+    const rawData = Object.fromEntries(formData);
+    const result = updateUserSchema.safeParse({ ...rawData, avatar });
     if (!result.success) {
       const flattened = z.flattenError(result.error);
       return {

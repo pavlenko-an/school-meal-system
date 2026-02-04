@@ -30,13 +30,7 @@ export async function getAllOrderItems(
           id: true,
           name: true,
           description: true,
-          images: {
-            select: {
-              id: true,
-              imageUrl: true,
-              isPrimary: true,
-            },
-          },
+          imageUrl: true,
         },
       },
     },
@@ -63,13 +57,7 @@ export async function getOrderItemById(
           id: true,
           name: true,
           description: true,
-          images: {
-            select: {
-              id: true,
-              imageUrl: true,
-              isPrimary: true,
-            },
-          },
+          imageUrl: true,
         },
       },
     },

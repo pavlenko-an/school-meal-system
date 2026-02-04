@@ -99,26 +99,13 @@ model MenuItem {
   description String?     @map("description") @db.Text
   price       Decimal     @map("price") @db.Decimal(10, 2)
   isAvailable Boolean     @default(true) @map("is_available")
-  images      MenuImage[] @relation("MenuItemImages")
+  imageUrl    String?     @map("image_url") @db.Text
   orderItems  OrderItem[] @relation("OrderItemMenuItems")
   createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @updatedAt @map("updated_at")
 
   @@index([categoryId])
   @@map("menu_items")
-}
-
-model MenuImage {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  menuItemId String   @map("menu_item_id") @db.Uuid
-  menuItem   MenuItem @relation("MenuItemImages", fields: [menuItemId], references: [id], onDelete: Cascade)
-  imageUrl   String   @unique @map("image_url") @db.Text
-  isPrimary  Boolean  @default(false) @map("is_primary")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
-
-  @@unique([menuItemId, isPrimary], map: "unique_primary_image_per_item")
-  @@map("menu_images")
 }
 
 model Order {

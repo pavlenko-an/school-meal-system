@@ -39,17 +39,9 @@ export default function MenuItemsAccordionList({
     );
   }
 
-  const getPrimaryOrFirstImage = (images: MenuItemInfo["images"]) => {
-    if (!images || images.length === 0) return null;
-    const primary = images.find((img) => img.isPrimary);
-    return primary || images[0];
-  };
-  
   return (
     <Accordion type="single" collapsible className="space-y-4">
       {menuItems.map((item) => {
-        const primaryImage = getPrimaryOrFirstImage(item.images);
-
         return (
           <AccordionItem
             key={item.id}
@@ -59,10 +51,10 @@ export default function MenuItemsAccordionList({
             <AccordionTrigger className="flex items-center hover:no-underline px-5 py-4 bg-muted/20 hover:bg-muted/40 transition-colors border-b border-gray-200 data-[state=open]:border-b-0">
               <div className="flex-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-left">
                 <div>
-                  {primaryImage ? (
+                  {item.imageUrl ? (
                     <div className="relative h-14 w-14 rounded-md overflow-hidden border bg-muted">
                       <Image
-                        src={primaryImage.imageUrl}
+                        src={item.imageUrl}
                         alt={item.name || "Пункт меню"}
                         fill
                         className="object-cover"
@@ -112,33 +104,20 @@ export default function MenuItemsAccordionList({
                   </div>
                 )}
 
-                {item.images && item.images.length > 0 ? (
+                {item.imageUrl ? (
                   <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-2.5">
-                      Фотографії ({item.images.length})
-                    </h4>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                      {item.images.map((img) => (
-                        <div
-                          key={img.id}
-                          className="relative aspect-square rounded-md overflow-hidden border bg-muted group"
-                        >
-                          <Image
-                            src={img.imageUrl}
-                            alt={`${item.name} - фото${img.isPrimary ? " (основне)" : ""}`}
-                            fill
-                            className="object-cover transition-transform group-hover:scale-105"
-                            sizes="(max-width: 640px) 150px, (max-width: 1024px) 200px, 250px"
-                            loading="lazy"
-                            unoptimized
-                          />
-                          {img.isPrimary && (
-                            <div className="absolute top-1 right-1 bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 rounded-full font-medium">
-                              Основне
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                      <div className="relative aspect-square rounded-md overflow-hidden border bg-muted group">
+                        <Image
+                          src={item.imageUrl}
+                          alt={`${item.name} - фото`}
+                          fill
+                          className="object-cover transition-transform group-hover:scale-105"
+                          sizes="(max-width: 640px) 150px, (max-width: 1024px) 200px, 250px"
+                          loading="lazy"
+                          unoptimized
+                        />
+                      </div>
                     </div>
                   </div>
                 ) : (

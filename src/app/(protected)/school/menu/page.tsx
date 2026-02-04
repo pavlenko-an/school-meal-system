@@ -2,9 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import MenuCategoryTabs from "@/features/category/ui/MenuCategoryTabs";
 import MenuGrid from "@/features/menu-item/ui/MenuGrid";
 import { getAllMenuItemsSchema } from "@/features/menu-item/model/schemas";
-import { MenuItemInfo } from "@/features/menu-item/model/types";
 import { getAllMenuItems } from "@/features/menu-item/model/queries";
-import { CategoryInfo } from "@/features/category/model/types";
 import { getAllCategories } from "@/features/category/model/queries";
 
 interface Props {
@@ -20,11 +18,10 @@ export default async function SchoolMenuPage({ searchParams }: Props) {
       ? menuQuery.categoryId
       : undefined;
 
-  const [categories, menuItems]: [CategoryInfo[], MenuItemInfo[]] =
-    await Promise.all([
-      getAllCategories({ limit: 20 }),
-      getAllMenuItems({ ...menuQuery, categoryId, isAvailable: true }),
-    ]);
+  const [catData, menuData] = await Promise.all([
+    getAllCategories({ limit: 20 }),
+    getAllMenuItems({ ...menuQuery, categoryId, isAvailable: true }),
+  ]);
 
   return (
     <div className="space-y-8">
@@ -34,9 +31,9 @@ export default async function SchoolMenuPage({ searchParams }: Props) {
           Доступні страви для формування замовлень
         </p>
       </div>
-      <MenuCategoryTabs categories={categories} />
-      <MenuGrid items={menuItems} />
-      {menuItems.length === 0 && (
+      <MenuCategoryTabs categories={catData.categories} />
+      <MenuGrid items={menuData.items} />
+      {menuData.items.length === 0 && (
         <Card className="text-center py-12">
           <CardContent>
             <p className="text-muted-foreground">

@@ -11,21 +11,20 @@ export default function MenuGrid({ items }: Props) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {items.map((item) => {
-        const primaryImage = item.images?.find((img) => img.isPrimary);
-
         return (
           <Card
             key={item.id}
             className="flex-col gap-4 overflow-hidden hover:shadow-lg transition-shadow"
           >
-            {primaryImage ? (
+            {item.imageUrl ? (
               <div className="aspect-4/3 relative">
                 <Image
-                  src={primaryImage.imageUrl}
+                  src={item.imageUrl}
                   alt={item.name}
                   fill
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  unoptimized
                 />
               </div>
             ) : (
@@ -36,7 +35,9 @@ export default function MenuGrid({ items }: Props) {
 
             <CardContent className="px-4 py-0">
               <div className="flex justify-between items-start mb-2">
-                <h3 className="font-semibold text-lg line-clamp-2">{item.name}</h3>
+                <h3 className="font-semibold text-lg line-clamp-2">
+                  {item.name}
+                </h3>
                 <Badge variant="secondary">
                   {new Intl.NumberFormat("uk-UA", {
                     style: "currency",

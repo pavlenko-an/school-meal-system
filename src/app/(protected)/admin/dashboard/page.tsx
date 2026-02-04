@@ -101,7 +101,7 @@ export default async function AdminDashboardPage() {
           </Button>
 
           <Button variant="outline" asChild>
-            <Link href="/admin/users/invite">Запросити користувача</Link>
+            <Link href="/admin/users/new">Зареєструвати користувача</Link>
           </Button>
 
           <Button variant="outline" asChild>

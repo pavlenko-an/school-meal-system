@@ -14,8 +14,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { signOut } from "next-auth/react";
 import { deleteUser } from "../api/actions";
+import { signOut } from "next-auth/react";
 
 export default function DeleteAccountSection() {
   const [isDeleting, startDelete] = useTransition();

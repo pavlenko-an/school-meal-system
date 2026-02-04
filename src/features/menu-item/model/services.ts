@@ -4,6 +4,9 @@ import {
   deleteMenuItemInput,
   updateMenuItemInput,
 } from "./types";
+import { randomUUID } from "crypto";
+import path from "path";
+import { mkdir, writeFile } from "fs/promises";
 
 export const MenuItemService = {
   async create(data: createMenuItemInput) {
@@ -13,6 +16,26 @@ export const MenuItemService = {
     if (existingMenuItem) {
       throw new Error("Позиція меню з такою назвою вже існує");
     }
+
+    let imageUrl: string | null = null;
+
+    if (data.image && data.image.size > 0) {
+      const file = data.image;
+      const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const fileName = `${randomUUID()}.${fileExt}`;
+      const filePath = path.join(
+        process.cwd(),
+        "public/uploads/menu-images",
+        fileName,
+      );
+
+      const buffer = Buffer.from(await file.arrayBuffer());
+      await mkdir(path.dirname(filePath), { recursive: true });
+      await writeFile(filePath, buffer);
+
+      imageUrl = `/uploads/menu-images/${fileName}`;
+    }
+
     const menuItem = await prisma.menuItem.create({
       data: {
         name: data.name,
@@ -20,6 +43,7 @@ export const MenuItemService = {
         price: data.price,
         categoryId: data.categoryId,
         isAvailable: data.isAvailable,
+        imageUrl,
       },
       select: {
         id: true,
@@ -27,18 +51,12 @@ export const MenuItemService = {
         description: true,
         price: true,
         isAvailable: true,
+        imageUrl: true,
         category: {
           select: {
             id: true,
             name: true,
             description: true,
-          },
-        },
-        images: {
-          select: {
-            id: true,
-            imageUrl: true,
-            isPrimary: true,
           },
         },
       },
@@ -85,6 +103,27 @@ export const MenuItemService = {
     if (data.isAvailable !== undefined) {
       updateData.isAvailable = data.isAvailable;
     }
+    if (data.image) {
+      let imageUrl: string | null = null;
+
+      if (data.image && data.image.size > 0) {
+        const file = data.image;
+        const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
+        const fileName = `${randomUUID()}.${fileExt}`;
+        const filePath = path.join(
+          process.cwd(),
+          "public/uploads/menu-images",
+          fileName,
+        );
+
+        const buffer = Buffer.from(await file.arrayBuffer());
+        await mkdir(path.dirname(filePath), { recursive: true });
+        await writeFile(filePath, buffer);
+
+        imageUrl = `/uploads/menu-images/${fileName}`;
+      }
+      updateData.imageUrl = imageUrl;
+    }
 
     const updatedMenuItem = await prisma.menuItem.update({
       where: { id: data.id },
@@ -95,18 +134,12 @@ export const MenuItemService = {
         description: true,
         price: true,
         isAvailable: true,
+        imageUrl: true,
         category: {
           select: {
             id: true,
             name: true,
             description: true,
-          },
-        },
-        images: {
-          select: {
-            id: true,
-            imageUrl: true,
-            isPrimary: true,
           },
         },
       },

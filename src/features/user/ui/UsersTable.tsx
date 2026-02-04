@@ -27,6 +27,7 @@ import { useTransition } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { deleteUser } from "../api/actions";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Props {
   users: UserInfo[];
@@ -72,6 +73,7 @@ export default function UsersTable({ users, isLoading = false }: Props) {
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead>Аватар</TableHead>
             <TableHead>Ім&apos;я</TableHead>
             <TableHead>Прізвище</TableHead>
             <TableHead>Електронна пошта</TableHead>
@@ -84,6 +86,12 @@ export default function UsersTable({ users, isLoading = false }: Props) {
         <TableBody>
           {users.map((user) => (
             <TableRow key={user.id} className="hover:bg-muted/50">
+              <TableCell>
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={user.avatarUrl ?? undefined} />
+                  <AvatarFallback>{user.firstName?.[0] || "U"}</AvatarFallback>
+                </Avatar>
+              </TableCell>
               <TableCell>{user.firstName}</TableCell>
               <TableCell>{user.lastName}</TableCell>
               <TableCell>{user.email}</TableCell>

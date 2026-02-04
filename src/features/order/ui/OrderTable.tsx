@@ -17,6 +17,7 @@ import { OrderInfo } from "../model/types";
 interface Props {
   orders: OrderInfo[];
   organizationType?: "school" | "supplier";
+  role?: "employee" | "admin";
   isLoading?: boolean;
 }
 
@@ -32,6 +33,7 @@ const statusColors: Record<OrderInfo["orderStatus"], string> = {
 export default function OrderTable({
   orders,
   organizationType,
+  role,
   isLoading = false,
 }: Props) {
   if (isLoading) {
@@ -80,43 +82,51 @@ export default function OrderTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {orders.map((order) => (
-            <TableRow key={order.id} className="hover:bg-muted/50">
-              <TableCell>
-                {order.deliveryDate?.toLocaleDateString("uk-UA")}
-              </TableCell>
-              <TableCell>
-                <Badge
-                  variant="outline"
-                  className={statusColors[order.orderStatus] || "bg-gray-100"}
-                >
-                  {statusLabels[order.orderStatus]}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <Badge
-                  variant={
-                    order.paymentStatus === "paid" ? "default" : "secondary"
-                  }
-                >
-                  {paymentStatusLabels[order.paymentStatus]}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-right font-medium">
-                {order.totalPrice} ₴
-              </TableCell>
-              <TableCell className="text-right">
-                <Button variant="ghost" size="icon" asChild>
-                  <Link href={`/${organizationType}/orders/${order.id}`}>
-                    <Eye
-                      className="h-4 w-4"
-                      aria-label="Переглянути замовлення"
-                    />
-                  </Link>
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
+          {orders.map((order) => {
+            const routeRoot = organizationType
+              ? `/${organizationType}`
+              : role
+                ? `/${role}`
+                : "";
+
+            return (
+              <TableRow key={order.id} className="hover:bg-muted/50">
+                <TableCell>
+                  {order.deliveryDate?.toLocaleDateString("uk-UA")}
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    variant="outline"
+                    className={statusColors[order.orderStatus] || "bg-gray-100"}
+                  >
+                    {statusLabels[order.orderStatus]}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    variant={
+                      order.paymentStatus === "paid" ? "default" : "secondary"
+                    }
+                  >
+                    {paymentStatusLabels[order.paymentStatus]}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right font-medium">
+                  {order.totalPrice} ₴
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link href={`${routeRoot}/orders/${order.id}`}>
+                      <Eye
+                        className="h-4 w-4"
+                        aria-label="Переглянути замовлення"
+                      />
+                    </Link>
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>

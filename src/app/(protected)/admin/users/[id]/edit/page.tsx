@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/card";
 import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { getUserById } from "@/features/user/model/queries";
-import { updateUserInput } from "@/features/user/model/types";
 import EditUserForm from "@/features/user/ui/EditUserForm";
 
 interface Props {
@@ -22,12 +21,12 @@ export default async function EditUserPage({ params }: Props) {
     throw new UnauthorizedError("Unauthorized");
   }
   const user = await getUserById({ id }, currentUser);
-  const defaultValues: Partial<updateUserInput> = {
+  const defaultValues = {
     id: user?.id,
     email: user?.email,
     firstName: user?.firstName || "",
     lastName: user?.lastName || "",
-    avatarUrl: user?.avatarUrl || "",
+    avatarUrl: user?.avatarUrl || null,
     organizationId: user?.organization?.id || "",
   };
 

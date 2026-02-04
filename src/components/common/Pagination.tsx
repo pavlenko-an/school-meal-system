@@ -24,7 +24,7 @@ export default function Pagination({
   if (totalPages <= 1) return null;
 
   const createPageUrl = (page: number) => {
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams?.toString() ?? "");
 
     if (currentParams) {
       Object.entries(currentParams).forEach(([key, value]) => {
@@ -45,6 +45,9 @@ export default function Pagination({
   const from = (currentPage - 1) * itemsPerPage + 1;
   const to = Math.min(currentPage * itemsPerPage, totalItems);
 
+  const prevDisabled = currentPage === 1;
+  const nextDisabled = currentPage === totalPages;
+
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-8">
       <p className="text-sm text-muted-foreground text-center sm:text-left">
@@ -52,22 +55,34 @@ export default function Pagination({
       </p>
 
       <div className="flex justify-center sm:justify-end gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={currentPage === 1}
-          asChild
-        >
-          <a href={createPageUrl(currentPage - 1)}>Попередня</a>
+        <Button variant="outline" size="sm" disabled={prevDisabled} asChild>
+          <a
+            href={
+              prevDisabled
+                ? undefined
+                : createPageUrl(Math.max(1, currentPage - 1))
+            }
+            onClick={prevDisabled ? (e) => e.preventDefault() : undefined}
+            aria-disabled={prevDisabled}
+            tabIndex={prevDisabled ? -1 : 0}
+          >
+            Попередня
+          </a>
         </Button>
 
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={currentPage === totalPages}
-          asChild
-        >
-          <a href={createPageUrl(currentPage + 1)}>Наступна</a>
+        <Button variant="outline" size="sm" disabled={nextDisabled} asChild>
+          <a
+            href={
+              nextDisabled
+                ? undefined
+                : createPageUrl(Math.min(totalPages, currentPage + 1))
+            }
+            onClick={nextDisabled ? (e) => e.preventDefault() : undefined}
+            aria-disabled={nextDisabled}
+            tabIndex={nextDisabled ? -1 : 0}
+          >
+            Наступна
+          </a>
         </Button>
       </div>
     </div>

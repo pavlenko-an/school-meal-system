@@ -1,6 +1,6 @@
-import { authOptions } from "@/features/auth";
 import { getServerSession } from "next-auth";
 import { UnauthorizedError } from "../errors/unauthorized-error";
+import { authOptions } from "@/lib/auth";
 
 export type CurrentUser = {
   id: string;
