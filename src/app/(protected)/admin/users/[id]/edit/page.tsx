@@ -6,7 +6,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { getUserById } from "@/features/user/model/queries";
 import EditUserForm from "@/features/user/ui/EditUserForm";
 
@@ -17,9 +16,6 @@ interface Props {
 export default async function EditUserPage({ params }: Props) {
   const { id } = await params;
   const currentUser = await getCurrentUser();
-  if (!currentUser || currentUser.role !== "admin") {
-    throw new UnauthorizedError("Unauthorized");
-  }
   const user = await getUserById({ id }, currentUser);
   const defaultValues = {
     id: user?.id,

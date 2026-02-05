@@ -71,6 +71,7 @@ export default function OrderItemRow({
             height={96}
             className="object-cover w-full h-full"
             priority={false}
+            unoptimized
           />
         </div>
       ) : (

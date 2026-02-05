@@ -25,6 +25,7 @@ export default function MenuGrid({ items }: Props) {
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   unoptimized
+                  loading="eager"
                 />
               </div>
             ) : (
@@ -58,15 +59,12 @@ export default function MenuGrid({ items }: Props) {
             </CardContent>
 
             <CardFooter className="px-4 pb-4 pt-0">
-              {item.isAvailable ? (
-                <span className="text-sm text-muted-foreground">
-                  В наявності
-                </span>
-              ) : (
-                <span className="text-sm text-destructive">
-                  Немає в наявності
-                </span>
-              )}
+              <Badge
+                variant={item.isAvailable ? "default" : "secondary"}
+                className="text-xs"
+              >
+                {item.isAvailable ? "Доступний" : "Недоступний"}
+              </Badge>
             </CardFooter>
           </Card>
         );

@@ -1,6 +1,5 @@
 import { prisma } from "@/shared/db/prisma";
 import { Prisma } from "@/generated/prisma/client";
-import { NotFoundError } from "@/shared/errors/not-found.error";
 import { getAllMenuItemsSchema, getMenuItemByIdSchema } from "./schemas";
 import {
   getAllMenuItemsInput,
@@ -8,6 +7,7 @@ import {
   MenuItemInfo,
   MenuItemsList,
 } from "./types";
+import { notFound } from "next/navigation";
 
 export async function getAllMenuItems(
   data: getAllMenuItemsInput,
@@ -22,7 +22,7 @@ export async function getAllMenuItems(
       })
     : null;
   if (validated.categoryId && !existingCategory) {
-    throw new NotFoundError("Category not found");
+    notFound();
   }
 
   const filters: Prisma.MenuItemWhereInput[] = [];
@@ -95,7 +95,7 @@ export async function getMenuItemById(
     },
   });
   if (!menuItem) {
-    throw new NotFoundError("Menu item not found");
+    notFound();
   }
   return {
     ...menuItem,

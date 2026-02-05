@@ -1,4 +1,3 @@
-import { getCurrentUser } from "@/shared/auth/current-user";
 import {
   Card,
   CardContent,
@@ -6,15 +5,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { getAllCategories } from "@/features/category/model/queries";
 import MenuItemCreateForm from "@/features/menu-item/ui/MenuItemCreateForm";
 
 export default async function NewMenuItemPage() {
-  const currentUser = await getCurrentUser();
-  if (!currentUser || currentUser.role !== "admin") {
-    throw new UnauthorizedError("Unauthorized");
-  }
   const data = await getAllCategories({
     limit: 100,
   });

@@ -1,26 +1,40 @@
 import { Card, CardContent } from "@/components/ui/card";
 import MenuCategoryTabs from "@/features/category/ui/MenuCategoryTabs";
 import MenuGrid from "@/features/menu-item/ui/MenuGrid";
-import { getAllMenuItemsSchema } from "@/features/menu-item/model/schemas";
 import { getAllMenuItems } from "@/features/menu-item/model/queries";
 import { getAllCategories } from "@/features/category/model/queries";
+import Pagination from "@/components/common/Pagination";
+import { Suspense } from "react";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
+import MenuItemsFilters from "@/features/menu-item/ui/MenuItemsFilters";
 
 interface Props {
-  searchParams?: Promise<{ categoryId?: string }>;
+  searchParams: Promise<{
+    categoryId?: string;
+    name?: string;
+    isAvailable?: string;
+    page?: string;
+    limit?: string;
+  }>;
 }
 
 export default async function SchoolMenuPage({ searchParams }: Props) {
   const params = await searchParams;
-  const menuQuery = getAllMenuItemsSchema.parse(params || {});
 
-  const categoryId =
-    menuQuery.categoryId && menuQuery.categoryId !== "all"
-      ? menuQuery.categoryId
-      : undefined;
+  const query = {
+    categoryId:
+      params?.categoryId && params.categoryId !== "all"
+        ? params.categoryId
+        : undefined,
+    name: params?.name,
+    isAvailable: params?.isAvailable ? Boolean(params.isAvailable) : undefined,
+    page: params?.page ? Number(params.page) : 1,
+    limit: params?.limit ? Number(params.limit) : 10,
+  };
 
   const [catData, menuData] = await Promise.all([
     getAllCategories({ limit: 20 }),
-    getAllMenuItems({ ...menuQuery, categoryId, isAvailable: true }),
+    getAllMenuItems(query),
   ]);
 
   return (
@@ -32,6 +46,13 @@ export default async function SchoolMenuPage({ searchParams }: Props) {
         </p>
       </div>
       <MenuCategoryTabs categories={catData.categories} />
+      <Suspense
+        fallback={<LoadingSpinner size="md" text="Завантаження фільтрів..." />}
+      >
+        <div className="w-full flex justify-center">
+          <MenuItemsFilters currentParams={params} />
+        </div>
+      </Suspense>
       <MenuGrid items={menuData.items} />
       {menuData.items.length === 0 && (
         <Card className="text-center py-12">
@@ -42,6 +63,12 @@ export default async function SchoolMenuPage({ searchParams }: Props) {
           </CardContent>
         </Card>
       )}
+      <Pagination
+        currentPage={menuData.page}
+        totalPages={menuData.totalPages}
+        totalItems={menuData.total}
+        currentParams={params}
+      />
     </div>
   );
 }

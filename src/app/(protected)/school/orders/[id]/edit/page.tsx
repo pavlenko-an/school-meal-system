@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import OrderEditForm from "@/features/order/ui/OrderEditForm";
 import { getCurrentUser } from "@/shared/auth/current-user";
-import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { getOrderById } from "@/features/order/model/queries";
 import { getAllOrderItems } from "@/features/order-item/model/queries";
 import { getAllMenuItems } from "@/features/menu-item/model/queries";
@@ -13,9 +12,6 @@ interface Props {
 export default async function EditOrderPage({ params }: Props) {
   const { id } = await params;
   const currentUser = await getCurrentUser();
-  if (!currentUser || currentUser.organizationType !== "school") {
-    throw new UnauthorizedError("Unauthorized");
-  }
   const order = await getOrderById({ id }, currentUser);
   if (order.orderStatus !== "new") {
     redirect(`/school/orders/${id}`);

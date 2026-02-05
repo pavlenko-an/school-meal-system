@@ -6,8 +6,8 @@ import {
   getAllCategoriesInput,
   getCategoryByIdInput,
 } from "./types";
-import { NotFoundError } from "@/shared/errors/not-found.error";
 import { getAllCategoriesSchema, getCategoryByIdSchema } from "./schemas";
+import { notFound } from "next/navigation";
 
 export async function getAllCategories(
   data: getAllCategoriesInput,
@@ -60,7 +60,7 @@ export async function getCategoryById(
     },
   });
   if (!category) {
-    throw new NotFoundError("Категорія не знайдена");
+    notFound();
   }
   return category;
 }

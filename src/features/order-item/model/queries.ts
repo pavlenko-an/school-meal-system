@@ -1,11 +1,11 @@
 import { prisma } from "@/shared/db/prisma";
-import { NotFoundError } from "@/shared/errors/not-found.error";
 import {
   getAllOrderItemsInput,
   getOrderItemByIdInput,
   OrderItemInfo,
 } from "../model/types";
 import { getAllOrderItemsSchema, getOrderItemByIdSchema } from "./schemas";
+import { notFound } from "next/navigation";
 
 export async function getAllOrderItems(
   data: getAllOrderItemsInput,
@@ -15,7 +15,7 @@ export async function getAllOrderItems(
     where: { id: validated.orderId },
   });
   if (!order) {
-    throw new NotFoundError("Order not found");
+    notFound();
   }
   const orderItems = await prisma.orderItem.findMany({
     where: { orderId: validated.orderId },
@@ -63,7 +63,7 @@ export async function getOrderItemById(
     },
   });
   if (!orderItem) {
-    throw new NotFoundError("Order item not found");
+    notFound();
   }
   return {
     ...orderItem,

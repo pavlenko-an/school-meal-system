@@ -8,7 +8,6 @@ import { UsersList } from "@/features/user/model/types";
 import UsersFilters from "@/features/user/ui/UsersFilters";
 import UsersTable from "@/features/user/ui/UsersTable";
 import { getCurrentUser } from "@/shared/auth/current-user";
-import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { PlusCircle } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -40,9 +39,6 @@ export default async function AdminUsersPage({ searchParams }: Props) {
   });
 
   const user = await getCurrentUser();
-  if (!user || user.role !== "admin") {
-    throw new UnauthorizedError("Unauthorized");
-  }
 
   const data: UsersList = await getAllUsers(parsedQuery, user);
   const organizations: OrganizationInfo[] = Array.from(

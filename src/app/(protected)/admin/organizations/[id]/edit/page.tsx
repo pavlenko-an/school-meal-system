@@ -1,4 +1,3 @@
-import { getCurrentUser } from "@/shared/auth/current-user";
 import {
   Card,
   CardContent,
@@ -6,7 +5,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { updateOrganizationInput } from "@/features/organization/model/types";
 import { getOrganizationById } from "@/features/organization/model/queries";
 import OrganizationEditForm from "@/features/organization/ui/OrganizationEditForm";
@@ -17,10 +15,6 @@ interface Props {
 
 export default async function EditOrganizationPage({ params }: Props) {
   const { id } = await params;
-  const currentUser = await getCurrentUser();
-  if (!currentUser || currentUser.role !== "admin") {
-    throw new UnauthorizedError("Unauthorized");
-  }
   const organization = await getOrganizationById({ id });
   const defaultValues: Partial<updateOrganizationInput> = {
     id: organization?.id,

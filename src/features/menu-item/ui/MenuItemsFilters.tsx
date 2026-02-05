@@ -2,28 +2,18 @@
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { CategoryInfo } from "@/features/category/model/types";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 interface Props {
   currentParams: {
-    categoryId?: string;
     name?: string;
     isAvailable?: string;
   };
-  categories: CategoryInfo[];
 }
 
-export default function MenuItemsFilters({ currentParams, categories }: Props) {
+export default function MenuItemsFilters({ currentParams }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -53,24 +43,6 @@ export default function MenuItemsFilters({ currentParams, categories }: Props) {
         }}
         className="max-w-sm"
       />
-      <Select
-        value={currentParams.categoryId || "all"}
-        onValueChange={(value) =>
-          updateFilter("categoryId", value === "all" ? undefined : value)
-        }
-      >
-        <SelectTrigger className="w-45">
-          <SelectValue placeholder="Категорія" />
-        </SelectTrigger>
-        <SelectContent position="popper">
-          <SelectItem value="all">Всі</SelectItem>
-          {categories.map((cat) => (
-            <SelectItem key={cat.id} value={cat.id}>
-              {cat.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
       <div className="flex items-center space-x-2">
         <Switch
           id="available-only"

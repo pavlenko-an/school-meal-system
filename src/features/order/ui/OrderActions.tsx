@@ -13,7 +13,6 @@ import {
 
 interface Props {
   onSave: () => void;
-  onPublish: () => void;
   onDelete: () => void;
   isSubmitting: boolean;
   disabled?: boolean;
@@ -21,7 +20,6 @@ interface Props {
 
 export default function OrderActions({
   onSave,
-  onPublish,
   onDelete,
   isSubmitting,
   disabled = false,
@@ -37,35 +35,6 @@ export default function OrderActions({
       >
         {isSubmitting ? "Збереження..." : "Зберегти зміни"}
       </Button>
-
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button
-            size="lg"
-            variant="default"
-            disabled={disabled}
-            className="flex-1"
-            aria-label="Опублікувати замовлення"
-          >
-            Опублікувати замовлення
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Опублікувати замовлення?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Після публікації редагування буде заборонено. Постачальники
-              побачать замовлення в списку.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Скасувати</AlertDialogCancel>
-            <AlertDialogAction onClick={onPublish}>
-              Опублікувати
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <AlertDialog>
         <AlertDialogTrigger asChild>

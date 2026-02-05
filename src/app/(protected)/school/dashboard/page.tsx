@@ -2,10 +2,7 @@ import StatsCards from "@/features/order/ui/StatsCards";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { getCurrentUser } from "@/shared/auth/current-user";
-import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
-import { getMyOrganizationStatsSchema } from "@/features/order/model/params.schemas";
 import { getMyOrganizationStats } from "@/features/order/model/queries";
-import { OrdersStats } from "@/features/order/model/types";
 import { cache, Suspense } from "react";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import DateRangeFilters from "@/features/order/ui/DateRangeFilter";
@@ -21,14 +18,9 @@ interface Props {
 export default async function SchoolDashboard({ searchParams }: Props) {
   const paramsResolved = await searchParams;
 
-  const filters = {
+  const query = {
     from: paramsResolved.dateFrom,
     to: paramsResolved.dateTo,
-  };
-
-  const query = getMyOrganizationStatsSchema.parse({
-    from: filters.from,
-    to: filters.to,
     statuses: [
       "new",
       "published",
@@ -37,28 +29,25 @@ export default async function SchoolDashboard({ searchParams }: Props) {
       "completed",
       "cancelled",
     ],
-  });
+  };
 
   const params = new URLSearchParams();
-  Object.entries(filters).forEach(([key, value]) => {
+  Object.entries(query).forEach(([key, value]) => {
     if (value !== undefined) params.set(key, String(value));
   });
 
   const currentUser = await getCurrentUser();
-  if (!currentUser) {
-    throw new UnauthorizedError("Unauthorized");
-  }
 
   const getMyOrganizationStatsCached = cache(async () => {
     return await getMyOrganizationStats(query, currentUser);
   });
 
-  const data: OrdersStats = await getMyOrganizationStatsCached();
+  const data = await getMyOrganizationStatsCached();
   const stats = {
-    totalOrders: data.stats?.totalOrders ?? 0,
-    activeOrders: data.stats?.activeOrders ?? 0,
-    upcomingDelivery: data.stats?.upcomingDelivery ?? null,
-    totalUnpaid: data.stats?.totalUnpaid ?? 0,
+    totalOrders: data?.stats?.totalOrders ?? 0,
+    activeOrders: data?.stats?.activeOrders ?? 0,
+    upcomingDelivery: data?.stats?.upcomingDelivery ?? null,
+    totalUnpaid: data?.stats?.totalUnpaid ?? 0,
   };
 
   return (

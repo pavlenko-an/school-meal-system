@@ -2,7 +2,6 @@ import { format, startOfDay } from "date-fns";
 import { uk } from "date-fns/locale";
 import { getMyOrganizationOrdersSchema } from "@/features/order/model/params.schemas";
 import { getCurrentUser } from "@/shared/auth/current-user";
-import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { getMyOrganizationOrders } from "@/features/order/model/queries";
 import { OrdersList } from "@/features/order/model/types";
 import DateRangeFilters from "@/features/order/ui/DateRangeFilter";
@@ -45,9 +44,6 @@ export default async function PublishedOrdersPage({ searchParams }: Props) {
   });
 
   const currentUser = await getCurrentUser();
-  if (!currentUser) {
-    throw new UnauthorizedError("Unauthorized");
-  }
 
   const data: OrdersList = await getMyOrganizationOrders(
     parsedQuery,

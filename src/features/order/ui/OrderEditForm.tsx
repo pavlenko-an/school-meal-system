@@ -13,7 +13,7 @@ import OrderItemRow from "@/features/order-item/ui/OrderItemRow";
 import { OrderItemInfo } from "@/features/order-item/model/types";
 import { MenuItemInfo } from "@/features/menu-item/model/types";
 import { createOrderSchema } from "../model/input.schemas";
-import { deleteOrder, updateOrder, updateOrderStatus } from "../api/actions";
+import { deleteOrder, updateOrder } from "../api/actions";
 import {
   createOrderItem,
   deleteOrderItem,
@@ -51,7 +51,6 @@ export default function OrderEditForm({
   });
 
   const [isSaving, startSave] = useTransition();
-  const [isPublishing, startPublish] = useTransition();
   const [isDeleting, startDelete] = useTransition();
 
   const handleAddItem = async (menuItemId: string, quantity: number) => {
@@ -157,22 +156,6 @@ export default function OrderEditForm({
     });
   });
 
-  const handlePublishOrder = () => {
-    startPublish(async () => {
-      const result = await updateOrderStatus(null, {
-        id: orderId,
-        status: "published",
-      });
-
-      if (result?.success) {
-        toast.success("Замовлення опубліковано");
-        router.push("/school/orders");
-      } else {
-        toast.error(result?.error ?? "Не вдалося опублікувати");
-      }
-    });
-  };
-
   const handleDeleteOrder = () => {
     startDelete(async () => {
       const result = await deleteOrder(null, { id: orderId });
@@ -224,9 +207,8 @@ export default function OrderEditForm({
 
         <OrderActions
           onSave={handleSaveOrder}
-          onPublish={handlePublishOrder}
           onDelete={handleDeleteOrder}
-          isSubmitting={isSaving || isPublishing || isDeleting}
+          isSubmitting={isSaving || isDeleting}
           disabled={localItems.length === 0}
         />
       </div>

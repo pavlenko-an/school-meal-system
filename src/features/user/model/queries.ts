@@ -8,8 +8,8 @@ import {
   UsersList,
 } from "../model/types";
 import { AccessDeniedError } from "@/shared/errors/access-denied.error";
-import { NotFoundError } from "@/shared/errors/not-found.error";
 import { getAllUsersSchema, getUserByIdSchema } from "./schemas";
+import { notFound } from "next/navigation";
 
 export async function getAllUsers(
   data: getAllUsersInput,
@@ -28,7 +28,7 @@ export async function getAllUsers(
       })
     : null;
   if (validated.organizationId && !existingOrg) {
-    throw new NotFoundError("Organization not found");
+    notFound();
   }
 
   const filters: Prisma.UserWhereInput[] = [];
@@ -133,6 +133,6 @@ export async function getUserById(
       },
     },
   });
-  if (!user) throw new NotFoundError("User not found");
+  if (!user) notFound();
   return user;
 }

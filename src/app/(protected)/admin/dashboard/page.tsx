@@ -19,8 +19,6 @@ import {
   getTopSchoolsByOrderValue,
 } from "@/features/organization/model/queries";
 import { getAllUsersStats } from "@/features/user/model/queries";
-import { getCurrentUser } from "@/shared/auth/current-user";
-import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { format } from "date-fns";
 import {
   Building2,
@@ -34,11 +32,6 @@ import Link from "next/link";
 import { cache } from "react";
 
 export default async function AdminDashboardPage() {
-  const user = await getCurrentUser();
-  if (!user || user.role !== "admin") {
-    throw new UnauthorizedError("Unauthorized");
-  }
-
   const getAllOrganizationsStatsCached = cache(async () => {
     return await getAllOrganizationsStats();
   });

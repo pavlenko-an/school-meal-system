@@ -3,7 +3,6 @@ import LoadingSpinner from "@/components/common/LoadingSpinner";
 import OrdersFilters from "@/features/order/ui/OrdersFilters";
 import OrderTable from "@/features/order/ui/OrderTable";
 import Pagination from "@/components/common/Pagination";
-import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { getCurrentUser } from "@/shared/auth/current-user";
 import { getAllOrdersSchema } from "@/features/order/model/params.schemas";
 import { getAllOrders } from "@/features/order/model/queries";
@@ -46,9 +45,6 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
   });
 
   const currentUser = await getCurrentUser();
-  if (!currentUser || currentUser.role !== "admin") {
-    throw new UnauthorizedError("Unauthorized");
-  }
 
   const data: OrdersList = await getAllOrders(parsedQuery, currentUser);
 

@@ -4,7 +4,6 @@ import { CurrentUser } from "@/shared/auth/current-user";
 import {
   getAllOrdersInput,
   getMyOrganizationOrdersInput,
-  getMyOrganizationStatsInput,
   getOrderByIdInput,
   getOrderHistoryInput,
   OrderHistory,
@@ -21,7 +20,7 @@ import {
   getOrderByIdSchema,
   getOrderHistorySchema,
 } from "./params.schemas";
-import { NotFoundError } from "@/shared/errors/not-found.error";
+import { notFound } from "next/navigation";
 
 export async function getAllOrders(
   data: getAllOrdersInput,
@@ -41,14 +40,14 @@ export async function getAllOrders(
     const school = await prisma.organization.findUnique({
       where: { id: validated.schoolId },
     });
-    if (!school) throw new NotFoundError("School not found");
+    if (!school) notFound();
   }
 
   if (validated.supplierId) {
     const supplier = await prisma.organization.findUnique({
       where: { id: validated.supplierId },
     });
-    if (!supplier) throw new NotFoundError("Supplier not found");
+    if (!supplier) notFound();
   }
 
   const filters: Prisma.OrderWhereInput[] = [];
@@ -263,7 +262,11 @@ export async function getMyOrganizationOrders(
 }
 
 export async function getMyOrganizationStats(
-  data: getMyOrganizationStatsInput,
+  data: {
+    from?: string;
+    to?: string;
+    statuses?: string[];
+  },
   currentUser: CurrentUser,
 ): Promise<OrdersStats> {
   const permission = OrderPermissionPolicy.canViewOrganizationData(currentUser);
@@ -418,7 +421,6 @@ export async function getMyOrganizationStats(
     _sum: { totalPrice: true },
     where: unpaidWhere,
   });
-
   const totalUnpaid = Number(unpaidAgg._sum.totalPrice ?? 0);
 
   return {
@@ -442,7 +444,7 @@ export async function getOrderById(
     where: { id: validated.id },
   });
   if (!order) {
-    throw new NotFoundError("Order not found");
+    notFound();
   }
   const permission = OrderPermissionPolicy.canViewOrderById(currentUser, order);
   if (!permission.allowed) {
@@ -464,7 +466,7 @@ export async function getOrderById(
     },
   });
   if (!resultOrder) {
-    throw new NotFoundError("Order not found");
+    notFound();
   }
   return {
     ...resultOrder,
@@ -481,7 +483,7 @@ export async function getOrderHistory(
     where: { id: validated.id },
   });
   if (!order) {
-    throw new NotFoundError("Order not found");
+    notFound();
   }
   const permission = OrderPermissionPolicy.canViewOrderById(currentUser, order);
   if (!permission.allowed) {

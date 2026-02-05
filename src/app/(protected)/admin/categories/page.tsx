@@ -6,8 +6,6 @@ import { getAllCategoriesSchema } from "@/features/category/model/schemas";
 import { CategoriesList } from "@/features/category/model/types";
 import CategoriesFilters from "@/features/category/ui/CategoriesFilters";
 import CategoriesTable from "@/features/category/ui/CategoriesTable";
-import { getCurrentUser } from "@/shared/auth/current-user";
-import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { PlusCircle } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -35,11 +33,6 @@ export default async function AdminCategoriesPage({ searchParams }: Props) {
   Object.entries(query).forEach(([key, value]) => {
     if (value !== undefined) params.set(key, String(value));
   });
-
-  const user = await getCurrentUser();
-  if (!user || user.role !== "admin") {
-    throw new UnauthorizedError("Unauthorized");
-  }
 
   const data: CategoriesList = await getAllCategories(parsedQuery);
 

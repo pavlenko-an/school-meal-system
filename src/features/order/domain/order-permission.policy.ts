@@ -37,7 +37,7 @@ export class OrderPermissionPolicy {
     ) {
       return {
         allowed: false,
-        reason: "Відмовлено в доступі",
+        reason: "Ви не маєте права переглядати ці дані",
       };
     }
     return { allowed: true };

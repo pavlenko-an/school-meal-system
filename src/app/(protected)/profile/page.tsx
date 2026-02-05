@@ -10,16 +10,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { updateUserInput } from "@/features/user/model/types";
-import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import OrganizationForm from "@/features/organization/ui/OrganizationForm";
 import { getUserById } from "@/features/user/model/queries";
 import { updateOrganizationInput } from "@/features/organization/model/types";
 
 export default async function ProfilePage() {
   const currentUser = await getCurrentUser();
-  if (!currentUser) {
-    throw new UnauthorizedError("Unauthorized");
-  }
   const userInfo = await getUserById({ id: currentUser.id }, currentUser);
   const defaultUserValues: Partial<updateUserInput> = {
     email: userInfo.email,

@@ -1,4 +1,3 @@
-import { getCurrentUser } from "@/shared/auth/current-user";
 import {
   Card,
   CardContent,
@@ -6,9 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { getMenuItemById } from "@/features/menu-item/model/queries";
-import { updateMenuItemInput } from "@/features/menu-item/model/types";
 import { getAllCategories } from "@/features/category/model/queries";
 import MenuItemEditForm from "@/features/menu-item/ui/MenuItemEditForm";
 
@@ -18,10 +15,6 @@ interface Props {
 
 export default async function EditMenuItemPage({ params }: Props) {
   const { id } = await params;
-  const currentUser = await getCurrentUser();
-  if (!currentUser || currentUser.role !== "admin") {
-    throw new UnauthorizedError("Unauthorized");
-  }
   const menuItem = await getMenuItemById({ id });
   const defaultValues = {
     id: menuItem?.id,

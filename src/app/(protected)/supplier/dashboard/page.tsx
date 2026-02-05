@@ -2,7 +2,6 @@ import StatsCards from "@/features/order/ui/StatsCards";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { getCurrentUser } from "@/shared/auth/current-user";
-import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { getMyOrganizationStatsSchema } from "@/features/order/model/params.schemas";
 import { getMyOrganizationStats } from "@/features/order/model/queries";
 import { OrdersStats } from "@/features/order/model/types";
@@ -38,9 +37,6 @@ export default async function SupplierDashboard({ searchParams }: Props) {
   });
 
   const currentUser = await getCurrentUser();
-  if (!currentUser || currentUser.organizationType !== "supplier") {
-    throw new UnauthorizedError("Unauthorized");
-  }
 
   const getMyOrganizationStatsCached = cache(async () => {
     return await getMyOrganizationStats(query, currentUser);

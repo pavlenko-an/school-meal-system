@@ -1,4 +1,3 @@
-import { getCurrentUser } from "@/shared/auth/current-user";
 import {
   Card,
   CardContent,
@@ -6,7 +5,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { getCategoryById } from "@/features/category/model/queries";
 import { updateCategoryInput } from "@/features/category/model/types";
 import CategoryEditForm from "@/features/category/ui/CategoryEditForm";
@@ -17,10 +15,6 @@ interface Props {
 
 export default async function EditCategoryPage({ params }: Props) {
   const { id } = await params;
-  const currentUser = await getCurrentUser();
-  if (!currentUser || currentUser.role !== "admin") {
-    throw new UnauthorizedError("Unauthorized");
-  }
   const category = await getCategoryById({ id });
   const defaultValues: Partial<updateCategoryInput> = {
     id: category.id,

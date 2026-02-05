@@ -2,7 +2,6 @@ import { z } from "zod";
 import {
   getAllOrdersSchema,
   getMyOrganizationOrdersSchema,
-  getMyOrganizationStatsSchema,
   getOrderByIdSchema,
   getOrderHistorySchema,
 } from "./params.schemas";
@@ -16,9 +15,6 @@ import {
 
 export type getAllOrdersInput = z.infer<typeof getAllOrdersSchema>;
 export type getOrderByIdInput = z.infer<typeof getOrderByIdSchema>;
-export type getMyOrganizationStatsInput = z.infer<
-  typeof getMyOrganizationStatsSchema
->;
 export type getMyOrganizationOrdersInput = z.infer<
   typeof getMyOrganizationOrdersSchema
 >;

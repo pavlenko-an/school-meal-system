@@ -6,7 +6,6 @@ import { OrderHistory, OrderInfo } from "@/features/order/model/types";
 import { SchoolOrderDetailsCard } from "@/features/order/ui/SchoolOrderDetailsCard";
 import StatusHistory from "@/features/order/ui/StatusHistory";
 import { getCurrentUser } from "@/shared/auth/current-user";
-import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -15,9 +14,6 @@ interface Props {
 export default async function SchoolOrderDetailPage({ params }: Props) {
   const { id } = await params;
   const currentUser = await getCurrentUser();
-  if (!currentUser || currentUser.organizationType !== "school") {
-    throw new UnauthorizedError("Unauthorized");
-  }
   const order: OrderInfo = await getOrderById({ id }, currentUser);
   const orderItems: OrderItemInfo[] = await getAllOrderItems({ orderId: id });
   const statusHistory: OrderHistory[] = await getOrderHistory(

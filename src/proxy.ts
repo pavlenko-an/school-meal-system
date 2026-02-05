@@ -23,6 +23,15 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  if (pathname === "/") {
+    if (!token) {
+      const loginUrl = new URL("/auth/login", request.url);
+      loginUrl.searchParams.set("callbackUrl", "/");
+      return NextResponse.redirect(loginUrl);
+    }
+    return NextResponse.redirect(new URL("/profile", request.url));
+  }
+
   if (!token) {
     const loginUrl = new URL("/auth/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname + request.nextUrl.search);

@@ -3,7 +3,6 @@ import LoadingSpinner from "@/components/common/LoadingSpinner";
 import OrdersFilters from "@/features/order/ui/OrdersFilters";
 import OrderTable from "@/features/order/ui/OrderTable";
 import Pagination from "@/components/common/Pagination";
-import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
 import { getCurrentUser } from "@/shared/auth/current-user";
 import { getMyOrganizationOrdersSchema } from "@/features/order/model/params.schemas";
 import { getMyOrganizationOrders } from "@/features/order/model/queries";
@@ -53,9 +52,6 @@ export default async function SupplierOrdersPage({ searchParams }: Props) {
   });
 
   const currentUser = await getCurrentUser();
-  if (!currentUser || currentUser.organizationType !== "supplier") {
-    throw new UnauthorizedError("Unauthorized");
-  }
 
   const data: OrdersList = await getMyOrganizationOrders(
     parsedQuery,
