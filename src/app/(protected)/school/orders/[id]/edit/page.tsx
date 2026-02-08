@@ -13,7 +13,7 @@ export default async function EditOrderPage({ params }: Props) {
   const { id } = await params;
   const currentUser = await getCurrentUser();
   const order = await getOrderById({ id }, currentUser);
-  if (order.orderStatus !== "new") {
+  if (order.orderStatus !== "draft") {
     redirect(`/school/orders/${id}`);
   }
   const orderItems = await getAllOrderItems({ orderId: id });

@@ -17,7 +17,7 @@ export default async function DraftOrdersPage({ searchParams }: Props) {
   const paramsResolved = await searchParams;
 
   const query = {
-    orderStatus: "new",
+    orderStatus: "draft",
     page: paramsResolved.page ? Number(paramsResolved.page) : 1,
     limit: paramsResolved.limit ? Number(paramsResolved.limit) : 10,
   };

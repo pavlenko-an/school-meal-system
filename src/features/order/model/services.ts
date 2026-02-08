@@ -26,7 +26,7 @@ export const OrderService = {
       data: {
         schoolId: user.organizationId,
         deliveryDate: null,
-        orderStatus: "new",
+        orderStatus: "draft",
         paymentStatus: "unpaid",
         totalPrice: 0,
         comment: null,
@@ -72,8 +72,8 @@ export const OrderService = {
     if (!order) {
       throw new Error("Замовлення не знайдено");
     }
-    if (order.orderStatus !== "new") {
-      throw new Error("Неможливо оновити замовлення, яке не є новим");
+    if (order.orderStatus !== "draft") {
+      throw new Error("Неможливо оновити замовлення, яке не є чернеткою");
     }
     if (user.organizationId !== order.schoolId) {
       throw new Error(
@@ -247,7 +247,7 @@ export const OrderService = {
         },
       });
 
-      await tx.paymentStatusHistory.create({
+      await tx.orderPaymentHistory.create({
         data: {
           orderId: data.id,
           previousStatus: order.paymentStatus,
@@ -272,8 +272,8 @@ export const OrderService = {
     if (!order) {
       throw new Error("Замовлення не знайдено");
     }
-    if (order.orderStatus !== "new") {
-      throw new Error("Лише нові замовлення можна видаляти");
+    if (order.orderStatus !== "draft") {
+      throw new Error("Лише чернетки можна видаляти");
     }
     const permission = OrderPermissionPolicy.canDeleteOrder(user, order);
     if (!permission.allowed) {

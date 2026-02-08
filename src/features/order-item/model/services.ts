@@ -17,8 +17,8 @@ export const OrderItemService = {
     ]);
     if (!existingOrder) throw new Error("Замовлення не знайдено");
     if (!existingMenuItem) throw new Error("Пункт меню не знайдено");
-    if (existingOrder.orderStatus !== "new")
-      throw new Error("Неможливо додати позиції до замовлення, яке не є новим");
+    if (existingOrder.orderStatus !== "draft")
+      throw new Error("Неможливо додати позиції до замовлення, яке не є чернеткою");
 
     const totalPrice = existingOrder.orderItems
       .reduce(
@@ -70,8 +70,8 @@ export const OrderItemService = {
     if (!existingOrderItem) {
       throw new Error("Позиція замовлення не знайдена");
     }
-    if (existingOrderItem.order.orderStatus !== "new") {
-      throw new Error("Неможливо оновити позиції замовлення, яке не є новим");
+    if (existingOrderItem.order.orderStatus !== "draft") {
+      throw new Error("Неможливо оновити позиції замовлення, яке не є чернеткою");
     }
 
     const quantity = data.quantity ?? existingOrderItem.quantity;
@@ -126,9 +126,9 @@ export const OrderItemService = {
     if (!orderItem) {
       throw new Error("Позиція замовлення не знайдена");
     }
-    if (orderItem.order.orderStatus !== "new") {
+    if (orderItem.order.orderStatus !== "draft") {
       throw new Error(
-        "Неможливо видалити позиції з замовлення, яке не є новим",
+        "Неможливо видалити позиції з замовлення, яке не є чернеткою",
       );
     }
     const totalPrice = orderItem.order.totalPrice.sub(orderItem.price);

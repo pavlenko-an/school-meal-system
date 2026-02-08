@@ -29,7 +29,7 @@ enum OrgType {
 }
 
 enum OrderStatus {
-  new
+  draft
   published
   accepted
   in_progress
@@ -73,7 +73,7 @@ model User {
   avatarUrl              String?                @map("avatar_url") @db.Text
   role                   Role                   @map("role")
   orderStatusHistories   OrderStatusHistory[]   @relation("OrderStatusHistoryActors")
-  paymentStatusHistories PaymentStatusHistory[] @relation("PaymentStatusHistoryActors")
+  orderPaymentHistories  OrderPaymentHistory[]  @relation("OrderPaymentHistoryActors")
   createdAt              DateTime               @default(now()) @map("created_at")
   updatedAt              DateTime               @updatedAt @map("updated_at")
 
@@ -116,13 +116,13 @@ model Order {
   supplierId             String?                @map("supplier_id") @db.Uuid
   supplier               Organization?          @relation("SupplierOrders", fields: [supplierId], references: [id], onDelete: SetNull)
   deliveryDate           DateTime?              @map("delivery_date") @db.Date
-  orderStatus            OrderStatus            @default(new) @map("status")
+  orderStatus            OrderStatus            @default(draft) @map("status")
   paymentStatus          PaymentStatus          @default(unpaid) @map("payment_status")
   totalPrice             Decimal                @default(0) @map("total_price") @db.Decimal(10, 2)
   comment                String?                @map("comment") @db.Text
   orderItems             OrderItem[]            @relation("OrderOrderItems")
   orderStatusHistories   OrderStatusHistory[]   @relation("OrderStatusHistoryOrders")
-  paymentStatusHistories PaymentStatusHistory[] @relation("PaymentStatusHistoryOrders")
+  orderPaymentHistories  OrderPaymentHistory[]  @relation("OrderPaymentHistoryOrders")
   createdAt              DateTime               @default(now()) @map("created_at")
   publishedAt            DateTime?              @map("published_at")
   updatedAt              DateTime               @updatedAt @map("updated_at")
@@ -165,17 +165,17 @@ model OrderStatusHistory {
   @@map("order_status_history")
 }
 
-model PaymentStatusHistory {
+model OrderPaymentHistory {
   id             String        @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
   orderId        String        @map("order_id") @db.Uuid
-  order          Order         @relation("PaymentStatusHistoryOrders", fields: [orderId], references: [id], onDelete: Cascade)
+  order          Order         @relation("OrderPaymentHistoryOrders", fields: [orderId], references: [id], onDelete: Cascade)
   previousStatus PaymentStatus @map("previous_status")
   newStatus      PaymentStatus @map("new_status")
   actorId        String?       @map("actor_id") @db.Uuid
-  actor          User?         @relation("PaymentStatusHistoryActors", fields: [actorId], references: [id], onDelete: SetNull)
+  actor          User?         @relation("OrderPaymentHistoryActors", fields: [actorId], references: [id], onDelete: SetNull)
   changedAt      DateTime      @default(now()) @map("changed_at")
 
   @@index([orderId])
   @@index([actorId])
-  @@map("payment_status_history")
+  @@map("order_payment_history")
 }

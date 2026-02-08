@@ -35,9 +35,9 @@ export function SchoolOrderDetailsCard({ order }: Props) {
   const router = useRouter();
 
   const permissions = {
-    canDelete: order.orderStatus === "new",
-    canEdit: order.orderStatus === "new",
-    canPublish: order.orderStatus === "new",
+    canDelete: order.orderStatus === "draft",
+    canEdit: order.orderStatus === "draft",
+    canPublish: order.orderStatus === "draft",
     canMarkAsPaid:
       order.paymentStatus === "unpaid" && order.orderStatus === "accepted",
     canComplete: order.orderStatus === "in_progress",

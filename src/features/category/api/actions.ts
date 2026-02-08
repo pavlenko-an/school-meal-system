@@ -29,6 +29,7 @@ export async function createCategory(
         error: "Лише адміністратори можуть створювати категорії",
       };
     }
+    console.log("Current user:", currentUser);
     const rawData =
       formData instanceof FormData ? Object.fromEntries(formData) : formData;
     const result = createCategorySchema.safeParse(rawData);

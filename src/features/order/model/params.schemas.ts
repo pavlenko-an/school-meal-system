@@ -7,7 +7,14 @@ export const getAllOrdersSchema = z.object({
   to: z.coerce.date().optional(),
   orderStatus: z
     .enum(
-      ["new", "published", "accepted", "in_progress", "completed", "cancelled"],
+      [
+        "draft",
+        "published",
+        "accepted",
+        "in_progress",
+        "completed",
+        "cancelled",
+      ],
       "Неправильний формат статусу замовлення",
     )
     .optional(),
@@ -25,7 +32,7 @@ export const getMyOrganizationOrdersSchema = z.object({
     .union([
       z.array(
         z.enum([
-          "new",
+          "draft",
           "published",
           "accepted",
           "in_progress",
@@ -35,7 +42,7 @@ export const getMyOrganizationOrdersSchema = z.object({
       ),
       z.enum([
         "all",
-        "new",
+        "draft",
         "published",
         "accepted",
         "in_progress",
@@ -61,7 +68,7 @@ export const getMyOrganizationStatsSchema = z.object({
   statuses: z
     .array(
       z.enum([
-        "new",
+        "draft",
         "published",
         "accepted",
         "in_progress",

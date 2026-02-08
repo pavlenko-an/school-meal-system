@@ -11,6 +11,8 @@ async function main() {
   console.log("Clearing database...");
 
   await prisma.orderItem.deleteMany({});
+  await prisma.orderStatusHistory.deleteMany({});
+  await prisma.orderPaymentHistory.deleteMany({});
   await prisma.order.deleteMany({});
   await prisma.menuItem.deleteMany({});
   await prisma.category.deleteMany({});
@@ -126,7 +128,7 @@ async function main() {
       {
         comment: "New draft order - April",
         deliveryDate: new Date("2026-04-10"),
-        status: "new" as OrderStatus,
+        status: "draft" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         orderHistory: [],
         paymentHistory: [],
@@ -138,7 +140,7 @@ async function main() {
       {
         comment: "New draft order - April",
         deliveryDate: new Date("2026-04-20"),
-        status: "new" as OrderStatus,
+        status: "draft" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         orderHistory: [],
         paymentHistory: [],
@@ -152,7 +154,7 @@ async function main() {
         deliveryDate: new Date("2026-03-10"),
         status: "published" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
-        orderHistory: [{ from: "new", to: "published" }],
+        orderHistory: [{ from: "draft", to: "published" }],
         paymentHistory: [],
         items: [{ name: "Вегетаріанська паста", qty: 15 }],
         schoolActor: true,
@@ -165,7 +167,7 @@ async function main() {
         deliveryDate: new Date("2026-03-20"),
         status: "published" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
-        orderHistory: [{ from: "new", to: "published" }],
+        orderHistory: [{ from: "draft", to: "published" }],
         paymentHistory: [],
         items: [{ name: "Вегетаріанська паста", qty: 15 }],
         schoolActor: true,
@@ -179,7 +181,7 @@ async function main() {
         status: "accepted" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         orderHistory: [
-          { from: "new", to: "published" },
+          { from: "draft", to: "published" },
           { from: "published", to: "accepted" },
         ],
         paymentHistory: [],
@@ -198,7 +200,7 @@ async function main() {
         status: "accepted" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         orderHistory: [
-          { from: "new", to: "published" },
+          { from: "draft", to: "published" },
           { from: "published", to: "accepted" },
         ],
         paymentHistory: [],
@@ -217,7 +219,7 @@ async function main() {
         status: "in_progress" as OrderStatus,
         payment: "verified" as PaymentStatus,
         orderHistory: [
-          { from: "new", to: "published" },
+          { from: "draft", to: "published" },
           { from: "published", to: "accepted" },
           { from: "accepted", to: "in_progress" },
         ],
@@ -237,7 +239,7 @@ async function main() {
         status: "in_progress" as OrderStatus,
         payment: "verified" as PaymentStatus,
         orderHistory: [
-          { from: "new", to: "published" },
+          { from: "draft", to: "published" },
           { from: "published", to: "accepted" },
           { from: "accepted", to: "in_progress" },
         ],
@@ -257,7 +259,7 @@ async function main() {
         status: "completed" as OrderStatus,
         payment: "verified" as PaymentStatus,
         orderHistory: [
-          { from: "new", to: "published" },
+          { from: "draft", to: "published" },
           { from: "published", to: "accepted" },
           { from: "accepted", to: "in_progress" },
           { from: "in_progress", to: "completed" },
@@ -278,7 +280,7 @@ async function main() {
         status: "completed" as OrderStatus,
         payment: "verified" as PaymentStatus,
         orderHistory: [
-          { from: "new", to: "published" },
+          { from: "draft", to: "published" },
           { from: "published", to: "accepted" },
           { from: "accepted", to: "in_progress" },
           { from: "in_progress", to: "completed" },
@@ -299,7 +301,7 @@ async function main() {
         status: "cancelled" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         orderHistory: [
-          { from: "new", to: "published" },
+          { from: "draft", to: "published" },
           { from: "published", to: "cancelled" },
         ],
         paymentHistory: [],
@@ -315,7 +317,7 @@ async function main() {
         status: "cancelled" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         orderHistory: [
-          { from: "new", to: "published" },
+          { from: "draft", to: "published" },
           { from: "published", to: "cancelled" },
         ],
         paymentHistory: [],
@@ -331,7 +333,7 @@ async function main() {
         status: "cancelled" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         orderHistory: [
-          { from: "new", to: "published" },
+          { from: "draft", to: "published" },
           { from: "published", to: "accepted" },
           { from: "accepted", to: "cancelled" },
         ],
@@ -348,7 +350,7 @@ async function main() {
         status: "cancelled" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         orderHistory: [
-          { from: "new", to: "published" },
+          { from: "draft", to: "published" },
           { from: "published", to: "accepted" },
           { from: "accepted", to: "cancelled" },
         ],
@@ -365,7 +367,7 @@ async function main() {
         const order = await tx.order.create({
           data: {
             schoolId: school.id,
-            supplierId: ord.status !== "new" ? supplier.id : null,
+            supplierId: ord.status !== "draft" ? supplier.id : null,
             deliveryDate: ord.deliveryDate,
             orderStatus: ord.status,
             paymentStatus: ord.payment,
@@ -443,7 +445,7 @@ async function main() {
           }
 
           if (actorId) {
-            await tx.paymentStatusHistory.create({
+            await tx.orderPaymentHistory.create({
               data: {
                 orderId: order.id,
                 previousStatus: h.from as PaymentStatus,

@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/shared/db/prisma";
 import { JWT } from "next-auth/jwt";
 import { loginSchema } from "@/features/auth/model/schemas";
+import { SessionUpdateData } from "@/shared/auth/update-session";
 
 export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -61,40 +62,49 @@ export const authOptions: AuthOptions = {
     },
   },
   callbacks: {
-    jwt({ token, user }: { token: JWT; user?: User }) {
+    async jwt({
+      token,
+      user,
+      trigger,
+      session,
+    }: {
+      token: JWT;
+      user?: User;
+      trigger?: "signIn" | "signUp" | "update";
+      session?: SessionUpdateData;
+    }) {
       if (user) {
         token.id = user.id;
+        token.email = user.email!;
+        token.name = user.name ?? null;
+        token.image = user.image ?? null;
         token.role = user.role;
         token.organizationId = user.organizationId;
         token.organizationType = user.organizationType;
       }
+
+      if (trigger === "update" && session) {
+        if (session.name !== undefined) token.name = session.name;
+        if (session.email !== undefined) token.email = session.email;
+        if (session.image !== undefined) token.image = session.image;
+        if (session.role !== undefined) token.role = session.role;
+        if (session.organizationId !== undefined)
+          token.organizationId = session.organizationId;
+        if (session.organizationType !== undefined)
+          token.organizationType = session.organizationType;
+      }
+
       return token;
     },
-    async session({ session, token }: { session: Session; token: JWT }) {
+    session({ session, token }: { session: Session; token: JWT }) {
       if (token?.id) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.id },
-          include: { organization: true },
-        });
-        if (dbUser) {
-          session.user.id = dbUser.id;
-          session.user.email = dbUser.email;
-          session.user.name =
-            dbUser.firstName && dbUser.lastName
-              ? `${dbUser.firstName} ${dbUser.lastName}`.trim()
-              : null;
-          session.user.image = dbUser.avatarUrl;
-          session.user.organizationId = dbUser.organizationId;
-          session.user.organizationType = dbUser.organization?.type ?? null;
-          session.user.role = dbUser.role;
-        } else {
-          if (token.role) {
-            session.user.id = token.id;
-            session.user.role = token.role;
-            session.user.organizationId = token.organizationId;
-            session.user.organizationType = token.organizationType;
-          }
-        }
+        session.user.id = token.id;
+        session.user.email = token.email;
+        session.user.name = token.name ?? null;
+        session.user.image = token.image ?? null;
+        session.user.role = token.role;
+        session.user.organizationId = token.organizationId ?? null;
+        session.user.organizationType = token.organizationType ?? null;
       }
       return session;
     },

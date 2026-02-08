@@ -20,6 +20,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { updateUserSchema } from "../model/schemas";
 import { updateUser } from "../api/actions";
 import { Upload, X } from "lucide-react";
+import { useUpdateSession } from "@/shared/auth/update-session";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const MAX_SIZE = 1024 * 1024;
@@ -36,6 +37,7 @@ type Props = {
 
 export default function ProfileForm({ defaultValues }: Props) {
   const router = useRouter();
+  const updateSessionData = useUpdateSession();
 
   const form = useForm<Partial<updateUserInput>>({
     resolver: zodResolver(updateUserSchema),
@@ -107,6 +109,14 @@ export default function ProfileForm({ defaultValues }: Props) {
     if (!state) return;
     if (state.success && state.data) {
       toast.success("Профіль успішно оновлено");
+      updateSessionData({
+        name:
+          state.data.firstName && state.data.lastName
+            ? `${state.data.firstName} ${state.data.lastName}`.trim()
+            : null,
+        email: state.data.email,
+        image: state.data.avatarUrl,
+      });
       router.refresh();
     } else if (state?.success === false && state.error) {
       toast.error(
@@ -121,6 +131,7 @@ export default function ProfileForm({ defaultValues }: Props) {
         });
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state, router, form]);
 
   return (

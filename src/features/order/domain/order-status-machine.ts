@@ -12,7 +12,7 @@ export function canTransitionOrderStatus(
   let newSupplierId: string | undefined;
 
   switch (order.orderStatus) {
-    case "new":
+    case "draft":
       if (to === "published" && isSchool) {
         if (order.orderItems.length === 0) {
           reason = "Замовлення порожнє — додайте хоча б один товар";
@@ -27,7 +27,7 @@ export function canTransitionOrderStatus(
           break;
         }
         allowed = true;
-      } else reason = "From 'new' only → published by school";
+      } else reason = "From 'draft' only → published by school";
       break;
 
     case "published":

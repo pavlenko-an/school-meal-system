@@ -49,7 +49,7 @@ export default function OrdersFilters({ currentParams, allowedOrderStatuses }: P
   const orderOptions =
     allowedOrderStatuses ?? [
       { value: "all", label: "Всі" },
-      { value: "new", label: "Нові" },
+      { value: "draft", label: "Чернетки" },
       { value: "published", label: "Опубліковані" },
       { value: "accepted", label: "Прийняті" },
       { value: "in_progress", label: "В обробці" },

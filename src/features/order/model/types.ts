@@ -36,7 +36,7 @@ export type OrderInfo = {
   deliveryDate: Date | null;
   comment: string | null;
   orderStatus:
-    | "new"
+    | "draft"
     | "published"
     | "accepted"
     | "in_progress"
