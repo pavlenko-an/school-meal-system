@@ -63,7 +63,7 @@ export default function OrderItemRow({
       )}
     >
       {item.menuItem?.imageUrl ? (
-        <div className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-lg overflow-hidden bg-muted">
+        <div className="w-full sm:w-24 sm:h-24 shrink-0 rounded-lg overflow-hidden bg-muted">
           <Image
             src={item.menuItem?.imageUrl || ""}
             alt={item.menuItem?.name || "Страва"}
@@ -80,42 +80,47 @@ export default function OrderItemRow({
         </div>
       )}
 
-      <div className="flex-1 min-w-0">
+      <div className="flex flex-col items-center md:items-baseline md:flex-1 min-w-0">
         <div className="font-medium text-lg">
           {item.menuItem?.name || "Без назви"}
         </div>
         {item.menuItem?.description && (
-          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+          <p className="text-sm text-center text-muted-foreground mt-1 line-clamp-2">
             {item.menuItem.description}
           </p>
         )}
       </div>
 
-      <div className="w-24 sm:w-28">
-        <Input
-          type="number"
-          min={1}
-          max={100}
-          value={localQuantity}
-          onChange={(e) => handleQuantityChange(e.target.value)}
-          disabled={isPending}
-          className={cn("text-center", isPending && "opacity-70 animate-pulse")}
-          aria-label={`Кількість для ${item.menuItem?.name || "страви"}`}
-        />
-      </div>
+      <div className="flex flex-row items-center justify-center w-full sm:w-auto gap-4">
+        <div className="w-24 sm:w-28">
+          <Input
+            type="number"
+            min={1}
+            max={100}
+            value={localQuantity}
+            onChange={(e) => handleQuantityChange(e.target.value)}
+            disabled={isPending}
+            className={cn(
+              "text-center",
+              isPending && "opacity-70 animate-pulse",
+            )}
+            aria-label={`Кількість для ${item.menuItem?.name || "страви"}`}
+          />
+        </div>
 
-      <div className="w-28 text-right font-medium">
-        {(item.price * localQuantity).toFixed(2)} грн
-      </div>
+        <div className="w-28 text-center font-medium">
+          {(item.price * localQuantity).toFixed(2)} грн
+        </div>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onRemove}
-        aria-label="Видалити страву з замовлення"
-      >
-        <Trash2 className="h-5 w-5 text-destructive" />
-      </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onRemove}
+          aria-label="Видалити страву з замовлення"
+        >
+          <Trash2 className="h-5 w-5 text-destructive" />
+        </Button>
+      </div>
     </div>
   );
 }

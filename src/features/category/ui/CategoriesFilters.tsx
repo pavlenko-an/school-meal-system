@@ -28,7 +28,7 @@ export default function CategoriesFilters({ currentParams }: Props) {
   };
 
   return (
-    <div className="space-y-4 flex flex-wrap md:flex-nowrap md:items-center md:justify-center md:space-y-0 gap-2 md:gap-4">
+    <div className="w-full md:w-auto flex flex-wrap md:flex-nowrap md:items-center md:justify-center md:space-y-0 gap-4">
       <Input
         placeholder="Пошук за назвою категорії..."
         value={nameSearch}

@@ -9,16 +9,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  getAllOrdersStats,
-  getRecentOrders,
-} from "@/features/order/model/queries";
+import { getAllOrdersStats } from "@/features/order/model/queries";
 import { OrderInfo } from "@/features/order/model/types";
-import {
-  getAllOrganizationsStats,
-  getTopSchoolsByOrderValue,
-} from "@/features/organization/model/queries";
-import { getAllUsersStats } from "@/features/user/model/queries";
+import { getOrganizationsOverview } from "@/features/organization/model/queries";
 import { format } from "date-fns";
 import {
   Building2,
@@ -26,36 +19,17 @@ import {
   Eye,
   PlusCircle,
   ShoppingCart,
-  Users,
 } from "lucide-react";
 import Link from "next/link";
-import { cache } from "react";
 
 export default async function AdminDashboardPage() {
-  const getAllOrganizationsStatsCached = cache(async () => {
-    return await getAllOrganizationsStats();
-  });
-  const getAllUsersStatsCached = cache(async () => {
-    return await getAllUsersStats();
-  });
-  const getAllOrdersStatsCached = cache(async () => {
-    return await getAllOrdersStats();
-  });
-  const getRecentOrdersCached = cache(async (limit: number) => {
-    return await getRecentOrders(limit);
-  });
-  const getTopSchoolsByOrderValueCached = cache(async (limit: number) => {
-    return await getTopSchoolsByOrderValue(limit);
-  });
-
-  const [orgStats, userStats, orderStats, recentOrders, topSchools] =
-    await Promise.all([
-      getAllOrganizationsStatsCached(),
-      getAllUsersStatsCached(),
-      getAllOrdersStatsCached(),
-      getRecentOrdersCached(5),
-      getTopSchoolsByOrderValueCached(5),
-    ]);
+  const [orgOverview, orderStats] = await Promise.all([
+    getOrganizationsOverview(5),
+    getAllOrdersStats(5),
+  ]);
+  const orgStats = orgOverview.stats;
+  const topSchools = orgOverview.topSchools;
+  const topSuppliers = orgOverview.topSuppliers;
 
   const statusLabels: Record<OrderInfo["orderStatus"], string> = {
     new: "Новий",
@@ -86,24 +60,32 @@ export default async function AdminDashboardPage() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <Button asChild>
+          <Button asChild className="w-full md:flex-1 cursor-pointer">
             <Link href="/admin/organizations/new">
               <PlusCircle className="mr-2 h-4 w-4" />
               Додати організацію
             </Link>
           </Button>
 
-          <Button variant="outline" asChild>
+          <Button
+            variant="outline"
+            asChild
+            className="w-full md:flex-1 cursor-pointer"
+          >
             <Link href="/admin/users/new">Зареєструвати користувача</Link>
           </Button>
 
-          <Button variant="outline" asChild>
+          <Button
+            variant="outline"
+            asChild
+            className="w-full md:flex-1 cursor-pointer"
+          >
             <Link href="/admin/orders">Всі замовлення</Link>
           </Button>
         </div>
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Організацій</CardTitle>
@@ -116,20 +98,6 @@ export default async function AdminDashboardPage() {
             </p>
           </CardContent>
         </Card>
-
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Користувачів</CardTitle>
-            <Users className="h-5 w-5 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{userStats.total}</div>
-            <p className="text-xs text-muted-foreground mt-2">
-              {userStats.admins} адмінів • {userStats.employees} співробітників
-            </p>
-          </CardContent>
-        </Card>
-
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Замовлень</CardTitle>
@@ -138,10 +106,8 @@ export default async function AdminDashboardPage() {
           <CardContent>
             <div className="text-3xl font-bold">{orderStats.total}</div>
             <p className="text-xs text-muted-foreground mt-2">
-              {orderStats.statusCounts.new} нових •{" "}
-              {orderStats.statusCounts.accepted +
-                orderStats.statusCounts.in_progress}{" "}
-              активних
+              {orderStats.statusCounts.published} опубліковано •{" "}
+              {orderStats.statusCounts.accepted} прийнято
             </p>
           </CardContent>
         </Card>
@@ -171,8 +137,11 @@ export default async function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">
-              {orderStats.upcomingActiveDeliveries}
+              {orderStats.statusCounts.in_progress}
             </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              на даний момент
+            </p>
           </CardContent>
         </Card>
 
@@ -216,12 +185,12 @@ export default async function AdminDashboardPage() {
                 <TableHead>Організація</TableHead>
                 <TableHead>Сума</TableHead>
                 <TableHead>Статус</TableHead>
-                <TableHead>Дата</TableHead>
+                <TableHead>Дата створення</TableHead>
                 <TableHead className="w-10"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {recentOrders.map((order) => (
+              {orderStats.recentOrders.map((order) => (
                 <TableRow key={order.id} className="hover:bg-muted/50">
                   <TableCell className="font-medium">
                     #{order.id.slice(0, 8)}
@@ -300,6 +269,50 @@ export default async function AdminDashboardPage() {
           {topSchools.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
               Шкіл з замовленнями не знайдено
+            </div>
+          )}
+        </div>
+      </section>
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">
+            Топ-5 постачальників за сумою замовлень
+          </h2>
+          <Button variant="link" asChild>
+            <Link href="/admin/organizations?type=supplier">
+              Всі постачальники →
+            </Link>
+          </Button>
+        </div>
+
+        <div className="rounded-lg border divide-y">
+          {topSuppliers.map((supplier, idx) => (
+            <div
+              key={supplier.name}
+              className="flex items-center justify-between px-5 py-4 hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex items-center gap-4">
+                <span className="text-lg font-semibold text-muted-foreground w-8">
+                  {idx + 1}.
+                </span>
+                <div>
+                  <div className="font-medium">{supplier.name}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {supplier.orderCount} замовлень
+                  </div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="font-bold">
+                  {supplier.totalValue.toLocaleString("uk-UA")} ₴
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {topSuppliers.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              Постачальників з замовленнями не знайдено
             </div>
           )}
         </div>

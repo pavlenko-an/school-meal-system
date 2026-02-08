@@ -4,6 +4,7 @@ import z from "zod";
 import { registerSchema } from "../model/schemas";
 import { ActionResult } from "@/shared/types/action-result";
 import { AuthService } from "../model/services";
+import { updateTag } from "next/cache";
 
 export async function registerUser(
   prevState: ActionResult<void> | null = null,
@@ -26,6 +27,7 @@ export async function registerUser(
       };
     }
     await AuthService.register(result.data);
+    updateTag("all-users");
     return {
       success: true,
       message: "Користувача успішно зареєстровано",

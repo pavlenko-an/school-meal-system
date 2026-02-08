@@ -128,7 +128,8 @@ async function main() {
         deliveryDate: new Date("2026-04-10"),
         status: "new" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
-        history: [],
+        orderHistory: [],
+        paymentHistory: [],
         items: [{ name: "Смажена куряча грудка", qty: 8 }],
         schoolActor: false,
         supplierActor: false,
@@ -139,7 +140,8 @@ async function main() {
         deliveryDate: new Date("2026-04-20"),
         status: "new" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
-        history: [],
+        orderHistory: [],
+        paymentHistory: [],
         items: [{ name: "Смажена куряча грудка", qty: 8 }],
         schoolActor: false,
         supplierActor: false,
@@ -150,7 +152,8 @@ async function main() {
         deliveryDate: new Date("2026-03-10"),
         status: "published" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
-        history: [{ from: "new", to: "published" }],
+        orderHistory: [{ from: "new", to: "published" }],
+        paymentHistory: [],
         items: [{ name: "Вегетаріанська паста", qty: 15 }],
         schoolActor: true,
         supplierActor: false,
@@ -162,7 +165,8 @@ async function main() {
         deliveryDate: new Date("2026-03-20"),
         status: "published" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
-        history: [{ from: "new", to: "published" }],
+        orderHistory: [{ from: "new", to: "published" }],
+        paymentHistory: [],
         items: [{ name: "Вегетаріанська паста", qty: 15 }],
         schoolActor: true,
         supplierActor: false,
@@ -174,10 +178,11 @@ async function main() {
         deliveryDate: new Date("2026-02-10"),
         status: "accepted" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
-        history: [
+        orderHistory: [
           { from: "new", to: "published" },
           { from: "published", to: "accepted" },
         ],
+        paymentHistory: [],
         items: [
           { name: "Бургер з яловичини", qty: 25 },
           { name: "Картопля фрі", qty: 40 },
@@ -192,10 +197,11 @@ async function main() {
         deliveryDate: new Date("2026-02-20"),
         status: "accepted" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
-        history: [
+        orderHistory: [
           { from: "new", to: "published" },
           { from: "published", to: "accepted" },
         ],
+        paymentHistory: [],
         items: [
           { name: "Бургер з яловичини", qty: 25 },
           { name: "Картопля фрі", qty: 40 },
@@ -210,10 +216,14 @@ async function main() {
         deliveryDate: new Date("2026-01-10"),
         status: "in_progress" as OrderStatus,
         payment: "verified" as PaymentStatus,
-        history: [
+        orderHistory: [
           { from: "new", to: "published" },
           { from: "published", to: "accepted" },
           { from: "accepted", to: "in_progress" },
+        ],
+        paymentHistory: [
+          { from: "unpaid", to: "paid" },
+          { from: "paid", to: "verified" },
         ],
         items: [{ name: "Апельсиновий сік", qty: 60 }],
         schoolActor: true,
@@ -226,10 +236,14 @@ async function main() {
         deliveryDate: new Date("2026-01-20"),
         status: "in_progress" as OrderStatus,
         payment: "verified" as PaymentStatus,
-        history: [
+        orderHistory: [
           { from: "new", to: "published" },
           { from: "published", to: "accepted" },
           { from: "accepted", to: "in_progress" },
+        ],
+        paymentHistory: [
+          { from: "unpaid", to: "paid" },
+          { from: "paid", to: "verified" },
         ],
         items: [{ name: "Апельсиновий сік", qty: 60 }],
         schoolActor: true,
@@ -242,11 +256,15 @@ async function main() {
         deliveryDate: new Date("2025-12-10"),
         status: "completed" as OrderStatus,
         payment: "verified" as PaymentStatus,
-        history: [
+        orderHistory: [
           { from: "new", to: "published" },
           { from: "published", to: "accepted" },
           { from: "accepted", to: "in_progress" },
           { from: "in_progress", to: "completed" },
+        ],
+        paymentHistory: [
+          { from: "unpaid", to: "paid" },
+          { from: "paid", to: "verified" },
         ],
         items: [{ name: "Шоколадний брауні", qty: 30 }],
         schoolActor: true,
@@ -259,11 +277,15 @@ async function main() {
         deliveryDate: new Date("2025-12-20"),
         status: "completed" as OrderStatus,
         payment: "verified" as PaymentStatus,
-        history: [
+        orderHistory: [
           { from: "new", to: "published" },
           { from: "published", to: "accepted" },
           { from: "accepted", to: "in_progress" },
           { from: "in_progress", to: "completed" },
+        ],
+        paymentHistory: [
+          { from: "unpaid", to: "paid" },
+          { from: "paid", to: "verified" },
         ],
         items: [{ name: "Шоколадний брауні", qty: 30 }],
         schoolActor: true,
@@ -276,10 +298,11 @@ async function main() {
         deliveryDate: new Date("2025-11-10"),
         status: "cancelled" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
-        history: [
+        orderHistory: [
           { from: "new", to: "published" },
           { from: "published", to: "cancelled" },
         ],
+        paymentHistory: [],
         items: [{ name: "Салат з овочів", qty: 10 }],
         schoolActor: true,
         supplierActor: false,
@@ -291,10 +314,11 @@ async function main() {
         deliveryDate: new Date("2025-11-20"),
         status: "cancelled" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
-        history: [
+        orderHistory: [
           { from: "new", to: "published" },
           { from: "published", to: "cancelled" },
         ],
+        paymentHistory: [],
         items: [{ name: "Салат з овочів", qty: 10 }],
         schoolActor: true,
         supplierActor: false,
@@ -306,11 +330,12 @@ async function main() {
         deliveryDate: new Date("2025-10-10"),
         status: "cancelled" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
-        history: [
+        orderHistory: [
           { from: "new", to: "published" },
           { from: "published", to: "accepted" },
           { from: "accepted", to: "cancelled" },
         ],
+        paymentHistory: [],
         items: [{ name: "Картопляне пюре", qty: 18 }],
         schoolActor: true,
         supplierActor: true,
@@ -322,11 +347,12 @@ async function main() {
         deliveryDate: new Date("2025-10-20"),
         status: "cancelled" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
-        history: [
+        orderHistory: [
           { from: "new", to: "published" },
           { from: "published", to: "accepted" },
           { from: "accepted", to: "cancelled" },
         ],
+        paymentHistory: [],
         items: [{ name: "Картопляне пюре", qty: 18 }],
         schoolActor: true,
         supplierActor: true,
@@ -378,7 +404,7 @@ async function main() {
           data: { totalPrice: total },
         });
 
-        for (const h of ord.history) {
+        for (const h of ord.orderHistory) {
           let actorId: string | undefined;
 
           if (
@@ -401,6 +427,27 @@ async function main() {
                 orderId: order.id,
                 previousStatus: h.from as OrderStatus,
                 newStatus: h.to as OrderStatus,
+                actorId,
+              },
+            });
+          }
+        }
+
+        for (const h of ord.paymentHistory) {
+          let actorId: string | undefined;
+
+          if (h.to === "paid") {
+            actorId = schoolUser.id;
+          } else if (h.to === "verified") {
+            actorId = supplierUser.id;
+          }
+
+          if (actorId) {
+            await tx.paymentStatusHistory.create({
+              data: {
+                orderId: order.id,
+                previousStatus: h.from as PaymentStatus,
+                newStatus: h.to as PaymentStatus,
                 actorId,
               },
             });

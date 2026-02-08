@@ -2,7 +2,6 @@ import LoadingSpinner from "@/components/common/LoadingSpinner";
 import Pagination from "@/components/common/Pagination";
 import { Button } from "@/components/ui/button";
 import { getAllOrganizations } from "@/features/organization/model/queries";
-import { getAllOrganizationsSchema } from "@/features/organization/model/schemas";
 import { OrganizationsList } from "@/features/organization/model/types";
 import OrganizationsFilters from "@/features/organization/ui/OrganizationsFilters";
 import OrganizationsTable from "@/features/organization/ui/OrganizationsTable";
@@ -29,14 +28,12 @@ export default async function AdminOrganizationsPage({ searchParams }: Props) {
     limit: paramsResolved.limit ? Number(paramsResolved.limit) : 10,
   };
 
-  const parsedQuery = getAllOrganizationsSchema.parse(query);
-
   const params = new URLSearchParams();
   Object.entries(query).forEach(([key, value]) => {
     if (value !== undefined) params.set(key, String(value));
   });
 
-  const data: OrganizationsList = await getAllOrganizations(parsedQuery);
+  const data: OrganizationsList = await getAllOrganizations(query);
 
   return (
     <div className="space-y-8">
@@ -51,7 +48,7 @@ export default async function AdminOrganizationsPage({ searchParams }: Props) {
       <Suspense
         fallback={<LoadingSpinner size="md" text="Завантаження фільтрів..." />}
       >
-        <div className="max-w-3xl flex flex-row space-x-4 justify-between items-center">
+        <div className="max-w-3xl w-full flex flex-col sm:flex-row sm:space-x-4 sm:justify-between items-center gap-4">
           <Button asChild className="w-full sm:w-auto">
             <Link href="/admin/organizations/new">
               <PlusCircle className="mr-2 h-4 w-4" />

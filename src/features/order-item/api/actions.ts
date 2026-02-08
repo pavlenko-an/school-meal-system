@@ -15,6 +15,7 @@ import {
 } from "../model/types";
 import { getCurrentUser } from "@/shared/auth/current-user";
 import z from "zod";
+import { revalidateTag, updateTag } from "next/cache";
 
 export async function createOrderItem(
   prevState: ActionResult<OrderItemInfo> | null = null,
@@ -40,6 +41,10 @@ export async function createOrderItem(
       };
     }
     const orderItem = await OrderItemService.create(result.data);
+    updateTag(`org-stats-${currentUser.organizationId}`);
+    updateTag(`org-orders-${currentUser.organizationId}`);
+    revalidateTag("org-overview", "max");
+    revalidateTag("all-orders-stats", "max");
     return {
       success: true,
       data: orderItem,
@@ -79,6 +84,10 @@ export async function updateOrderItem(
       };
     }
     const updatedOrderItem = await OrderItemService.update(result.data);
+    updateTag(`org-stats-${currentUser.organizationId}`);
+    updateTag(`org-orders-${currentUser.organizationId}`);
+    revalidateTag("org-overview", "max");
+    revalidateTag("all-orders-stats", "max");
     return {
       success: true,
       data: updatedOrderItem,
@@ -118,6 +127,10 @@ export async function deleteOrderItem(
       };
     }
     await OrderItemService.delete(result.data);
+    updateTag(`org-stats-${currentUser.organizationId}`);
+    updateTag(`org-orders-${currentUser.organizationId}`);
+    revalidateTag("org-overview", "max");
+    revalidateTag("all-orders-stats", "max");
     return { success: true, message: "Позиція замовлення успішно видалена" };
   } catch (error: unknown) {
     return {

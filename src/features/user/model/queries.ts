@@ -10,6 +10,7 @@ import {
 import { AccessDeniedError } from "@/shared/errors/access-denied.error";
 import { getAllUsersSchema, getUserByIdSchema } from "./schemas";
 import { notFound } from "next/navigation";
+import { unstable_cache } from "next/cache";
 
 export async function getAllUsers(
   data: getAllUsersInput,
@@ -19,90 +20,93 @@ export async function getAllUsers(
     throw new AccessDeniedError("Access denied");
   }
   const validated = getAllUsersSchema.parse(data);
-  const page = validated.page && validated.page > 0 ? validated.page : 1;
-  const limit = validated.limit && validated.limit > 0 ? validated.limit : 10;
-  const skip = (page - 1) * limit;
-  const existingOrg = validated.organizationId
-    ? await prisma.organization.findUnique({
-        where: { id: validated.organizationId },
-      })
-    : null;
-  if (validated.organizationId && !existingOrg) {
-    notFound();
-  }
 
-  const filters: Prisma.UserWhereInput[] = [];
-  if (validated.organizationId) {
-    filters.push({ organizationId: validated.organizationId });
-  }
-  if (validated.name) {
-    filters.push({
-      OR: [
-        {
-          firstName: {
-            contains: validated.name,
-            mode: "insensitive",
-          },
-        },
-        {
-          lastName: {
-            contains: validated.name,
-            mode: "insensitive",
-          },
-        },
-      ],
-    });
-  }
+  const cacheKeyParts = [
+    "all-users",
+    validated.name || "no-name",
+    validated.organizationId || "no-org",
+    validated.page ? String(validated.page) : "1",
+    validated.limit ? String(validated.limit) : "10",
+  ];
 
-  const [users, total] = await Promise.all([
-    prisma.user.findMany({
-      where: filters.length > 0 ? { AND: filters } : undefined,
-      skip: skip,
-      take: limit,
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        avatarUrl: true,
-        organization: {
+  return unstable_cache(
+    async () => {
+      console.log(
+        `[CACHE MISS/HIT CHECK] ${new Date().toISOString()} — выполняю реальные запросы к БД`,
+      );
+
+      const page = validated.page && validated.page > 0 ? validated.page : 1;
+      const limit =
+        validated.limit && validated.limit > 0 ? validated.limit : 10;
+      const skip = (page - 1) * limit;
+      const existingOrg = validated.organizationId
+        ? await prisma.organization.findUnique({
+            where: { id: validated.organizationId },
+          })
+        : null;
+      if (validated.organizationId && !existingOrg) {
+        notFound();
+      }
+
+      const filters: Prisma.UserWhereInput[] = [];
+      if (validated.organizationId) {
+        filters.push({ organizationId: validated.organizationId });
+      }
+      if (validated.name) {
+        filters.push({
+          OR: [
+            {
+              firstName: {
+                contains: validated.name,
+                mode: "insensitive",
+              },
+            },
+            {
+              lastName: {
+                contains: validated.name,
+                mode: "insensitive",
+              },
+            },
+          ],
+        });
+      }
+
+      const [users, total] = await Promise.all([
+        prisma.user.findMany({
+          where: filters.length > 0 ? { AND: filters } : undefined,
+          skip: skip,
+          take: limit,
           select: {
             id: true,
-            name: true,
-            type: true,
-            contactEmail: true,
-            contactPhone: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+            avatarUrl: true,
+            organization: {
+              select: {
+                id: true,
+                name: true,
+                type: true,
+                contactEmail: true,
+                contactPhone: true,
+              },
+            },
           },
-        },
-      },
-    }),
-    prisma.user.count({
-      where: filters.length > 0 ? { AND: filters } : undefined,
-    }),
-  ]);
-  const totalPages = Math.ceil(total / limit);
-  return { users, total, page, totalPages };
-}
-
-export async function getAllUsersStats() {
-  const [total, admins, employees, withOrg, withoutOrg] = await Promise.all([
-    prisma.user.count(),
-    prisma.user.count({ where: { role: "admin" } }),
-    prisma.user.count({ where: { role: "employee" } }),
-    prisma.user.count({ where: { organizationId: { not: null } } }),
-    prisma.user.count({ where: { organizationId: null } }),
-  ]);
-
-  return {
-    total,
-    admins,
-    employees,
-    withOrg,
-    withoutOrg,
-    adminsPercentage: total > 0 ? Math.round((admins / total) * 100) : 0,
-    employeesPercentage: total > 0 ? Math.round((employees / total) * 100) : 0,
-  };
+        }),
+        prisma.user.count({
+          where: filters.length > 0 ? { AND: filters } : undefined,
+        }),
+      ]);
+      const totalPages = Math.ceil(total / limit);
+      return { users, total, page, totalPages };
+    },
+    cacheKeyParts,
+    {
+      revalidate: 300,
+      tags: ["all-users"],
+    },
+  )();
 }
 
 export async function getUserById(

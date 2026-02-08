@@ -63,18 +63,19 @@ model Organization {
 }
 
 model User {
-  id                   String               @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
-  organizationId       String?              @map("organization_id") @db.Uuid
-  organization         Organization?        @relation("OrganizationUsers", fields: [organizationId], references: [id], onDelete: SetNull)
-  email                String               @unique @map("email") @db.VarChar(255)
-  passwordHash         String               @map("password_hash") @db.VarChar(255)
-  firstName            String?              @map("first_name") @db.VarChar(255)
-  lastName             String?              @map("last_name") @db.VarChar(255)
-  avatarUrl            String?              @map("avatar_url") @db.Text
-  role                 Role                 @map("role")
-  orderStatusHistories OrderStatusHistory[] @relation("OrderStatusHistoryActors")
-  createdAt            DateTime             @default(now()) @map("created_at")
-  updatedAt            DateTime             @updatedAt @map("updated_at")
+  id                     String                 @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  organizationId         String?                @map("organization_id") @db.Uuid
+  organization           Organization?          @relation("OrganizationUsers", fields: [organizationId], references: [id], onDelete: SetNull)
+  email                  String                 @unique @map("email") @db.VarChar(255)
+  passwordHash           String                 @map("password_hash") @db.VarChar(255)
+  firstName              String?                @map("first_name") @db.VarChar(255)
+  lastName               String?                @map("last_name") @db.VarChar(255)
+  avatarUrl              String?                @map("avatar_url") @db.Text
+  role                   Role                   @map("role")
+  orderStatusHistories   OrderStatusHistory[]   @relation("OrderStatusHistoryActors")
+  paymentStatusHistories PaymentStatusHistory[] @relation("PaymentStatusHistoryActors")
+  createdAt              DateTime               @default(now()) @map("created_at")
+  updatedAt              DateTime               @updatedAt @map("updated_at")
 
   @@index([organizationId])
   @@map("users")
@@ -109,21 +110,22 @@ model MenuItem {
 }
 
 model Order {
-  id                   String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  schoolId             String?              @map("school_id") @db.Uuid
-  school               Organization?        @relation("SchoolOrders", fields: [schoolId], references: [id], onDelete: SetNull)
-  supplierId           String?              @map("supplier_id") @db.Uuid
-  supplier             Organization?        @relation("SupplierOrders", fields: [supplierId], references: [id], onDelete: SetNull)
-  deliveryDate         DateTime?            @map("delivery_date") @db.Date
-  orderStatus          OrderStatus          @default(new) @map("status")
-  paymentStatus        PaymentStatus        @default(unpaid) @map("payment_status")
-  totalPrice           Decimal              @default(0) @map("total_price") @db.Decimal(10, 2)
-  comment              String?              @map("comment") @db.Text
-  orderItems           OrderItem[]          @relation("OrderOrderItems")
-  orderStatusHistories OrderStatusHistory[] @relation("OrderStatusHistoryOrders")
-  createdAt            DateTime             @default(now()) @map("created_at")
-  publishedAt          DateTime?            @map("published_at")
-  updatedAt            DateTime             @updatedAt @map("updated_at")
+  id                     String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  schoolId               String?                @map("school_id") @db.Uuid
+  school                 Organization?          @relation("SchoolOrders", fields: [schoolId], references: [id], onDelete: SetNull)
+  supplierId             String?                @map("supplier_id") @db.Uuid
+  supplier               Organization?          @relation("SupplierOrders", fields: [supplierId], references: [id], onDelete: SetNull)
+  deliveryDate           DateTime?              @map("delivery_date") @db.Date
+  orderStatus            OrderStatus            @default(new) @map("status")
+  paymentStatus          PaymentStatus          @default(unpaid) @map("payment_status")
+  totalPrice             Decimal                @default(0) @map("total_price") @db.Decimal(10, 2)
+  comment                String?                @map("comment") @db.Text
+  orderItems             OrderItem[]            @relation("OrderOrderItems")
+  orderStatusHistories   OrderStatusHistory[]   @relation("OrderStatusHistoryOrders")
+  paymentStatusHistories PaymentStatusHistory[] @relation("PaymentStatusHistoryOrders")
+  createdAt              DateTime               @default(now()) @map("created_at")
+  publishedAt            DateTime?              @map("published_at")
+  updatedAt              DateTime               @updatedAt @map("updated_at")
 
   @@index([orderStatus])
   @@index([paymentStatus])
@@ -161,4 +163,19 @@ model OrderStatusHistory {
   @@index([orderId])
   @@index([actorId])
   @@map("order_status_history")
+}
+
+model PaymentStatusHistory {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  orderId        String        @map("order_id") @db.Uuid
+  order          Order         @relation("PaymentStatusHistoryOrders", fields: [orderId], references: [id], onDelete: Cascade)
+  previousStatus PaymentStatus @map("previous_status")
+  newStatus      PaymentStatus @map("new_status")
+  actorId        String?       @map("actor_id") @db.Uuid
+  actor          User?         @relation("PaymentStatusHistoryActors", fields: [actorId], references: [id], onDelete: SetNull)
+  changedAt      DateTime      @default(now()) @map("changed_at")
+
+  @@index([orderId])
+  @@index([actorId])
+  @@map("payment_status_history")
 }

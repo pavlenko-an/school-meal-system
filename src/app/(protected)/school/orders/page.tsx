@@ -4,7 +4,6 @@ import OrdersFilters from "@/features/order/ui/OrdersFilters";
 import OrderTable from "@/features/order/ui/OrderTable";
 import Pagination from "@/components/common/Pagination";
 import { getCurrentUser } from "@/shared/auth/current-user";
-import { getMyOrganizationOrdersSchema } from "@/features/order/model/params.schemas";
 import { getMyOrganizationOrders } from "@/features/order/model/queries";
 import { OrdersList } from "@/features/order/model/types";
 
@@ -37,8 +36,6 @@ export default async function SchoolOrdersPage({ searchParams }: Props) {
     limit: paramsResolved.limit ? Number(paramsResolved.limit) : 10,
   };
 
-  const parsedQuery = getMyOrganizationOrdersSchema.parse(query);
-
   const params = new URLSearchParams();
   Object.entries(query).forEach(([key, value]) => {
     if (value !== undefined) params.set(key, String(value));
@@ -46,10 +43,7 @@ export default async function SchoolOrdersPage({ searchParams }: Props) {
 
   const currentUser = await getCurrentUser();
 
-  const data: OrdersList = await getMyOrganizationOrders(
-    parsedQuery,
-    currentUser,
-  );
+  const data: OrdersList = await getMyOrganizationOrders(query, currentUser);
 
   return (
     <div className="space-y-8">

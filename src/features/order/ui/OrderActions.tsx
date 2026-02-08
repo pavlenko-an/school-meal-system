@@ -30,7 +30,7 @@ export default function OrderActions({
         size="lg"
         onClick={onSave}
         disabled={isSubmitting || disabled}
-        className="flex-1"
+        className="w-full md:flex-1 cursor-pointer"
         aria-label="Зберегти зміни в замовленні"
       >
         {isSubmitting ? "Збереження..." : "Зберегти зміни"}
@@ -41,7 +41,7 @@ export default function OrderActions({
           <Button
             size="lg"
             variant="destructive"
-            className="flex-1"
+            className="w-full md:flex-1 cursor-pointer"
             aria-label="Видалити замовлення"
           >
             Видалити замовлення

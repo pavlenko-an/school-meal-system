@@ -13,8 +13,8 @@ export default async function ProtectedLayout({
       <Header />
       <div className="flex flex-1">
         <Sidebar />
-        <main className="flex-1 bg-background">
-          <div className="container mx-auto p-4 md:p-6">{children}</div>
+        <main className="flex-1 bg-background overflow-x-hidden">
+          <div className="container mx-auto p-4 md:p-6 max-w-[100vw]">{children}</div>
         </main>
       </div>
       <Footer />

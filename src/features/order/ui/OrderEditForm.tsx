@@ -136,7 +136,16 @@ export default function OrderEditForm({
     startSave(async () => {
       const result = await updateOrder(null, {
         id: orderId,
-        deliveryDate: data.deliveryDate,
+        deliveryDate: data.deliveryDate
+          ? new Date(
+              data.deliveryDate.getFullYear(),
+              data.deliveryDate.getMonth(),
+              data.deliveryDate.getDate(),
+              12,
+              0,
+              0,
+            )
+          : undefined,
         comment: data.comment,
       });
 
@@ -175,7 +184,7 @@ export default function OrderEditForm({
         <OrderHeader />
 
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center flex-col md:flex-row gap-4">
             <h3 className="text-xl font-semibold">Позиції замовлення</h3>
             <AddItemDialog menuItems={menuItems} onAdd={handleAddItem} />
           </div>

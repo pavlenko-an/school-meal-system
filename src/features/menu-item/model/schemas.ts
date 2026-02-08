@@ -1,11 +1,11 @@
 import { z } from "zod";
 
 export const getAllMenuItemsSchema = z.object({
-  categoryId: z.uuid("Invalid category ID").optional(),
+  categoryId: z.uuid("Неправильний формат ID категорії").optional(),
   name: z
     .string()
     .trim()
-    .max(100, "Name cannot exceed 100 characters")
+    .max(100, "Назва не може перевищувати 100 символів")
     .optional(),
   isAvailable: z.coerce.boolean().optional(),
   page: z.coerce.number().int().min(1).default(1),
@@ -13,55 +13,43 @@ export const getAllMenuItemsSchema = z.object({
 });
 
 export const getMenuItemByIdSchema = z.object({
-  id: z.uuid("Invalid menu item ID"),
+  id: z.uuid("Неправильний формат ID пункту меню"),
 });
 
 export const createMenuItemSchema = z.object({
   name: z
     .string()
-    .min(5, "Name must be at least 5 characters")
-    .max(100, "Name cannot exceed 100 characters"),
+    .min(5, "Назва повинна містити щонайменше 5 символів")
+    .max(100, "Назва не може перевищувати 100 символів"),
   description: z
     .string()
     .trim()
-    .max(500, "Description cannot exceed 500 characters")
+    .max(500, "Опис не може перевищувати 500 символів")
     .optional(),
-  price: z.preprocess(
-    (val) => (typeof val === "string" ? parseFloat(val) : val),
-    z.number().positive("Price must be positive"),
-  ),
-  categoryId: z.uuid("Invalid category ID").optional(),
-  isAvailable: z.preprocess((val) => {
-    if (typeof val === "string") return val === "true";
-    return val;
-  }, z.boolean().default(true)),
+  price: z.coerce.number().positive("Ціна повинна бути додатньою"),
+  categoryId: z.uuid("Неправильний формат ID категорії").optional(),
+  isAvailable: z.coerce.boolean().default(true),
   image: z.instanceof(File).optional(),
 });
 
 export const updateMenuItemSchema = z.object({
-  id: z.uuid("Invalid menu item ID"),
+  id: z.uuid("Неправильний формат ID пункту меню"),
   name: z
     .string()
-    .min(1, "Name is required")
-    .max(100, "Name cannot exceed 100 characters")
+    .min(1, "Назва обов'язкова")
+    .max(100, "Назва не може перевищувати 100 символів")
     .optional(),
   description: z
     .string()
     .trim()
-    .max(500, "Description cannot exceed 500 characters")
+    .max(500, "Опис не може перевищувати 500 символів")
     .optional(),
-  price: z.preprocess(
-    (val) => (typeof val === "string" ? parseFloat(val) : val),
-    z.number().positive("Price must be positive").optional(),
-  ),
-  categoryId: z.uuid("Invalid category ID").optional(),
-  isAvailable: z.preprocess((val) => {
-    if (typeof val === "string") return val === "true";
-    return val;
-  }, z.boolean().optional()),
+  price: z.coerce.number().positive("Ціна повинна бути додатньою").optional(),
+  categoryId: z.uuid("Неправильний формат ID категорії").optional(),
+  isAvailable: z.coerce.boolean().default(true),
   image: z.instanceof(File).optional(),
 });
 
 export const deleteMenuItemSchema = z.object({
-  id: z.uuid("Invalid menu item ID"),
+  id: z.uuid("Неправильний формат ID пункту меню"),
 });

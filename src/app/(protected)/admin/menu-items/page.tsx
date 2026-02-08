@@ -57,7 +57,7 @@ export default async function AdminMenuItemsPage({ searchParams }: Props) {
       <Suspense
         fallback={<LoadingSpinner size="md" text="Завантаження фільтрів..." />}
       >
-        <div className="max-w-3xl flex flex-row space-x-4 justify-between items-center">
+        <div className="max-w-2xl w-full flex flex-col sm:flex-row sm:space-x-4 sm:justify-between items-center gap-4">
           <Button asChild className="w-full sm:w-auto">
             <Link href="/admin/menu-items/new">
               <PlusCircle className="mr-2 h-4 w-4" />

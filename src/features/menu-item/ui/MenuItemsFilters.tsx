@@ -33,7 +33,7 @@ export default function MenuItemsFilters({ currentParams }: Props) {
   const isAvailableFilter = currentParams.isAvailable === "true";
 
   return (
-    <div className="space-y-4 flex flex-wrap md:flex-nowrap md:items-center md:justify-center md:space-y-0 gap-2 md:gap-4">
+    <div className="w-full md:w-auto flex flex-wrap md:flex-nowrap items-center justify-center md:space-y-0 gap-4">
       <Input
         placeholder="Пошук за назвою пункту меню..."
         value={nameSearch}

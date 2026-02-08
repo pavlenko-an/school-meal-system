@@ -70,12 +70,31 @@ export const authOptions: AuthOptions = {
       }
       return token;
     },
-    session({ session, token }: { session: Session; token: JWT }) {
-      if (token.role) {
-        session.user.id = token.id;
-        session.user.role = token.role;
-        session.user.organizationId = token.organizationId;
-        session.user.organizationType = token.organizationType;
+    async session({ session, token }: { session: Session; token: JWT }) {
+      if (token?.id) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id },
+          include: { organization: true },
+        });
+        if (dbUser) {
+          session.user.id = dbUser.id;
+          session.user.email = dbUser.email;
+          session.user.name =
+            dbUser.firstName && dbUser.lastName
+              ? `${dbUser.firstName} ${dbUser.lastName}`.trim()
+              : null;
+          session.user.image = dbUser.avatarUrl;
+          session.user.organizationId = dbUser.organizationId;
+          session.user.organizationType = dbUser.organization?.type ?? null;
+          session.user.role = dbUser.role;
+        } else {
+          if (token.role) {
+            session.user.id = token.id;
+            session.user.role = token.role;
+            session.user.organizationId = token.organizationId;
+            session.user.organizationType = token.organizationType;
+          }
+        }
       }
       return session;
     },

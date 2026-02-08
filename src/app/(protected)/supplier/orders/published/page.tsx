@@ -1,6 +1,5 @@
 import { format, startOfDay } from "date-fns";
 import { uk } from "date-fns/locale";
-import { getMyOrganizationOrdersSchema } from "@/features/order/model/params.schemas";
 import { getCurrentUser } from "@/shared/auth/current-user";
 import { getMyOrganizationOrders } from "@/features/order/model/queries";
 import { OrdersList } from "@/features/order/model/types";
@@ -21,22 +20,15 @@ export default async function PublishedOrdersPage({ searchParams }: Props) {
   const paramsResolved = await searchParams;
   const today = startOfDay(new Date());
 
-  const fromStr = paramsResolved.dateFrom
-    ? paramsResolved.dateFrom
-    : today.toISOString().split("T")[0];
-  const toStr = paramsResolved.dateTo ? paramsResolved.dateTo : undefined;
-  const page = paramsResolved.page ? Number(paramsResolved.page) : 1;
-  const limit = paramsResolved.limit ? Number(paramsResolved.limit) : 10;
-
   const query = {
     orderStatus: "published",
-    from: fromStr,
-    to: toStr,
-    page,
-    limit,
+    from: paramsResolved.dateFrom
+      ? paramsResolved.dateFrom
+      : today.toISOString().split("T")[0],
+    to: paramsResolved.dateTo ? paramsResolved.dateTo : undefined,
+    page: paramsResolved.page ? Number(paramsResolved.page) : 1,
+    limit: paramsResolved.limit ? Number(paramsResolved.limit) : 10,
   };
-
-  const parsedQuery = getMyOrganizationOrdersSchema.parse(query);
 
   const params = new URLSearchParams();
   Object.entries(query).forEach(([key, value]) => {
@@ -45,10 +37,7 @@ export default async function PublishedOrdersPage({ searchParams }: Props) {
 
   const currentUser = await getCurrentUser();
 
-  const data: OrdersList = await getMyOrganizationOrders(
-    parsedQuery,
-    currentUser,
-  );
+  const data: OrdersList = await getMyOrganizationOrders(query, currentUser);
 
   return (
     <div className="container max-w-6xl mx-auto py-8 px-4 space-y-8">
@@ -59,14 +48,14 @@ export default async function PublishedOrdersPage({ searchParams }: Props) {
           </h1>
           <p className="text-muted-foreground mt-1">
             Замовлення зі статусом «Опубліковано» з датою поставки від{" "}
-            {format(new Date(fromStr), "dd.MM.yyyy", { locale: uk })}
+            {format(new Date(query.from), "dd.MM.yyyy", { locale: uk })}
           </p>
         </div>
 
         <DateRangeFilters
           currentParams={{
-            dateFrom: fromStr,
-            dateTo: toStr,
+            dateFrom: query.from,
+            dateTo: query.to,
           }}
         />
       </div>
@@ -75,7 +64,7 @@ export default async function PublishedOrdersPage({ searchParams }: Props) {
         currentPage={data.page}
         totalPages={data.totalPages}
         totalItems={data.total}
-        itemsPerPage={limit}
+        itemsPerPage={query.limit}
       />
     </div>
   );

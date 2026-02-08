@@ -38,20 +38,20 @@ export default async function SchoolMenuPage({ searchParams }: Props) {
   ]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-full overflow-hidden">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Меню</h1>
         <p className="text-muted-foreground mt-2">
           Доступні страви для формування замовлень
         </p>
       </div>
-      <MenuCategoryTabs categories={catData.categories} />
+      <div className="w-full">
+        <MenuCategoryTabs categories={catData.categories} />
+      </div>
       <Suspense
         fallback={<LoadingSpinner size="md" text="Завантаження фільтрів..." />}
       >
-        <div className="w-full flex justify-center">
-          <MenuItemsFilters currentParams={params} />
-        </div>
+        <MenuItemsFilters currentParams={params} />
       </Suspense>
       <MenuGrid items={menuData.items} />
       {menuData.items.length === 0 && (

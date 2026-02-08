@@ -26,20 +26,27 @@ export default function MenuCategoryTabs({ categories }: Props) {
   };
 
   return (
-    <Tabs
-      defaultValue="all"
-      value={currentCategory}
-      onValueChange={handleTabChange}
-      className="w-full"
-    >
-      <TabsList className="w-full justify-start overflow-x-auto">
-        <TabsTrigger value="all">Всі страви</TabsTrigger>
-        {categories.map((cat) => (
-          <TabsTrigger key={cat.id} value={cat.id}>
-            {cat.name}
+    <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+      <Tabs
+        defaultValue="all"
+        value={currentCategory}
+        onValueChange={handleTabChange}
+      >
+        <TabsList className="inline-flex w-max md:w-full">
+          <TabsTrigger value="all" className="whitespace-nowrap">
+            Всі страви
           </TabsTrigger>
-        ))}
-      </TabsList>
-    </Tabs>
+          {categories.map((cat) => (
+            <TabsTrigger
+              key={cat.id}
+              value={cat.id}
+              className="whitespace-nowrap"
+            >
+              {cat.name}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
+    </div>
   );
 }

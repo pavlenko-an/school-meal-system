@@ -20,6 +20,7 @@ import {
   updateOrganizationSchema,
 } from "../model/schemas";
 import z from "zod";
+import { revalidateTag, updateTag } from "next/cache";
 
 export async function getAllOrganizations(
   prevState: ActionResult<OrganizationsList> | null = null,
@@ -99,6 +100,8 @@ export async function createOrganization(
       };
     }
     const organization = await OrganizationService.create(result.data);
+    updateTag("all-orgs");
+    revalidateTag("org-overview", "max");
     return { success: true, data: organization };
   } catch (error: unknown) {
     return {
@@ -155,6 +158,9 @@ export async function updateOrganization(
       id: organizationId,
       ...data,
     });
+    updateTag("all-orgs");
+    updateTag("all-users");
+    revalidateTag("org-overview", "max");
     return { success: true, data: updatedOrganization };
   } catch (error: unknown) {
     return {
@@ -205,6 +211,9 @@ export async function deleteOrganization(
       };
     }
     await OrganizationService.delete({ id: organizationId });
+    updateTag("all-orgs");
+    updateTag("all-users");
+    revalidateTag("org-overview", "max");
     return { success: true, message: "Організацію успішно видалено" };
   } catch (error: unknown) {
     return {

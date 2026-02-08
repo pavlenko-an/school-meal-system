@@ -2,13 +2,13 @@ import StatsCards from "@/features/order/ui/StatsCards";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { getCurrentUser } from "@/shared/auth/current-user";
-import { getMyOrganizationStatsSchema } from "@/features/order/model/params.schemas";
 import { getMyOrganizationStats } from "@/features/order/model/queries";
 import { OrdersStats } from "@/features/order/model/types";
-import { cache, Suspense } from "react";
+import { Suspense } from "react";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import DateRangeFilters from "@/features/order/ui/DateRangeFilter";
 import OrdersPeriodCard from "@/features/order/ui/OrdersPeriodCard";
+import { OrderStatus } from "@/generated/prisma/client";
 
 interface Props {
   searchParams: Promise<{
@@ -20,29 +20,27 @@ interface Props {
 export default async function SupplierDashboard({ searchParams }: Props) {
   const paramsResolved = await searchParams;
 
-  const filters = {
-    from: paramsResolved.dateFrom,
-    to: paramsResolved.dateTo,
+  const query = {
+    from: paramsResolved.dateFrom
+      ? new Date(paramsResolved.dateFrom)
+      : undefined,
+    to: paramsResolved.dateTo ? new Date(paramsResolved.dateTo) : undefined,
+    statuses: [
+      "accepted",
+      "in_progress",
+      "completed",
+      "cancelled",
+    ] as (keyof typeof OrderStatus)[],
   };
 
-  const query = getMyOrganizationStatsSchema.parse({
-    from: filters.from,
-    to: filters.to,
-    statuses: ["accepted", "in_progress", "completed", "cancelled"],
-  });
-
   const params = new URLSearchParams();
-  Object.entries(filters).forEach(([key, value]) => {
+  Object.entries(query).forEach(([key, value]) => {
     if (value !== undefined) params.set(key, String(value));
   });
 
   const currentUser = await getCurrentUser();
 
-  const getMyOrganizationStatsCached = cache(async () => {
-    return await getMyOrganizationStats(query, currentUser);
-  });
-
-  const data: OrdersStats = await getMyOrganizationStatsCached();
+  const data: OrdersStats = await getMyOrganizationStats(query, currentUser);
   const stats = {
     totalOrders: data.stats?.totalOrders ?? 0,
     activeOrders: data.stats?.activeOrders ?? 0,

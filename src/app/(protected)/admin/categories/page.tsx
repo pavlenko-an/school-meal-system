@@ -2,7 +2,6 @@ import LoadingSpinner from "@/components/common/LoadingSpinner";
 import Pagination from "@/components/common/Pagination";
 import { Button } from "@/components/ui/button";
 import { getAllCategories } from "@/features/category/model/queries";
-import { getAllCategoriesSchema } from "@/features/category/model/schemas";
 import { CategoriesList } from "@/features/category/model/types";
 import CategoriesFilters from "@/features/category/ui/CategoriesFilters";
 import CategoriesTable from "@/features/category/ui/CategoriesTable";
@@ -27,14 +26,12 @@ export default async function AdminCategoriesPage({ searchParams }: Props) {
     limit: paramsResolved.limit ? Number(paramsResolved.limit) : 10,
   };
 
-  const parsedQuery = getAllCategoriesSchema.parse(query);
-
   const params = new URLSearchParams();
   Object.entries(query).forEach(([key, value]) => {
     if (value !== undefined) params.set(key, String(value));
   });
 
-  const data: CategoriesList = await getAllCategories(parsedQuery);
+  const data: CategoriesList = await getAllCategories(query);
 
   return (
     <div className="space-y-8">
@@ -49,7 +46,7 @@ export default async function AdminCategoriesPage({ searchParams }: Props) {
       <Suspense
         fallback={<LoadingSpinner size="md" text="Завантаження фільтрів..." />}
       >
-        <div className="max-w-2xl flex flex-row space-x-4 justify-between items-center">
+        <div className="max-w-2xl w-full flex flex-col sm:flex-row sm:space-x-4 sm:justify-between items-center gap-4">
           <Button
             asChild
             className="w-full sm:w-auto"

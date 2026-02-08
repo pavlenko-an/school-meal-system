@@ -92,7 +92,9 @@ export default function OrderTable({
             return (
               <TableRow key={order.id} className="hover:bg-muted/50">
                 <TableCell>
-                  {order.deliveryDate?.toLocaleDateString("uk-UA")}
+                  {order.deliveryDate
+                    ? new Date(order.deliveryDate).toLocaleDateString("uk-UA")
+                    : "—"}
                 </TableCell>
                 <TableCell>
                   <Badge

@@ -24,7 +24,7 @@ import { Upload, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const MAX_SIZE = 1024 * 1024;
-const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 
 type Props = {
   defaultValues: {
@@ -74,7 +74,7 @@ export default function EditUserForm({ defaultValues }: Props) {
     }
 
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      toast.error("Тільки JPG, PNG, WebP");
+      toast.error("Тільки JPG, PNG, WebP, AVIF");
       e.target.value = "";
       return;
     }
@@ -105,8 +105,6 @@ export default function EditUserForm({ defaultValues }: Props) {
     };
   }, [preview]);
 
-  const { setError } = form;
-
   const [state, formAction, isPending] = useActionState(updateUser, null);
 
   useEffect(() => {
@@ -120,16 +118,14 @@ export default function EditUserForm({ defaultValues }: Props) {
       );
       if (state.fieldErrors) {
         Object.entries(state.fieldErrors).forEach(([field, messages]) => {
-          setError(field as keyof updateUserInput, {
+          form.setError(field as keyof updateUserInput, {
             type: "server",
             message: messages?.join(", ") || "Помилка",
           });
         });
       }
     }
-  }, [state, router, setError]);
-
-  console.log("Default Values:", defaultValues);
+  }, [state, router, form]);
 
   return (
     <Form {...form}>
@@ -183,8 +179,8 @@ export default function EditUserForm({ defaultValues }: Props) {
               </div>
             </div>
             <FormDescription>
-              Рекомендований розмір: 200x200 пікселів. Макс. 5 МБ. Формати: JPG,
-              PNG, WebP.
+              Рекомендований розмір: 200x200 пікселів. Макс. 1 МБ. Формати: JPG,
+              PNG, WebP, AVIF.
             </FormDescription>
             <FormMessage />
           </FormItem>

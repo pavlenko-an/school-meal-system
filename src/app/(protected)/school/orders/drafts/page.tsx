@@ -1,10 +1,6 @@
-import { format, startOfDay } from "date-fns";
-import { uk } from "date-fns/locale";
-import { getMyOrganizationOrdersSchema } from "@/features/order/model/params.schemas";
 import { getCurrentUser } from "@/shared/auth/current-user";
 import { getMyOrganizationOrders } from "@/features/order/model/queries";
 import { OrdersList } from "@/features/order/model/types";
-import DateRangeFilters from "@/features/order/ui/DateRangeFilter";
 import Pagination from "@/components/common/Pagination";
 import OrderRows from "@/features/order/ui/OrderRows";
 
@@ -17,26 +13,14 @@ interface Props {
   }>;
 }
 
-export default async function NewOrdersPage({ searchParams }: Props) {
+export default async function DraftOrdersPage({ searchParams }: Props) {
   const paramsResolved = await searchParams;
-  const today = startOfDay(new Date());
-
-  const fromStr = paramsResolved.dateFrom
-    ? paramsResolved.dateFrom
-    : today.toISOString().split("T")[0];
-  const toStr = paramsResolved.dateTo ? paramsResolved.dateTo : undefined;
-  const page = paramsResolved.page ? Number(paramsResolved.page) : 1;
-  const limit = paramsResolved.limit ? Number(paramsResolved.limit) : 10;
 
   const query = {
     orderStatus: "new",
-    from: fromStr,
-    to: toStr,
-    page,
-    limit,
+    page: paramsResolved.page ? Number(paramsResolved.page) : 1,
+    limit: paramsResolved.limit ? Number(paramsResolved.limit) : 10,
   };
-
-  const parsedQuery = getMyOrganizationOrdersSchema.parse(query);
 
   const params = new URLSearchParams();
   Object.entries(query).forEach(([key, value]) => {
@@ -45,10 +29,7 @@ export default async function NewOrdersPage({ searchParams }: Props) {
 
   const currentUser = await getCurrentUser();
 
-  const data: OrdersList = await getMyOrganizationOrders(
-    parsedQuery,
-    currentUser,
-  );
+  const data: OrdersList = await getMyOrganizationOrders(query, currentUser);
 
   return (
     <div className="container max-w-6xl mx-auto py-8 px-4 space-y-8">
@@ -56,17 +37,9 @@ export default async function NewOrdersPage({ searchParams }: Props) {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Нові замовлення</h1>
           <p className="text-muted-foreground mt-1">
-            Замовлення зі статусом «Новий» з датою поставки від{" "}
-            {format(new Date(fromStr), "dd.MM.yyyy", { locale: uk })}
+            Усі замовлення зі статусом «Новий», створені сьогодні або раніше
           </p>
         </div>
-
-        <DateRangeFilters
-          currentParams={{
-            dateFrom: fromStr,
-            dateTo: toStr,
-          }}
-        />
       </div>
       {data.orders.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground border rounded-lg bg-muted/30">
@@ -82,7 +55,7 @@ export default async function NewOrdersPage({ searchParams }: Props) {
         currentPage={data.page}
         totalPages={data.totalPages}
         totalItems={data.total}
-        itemsPerPage={limit}
+        itemsPerPage={query.limit}
       />
     </div>
   );

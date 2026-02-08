@@ -17,6 +17,7 @@ import {
   updatePaymentStatusSchema,
 } from "../model/input.schemas";
 import z from "zod";
+import { revalidateTag, updateTag } from "next/cache";
 
 export async function createOrder(
   prevState: ActionResult<OrderInfo> | null = null,
@@ -24,6 +25,10 @@ export async function createOrder(
   try {
     const currentUser = await getCurrentUser();
     const order = await OrderService.create(currentUser);
+    updateTag(`org-stats-${currentUser.organizationId}`);
+    updateTag(`org-orders-${currentUser.organizationId}`);
+    revalidateTag("org-overview", "max");
+    revalidateTag("all-orders-stats", "max");
     return { success: true, data: order };
   } catch (error: unknown) {
     return {
@@ -54,6 +59,10 @@ export async function updateOrder(
       };
     }
     const order = await OrderService.update(result.data, currentUser);
+    updateTag(`org-stats-${currentUser.organizationId}`);
+    updateTag(`org-orders-${currentUser.organizationId}`);
+    revalidateTag("org-overview", "max");
+    revalidateTag("all-orders-stats", "max");
     return { success: true, data: order };
   } catch (error: unknown) {
     return {
@@ -87,6 +96,10 @@ export async function updateOrderStatus(
       result.data,
       currentUser,
     );
+    updateTag(`org-stats-${currentUser.organizationId}`);
+    updateTag(`org-orders-${currentUser.organizationId}`);
+    revalidateTag("org-overview", "max");
+    revalidateTag("all-orders-stats", "max");
     return {
       success: true,
       data: order,
@@ -123,6 +136,10 @@ export async function updatePaymentStatus(
       result.data,
       currentUser,
     );
+    updateTag(`org-stats-${currentUser.organizationId}`);
+    updateTag(`org-orders-${currentUser.organizationId}`);
+    revalidateTag("org-overview", "max");
+    revalidateTag("all-orders-stats", "max");
     return {
       success: true,
       data: order,
@@ -156,6 +173,10 @@ export async function deleteOrder(
       };
     }
     await OrderService.delete(result.data, currentUser);
+    updateTag(`org-stats-${currentUser.organizationId}`);
+    updateTag(`org-orders-${currentUser.organizationId}`);
+    revalidateTag("org-overview", "max");
+    revalidateTag("all-orders-stats", "max");
     return { success: true, message: "Замовлення успішно видалено" };
   } catch (error: unknown) {
     return {

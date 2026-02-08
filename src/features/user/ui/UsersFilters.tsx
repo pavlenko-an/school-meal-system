@@ -38,7 +38,7 @@ export default function UsersFilters({ currentParams, organizations }: Props) {
   };
 
   return (
-    <div className="space-y-4 flex flex-wrap md:flex-nowrap md:items-center md:justify-center md:space-y-0 gap-2 md:gap-4">
+    <div className="w-full md:w-auto flex flex-wrap md:flex-nowrap md:items-center md:justify-center md:space-y-0 gap-4">
       <Input
         placeholder="Пошук за ім'ям користувача..."
         value={nameSearch}
@@ -54,7 +54,7 @@ export default function UsersFilters({ currentParams, organizations }: Props) {
           updateFilter("organizationId", value === "all" ? undefined : value)
         }
       >
-        <SelectTrigger className="w-45">
+        <SelectTrigger className="w-full md:w-45">
           <SelectValue placeholder="Організація" />
         </SelectTrigger>
         <SelectContent position="popper">

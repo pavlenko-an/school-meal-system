@@ -10,6 +10,7 @@ import {
 import { MenuItemService } from "../model/services";
 import { deleteMenuItemInput, MenuItemInfo } from "../model/types";
 import z from "zod";
+import { updateTag } from "next/cache";
 
 export async function createMenuItem(
   prevState: ActionResult<MenuItemInfo> | null = null,
@@ -30,7 +31,6 @@ export async function createMenuItem(
     }
     const rawData = Object.fromEntries(formData);
     const result = createMenuItemSchema.safeParse({ ...rawData, image });
-    console.log("Create MenuItem parse result:", result);
     if (!result.success) {
       const flattened = z.flattenError(result.error);
       return {
@@ -40,6 +40,7 @@ export async function createMenuItem(
       };
     }
     const menuItem = await MenuItemService.create(result.data);
+    updateTag("menu-items");
     return { success: true, data: menuItem };
   } catch (error: unknown) {
     return {
@@ -78,6 +79,7 @@ export async function updateMenuItem(
       };
     }
     const updatedMenuItem = await MenuItemService.update(result.data);
+    updateTag("menu-items");
     return {
       success: true,
       data: updatedMenuItem,
@@ -117,6 +119,7 @@ export async function deleteMenuItem(
       };
     }
     await MenuItemService.delete(result.data);
+    updateTag("menu-items");
     return {
       success: true,
       message: "Позиція меню успішно видалена",

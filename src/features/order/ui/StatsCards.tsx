@@ -31,7 +31,7 @@ export default function StatsCards({
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{totalOrders}</div>
-          <p className="text-xs text-muted-foreground">за обраний період</p>
+          <p className="text-xs text-muted-foreground">за весь час</p>
         </CardContent>
       </Card>
       <Card>
@@ -43,7 +43,7 @@ export default function StatsCards({
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{activeOrders}</div>
-          <p className="text-xs text-muted-foreground">за обраний період</p>
+          <p className="text-xs text-muted-foreground">за весь час</p>
         </CardContent>
       </Card>
 
@@ -91,7 +91,7 @@ export default function StatsCards({
               currency: "UAH",
             }).format(totalUnpaid)}{" "}
           </div>
-          <p className="text-xs text-muted-foreground">за обраний період</p>
+          <p className="text-xs text-muted-foreground">за весь час</p>
         </CardContent>
       </Card>
     </div>

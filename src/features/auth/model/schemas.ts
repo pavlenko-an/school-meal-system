@@ -3,18 +3,18 @@ import { z } from "zod";
 export const registerSchema = z
   .object({
     email: z
-      .email("Invalid email format")
+      .email("Неправильний формат електронної адреси")
       .transform((v) => v.trim().toLowerCase()),
     password: z
       .string()
-      .min(8, "Password must be at least 8 characters long")
+      .min(8, "Пароль повинен містити щонайменше 8 символів")
       .regex(
         /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        "Password must contain uppercase, lowercase letters and a number",
+        "Пароль повинен містити великі та малі літери та цифру",
       ),
     firstName: z.string().trim().optional(),
     lastName: z.string().trim().optional(),
-    organizationId: z.uuid("Invalid organization ID"),
+    organizationId: z.uuid("Неправильний формат ID організації"),
     confirmPassword: z.string().optional(),
     avatar: z.instanceof(File).optional(),
   })
@@ -26,20 +26,20 @@ export const registerSchema = z
       return true;
     },
     {
-      message: "Passwords do not match",
+      message: "Паролі не співпадають",
       path: ["confirmPassword"],
     },
   );
 
 export const loginSchema = z.object({
   email: z
-    .email("Invalid email format")
+    .email("Неправильний формат електронної адреси")
     .transform((v) => v.trim().toLowerCase()),
   password: z
     .string()
-    .min(8, "Password must be at least 8 characters long")
+    .min(8, "Пароль повинен містити щонайменше 8 символів")
     .regex(
       /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      "Password must contain uppercase, lowercase letters and a number",
+      "Пароль повинен містити великі та малі літери та цифру",
     ),
 });

@@ -9,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { updateUserInput } from "@/features/user/model/types";
 import OrganizationForm from "@/features/organization/ui/OrganizationForm";
 import { getUserById } from "@/features/user/model/queries";
 import { updateOrganizationInput } from "@/features/organization/model/types";
@@ -17,10 +16,11 @@ import { updateOrganizationInput } from "@/features/organization/model/types";
 export default async function ProfilePage() {
   const currentUser = await getCurrentUser();
   const userInfo = await getUserById({ id: currentUser.id }, currentUser);
-  const defaultUserValues: Partial<updateUserInput> = {
+  const defaultUserValues = {
     email: userInfo.email,
     firstName: userInfo.firstName || "",
     lastName: userInfo.lastName || "",
+    avatarUrl: userInfo.avatarUrl || "",
   };
   const defaultOrgValues: Partial<updateOrganizationInput> =
     userInfo.organization

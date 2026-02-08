@@ -31,7 +31,7 @@ import { Upload, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const MAX_SIZE = 1024 * 1024;
-const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 
 interface Props {
   categories: CategoryInfo[];
@@ -72,7 +72,7 @@ export default function MenuItemCreateForm({ categories }: Props) {
     }
 
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      toast.error("Тільки JPG, PNG, WebP");
+      toast.error("Тільки JPG, PNG, WebP, AVIF");
       e.target.value = "";
       return;
     }
@@ -177,8 +177,8 @@ export default function MenuItemCreateForm({ categories }: Props) {
               </div>
             </div>
             <FormDescription>
-              Рекомендований розмір: 200x200 пікселів. Макс. 5 МБ. Формати: JPG,
-              PNG, WebP.
+              Рекомендований розмір: 200x200 пікселів. Макс. 1 МБ. Формати: JPG,
+              PNG, WebP, AVIF.
             </FormDescription>
             <FormMessage />
           </FormItem>

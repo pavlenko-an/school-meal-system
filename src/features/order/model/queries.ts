@@ -3,7 +3,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { CurrentUser } from "@/shared/auth/current-user";
 import {
   getAllOrdersInput,
-  getMyOrganizationOrdersInput,
+  getMyOrganizationStatsInput,
   getOrderByIdInput,
   getOrderHistoryInput,
   OrderHistory,
@@ -21,6 +21,7 @@ import {
   getOrderHistorySchema,
 } from "./params.schemas";
 import { notFound } from "next/navigation";
+import { unstable_cache } from "next/cache";
 
 export async function getAllOrders(
   data: getAllOrdersInput,
@@ -53,8 +54,8 @@ export async function getAllOrders(
   const filters: Prisma.OrderWhereInput[] = [];
   if (validated.schoolId) filters.push({ schoolId: validated.schoolId });
   if (validated.supplierId) filters.push({ supplierId: validated.supplierId });
-  if (validated.from) filters.push({ createdAt: { gte: validated.from } });
-  if (validated.to) filters.push({ createdAt: { lte: validated.to } });
+  if (validated.from) filters.push({ deliveryDate: { gte: validated.from } });
+  if (validated.to) filters.push({ deliveryDate: { lte: validated.to } });
   if (validated.orderStatus)
     filters.push({ orderStatus: validated.orderStatus });
   if (validated.paymentStatus)
@@ -87,6 +88,7 @@ export async function getAllOrders(
           },
         },
       },
+      orderBy: { deliveryDate: "desc" },
     }),
     prisma.order.count({
       where: filters.length > 0 ? { AND: filters } : {},
@@ -104,91 +106,90 @@ export async function getAllOrders(
   };
 }
 
-export async function getAllOrdersStats() {
-  const [
-    total,
-    byStatus,
-    totalValue,
-    unpaidValue,
-    completedValue,
-    upcomingCount,
-  ] = await Promise.all([
-    prisma.order.count(),
+export async function getAllOrdersStats(limit = 5) {
+  return unstable_cache(
+    async () => {
+      console.log(
+        `[CACHE MISS/HIT CHECK] ${new Date().toISOString()} — выполняю реальные запросы к БД`,
+      );
 
-    prisma.order.groupBy({
-      by: ["orderStatus"],
-      _count: { id: true },
-    }),
+      const [total, byStatus, totalValue, unpaidValue, recentOrders] =
+        await Promise.all([
+          prisma.order.count(),
 
-    prisma.order
-      .aggregate({
-        _sum: { totalPrice: true },
-      })
-      .then((r) => Number(r._sum.totalPrice ?? 0)),
+          prisma.order.groupBy({
+            by: ["orderStatus"],
+            _count: { id: true },
+          }),
 
-    prisma.order
-      .aggregate({
-        _sum: { totalPrice: true },
-        where: {
-          paymentStatus: "unpaid",
-          orderStatus: { not: "cancelled" },
+          prisma.order
+            .aggregate({
+              _sum: { totalPrice: true },
+            })
+            .then((r) => Number(r._sum.totalPrice ?? 0)),
+
+          prisma.order
+            .aggregate({
+              _sum: { totalPrice: true },
+              where: {
+                paymentStatus: "unpaid",
+                orderStatus: { not: "cancelled" },
+              },
+            })
+            .then((r) => Number(r._sum.totalPrice ?? 0)),
+
+          prisma.order.findMany({
+            take: limit,
+            orderBy: { createdAt: "desc" },
+            select: {
+              id: true,
+              createdAt: true,
+              totalPrice: true,
+              orderStatus: true,
+              school: { select: { name: true } },
+              supplier: { select: { name: true } },
+            },
+          }),
+        ]);
+
+      const statusCounts = Object.fromEntries(
+        byStatus.map((item) => [item.orderStatus, item._count.id]),
+      );
+
+      return {
+        total,
+        statusCounts: {
+          published: statusCounts.published ?? 0,
+          accepted: statusCounts.accepted ?? 0,
+          in_progress: statusCounts.in_progress ?? 0,
+          completed: statusCounts.completed ?? 0,
+          cancelled: statusCounts.cancelled ?? 0,
         },
-      })
-      .then((r) => Number(r._sum.totalPrice ?? 0)),
-
-    prisma.order
-      .aggregate({
-        _sum: { totalPrice: true },
-        where: { orderStatus: "completed" },
-      })
-      .then((r) => Number(r._sum.totalPrice ?? 0)),
-
-    prisma.order.count({
-      where: {
-        deliveryDate: { gte: new Date() },
-        orderStatus: { in: ["in_progress"] },
-      },
-    }),
-  ]);
-
-  const statusCounts = Object.fromEntries(
-    byStatus.map((item) => [item.orderStatus, item._count.id]),
-  );
-
-  return {
-    total,
-    statusCounts: {
-      new: statusCounts.new ?? 0,
-      published: statusCounts.published ?? 0,
-      accepted: statusCounts.accepted ?? 0,
-      in_progress: statusCounts.in_progress ?? 0,
-      completed: statusCounts.completed ?? 0,
-      cancelled: statusCounts.cancelled ?? 0,
+        totalValue,
+        unpaidValue,
+        recentOrders: recentOrders.map((o) => ({
+          ...o,
+          totalPrice: Number(o.totalPrice),
+        })) as OrderInfo[],
+      };
     },
-    totalValue,
-    unpaidValue,
-    completedValue,
-    upcomingActiveDeliveries: upcomingCount,
-  };
-}
-
-export async function getRecentOrders(limit = 5) {
-  return prisma.order.findMany({
-    take: limit,
-    orderBy: { deliveryDate: "desc" },
-    select: {
-      id: true,
-      createdAt: true,
-      totalPrice: true,
-      orderStatus: true,
-      school: { select: { name: true } },
-      supplier: { select: { name: true } },
+    ["all-orders-stats", String(limit)],
+    {
+      revalidate: 300,
+      tags: ["all-orders-stats"],
     },
-  });
+  )();
 }
 
 export async function getMyOrganizationOrders(
-  data: getMyOrganizationOrdersInput,
+  data: {
+    orderStatus?: string | string[];
+    paymentStatus?: string;
+    from?: string;
+    to?: string;
+    page?: number;
+    limit?: number;
+  },
   currentUser: CurrentUser,
 ): Promise<OrdersList> {
   const permission = OrderPermissionPolicy.canViewOrganizationData(currentUser);
@@ -197,76 +198,100 @@ export async function getMyOrganizationOrders(
   }
   const validated = getMyOrganizationOrdersSchema.parse(data);
 
-  const page = validated.page && validated.page > 0 ? validated.page : 1;
-  const limit = validated.limit && validated.limit > 0 ? validated.limit : 10;
-  const skip = (page - 1) * limit;
+  const cacheKeyParts = [
+    "org-orders",
+    currentUser.organizationId!,
+    currentUser.organizationType!,
+    Array.isArray(validated.orderStatus)
+      ? validated.orderStatus.join(",")
+      : validated.orderStatus || "no-orderStatus",
+    validated.paymentStatus || "no-paymentStatus",
+    validated.from ? validated.from.toISOString() : "no-from",
+    validated.to ? validated.to.toISOString() : "no-to",
+    validated.page ? String(validated.page) : "1",
+    validated.limit ? String(validated.limit) : "10",
+  ];
 
-  const filters: Prisma.OrderWhereInput = {
-    ...(currentUser.organizationType === "school" && {
-      schoolId: currentUser.organizationId,
-    }),
-    ...(currentUser.organizationType === "supplier" && {
-      supplierId: currentUser.organizationId,
-    }),
-  };
+  return unstable_cache(
+    async () => {
+      console.log(
+        `[CACHE MISS/HIT CHECK] ${new Date().toISOString()} — выполняю реальные запросы к БД для org ${currentUser.organizationId}`,
+      );
 
-  if (validated.orderStatus) {
-    if (Array.isArray(validated.orderStatus)) {
-      filters.orderStatus = { in: validated.orderStatus };
-    } else if (validated.orderStatus !== "all") {
-      filters.orderStatus = validated.orderStatus;
-    }
-  }
+      const page = validated.page && validated.page > 0 ? validated.page : 1;
+      const limit =
+        validated.limit && validated.limit > 0 ? validated.limit : 10;
+      const skip = (page - 1) * limit;
 
-  if (validated.paymentStatus && validated.paymentStatus !== "all") {
-    filters.paymentStatus = validated.paymentStatus;
-  }
-  if (validated.from || validated.to) {
-    filters.deliveryDate = {};
-    if (validated.from) filters.deliveryDate.gte = validated.from;
-    if (validated.to) filters.deliveryDate.lte = validated.to;
-  }
+      const filters: Prisma.OrderWhereInput = {
+        ...(currentUser.organizationType === "school" && {
+          schoolId: currentUser.organizationId,
+        }),
+        ...(currentUser.organizationType === "supplier" && {
+          supplierId: currentUser.organizationId,
+        }),
+      };
 
-  const [orders, total] = await Promise.all([
-    await prisma.order.findMany({
-      where: filters,
-      take: limit,
-      skip,
-      select: {
-        id: true,
-        deliveryDate: true,
-        orderStatus: true,
-        paymentStatus: true,
-        totalPrice: true,
-        createdAt: true,
-        publishedAt: true,
-        comment: true,
-        school: { select: { id: true, name: true } },
-        supplier: { select: { id: true, name: true } },
-      },
-      orderBy: { deliveryDate: "desc" },
-    }),
-    await prisma.order.count({ where: filters }),
-  ]);
+      if (validated.orderStatus) {
+        if (Array.isArray(validated.orderStatus)) {
+          filters.orderStatus = { in: validated.orderStatus };
+        } else if (validated.orderStatus !== "all") {
+          filters.orderStatus = validated.orderStatus;
+        }
+      }
 
-  const totalPages = Math.ceil(total / limit);
-  return {
-    orders: orders.map((order) => ({
-      ...order,
-      totalPrice: Number(order.totalPrice),
-    })),
-    total,
-    page,
-    totalPages,
-  };
+      if (validated.paymentStatus && validated.paymentStatus !== "all") {
+        filters.paymentStatus = validated.paymentStatus;
+      }
+      if (validated.from || validated.to) {
+        filters.deliveryDate = {};
+        if (validated.from) filters.deliveryDate.gte = validated.from;
+        if (validated.to) filters.deliveryDate.lte = validated.to;
+      }
+
+      const [orders, total] = await Promise.all([
+        await prisma.order.findMany({
+          where: filters,
+          take: limit,
+          skip,
+          select: {
+            id: true,
+            deliveryDate: true,
+            orderStatus: true,
+            paymentStatus: true,
+            totalPrice: true,
+            createdAt: true,
+            publishedAt: true,
+            comment: true,
+            school: { select: { id: true, name: true } },
+            supplier: { select: { id: true, name: true } },
+          },
+          orderBy: { deliveryDate: "desc" },
+        }),
+        await prisma.order.count({ where: filters }),
+      ]);
+
+      const totalPages = Math.ceil(total / limit);
+      return {
+        orders: orders.map((order) => ({
+          ...order,
+          totalPrice: Number(order.totalPrice),
+        })),
+        total,
+        page,
+        totalPages,
+      };
+    },
+    cacheKeyParts,
+    {
+      revalidate: 300,
+      tags: [`org-orders-${currentUser.organizationId}`],
+    },
+  )();
 }
 
 export async function getMyOrganizationStats(
-  data: {
-    from?: string;
-    to?: string;
-    statuses?: string[];
-  },
+  data: getMyOrganizationStatsInput,
   currentUser: CurrentUser,
 ): Promise<OrdersStats> {
   const permission = OrderPermissionPolicy.canViewOrganizationData(currentUser);
@@ -275,164 +300,188 @@ export async function getMyOrganizationStats(
   }
   const validated = getMyOrganizationStatsSchema.parse(data);
 
-  const baseFilters: Prisma.OrderWhereInput = {
-    ...(currentUser.organizationType === "school" && {
-      schoolId: currentUser.organizationId,
-    }),
-    ...(currentUser.organizationType === "supplier" && {
-      supplierId: currentUser.organizationId,
-    }),
-  };
-
-  const allowedStatuses = validated.statuses ?? [
-    "accepted",
-    "in_progress",
-    "completed",
-    "cancelled",
+  const cacheKeyParts = [
+    "org-stats",
+    currentUser.organizationId!,
+    currentUser.organizationType!,
+    validated.from ? validated.from.toISOString() : "no-from",
+    validated.to ? validated.to.toISOString() : "no-to",
+    validated.statuses?.sort().join(",") || "default",
   ];
 
-  const hasDateFilter = !!validated.from || !!validated.to;
+  return unstable_cache(
+    async () => {
+      console.log(
+        `[CACHE MISS/HIT CHECK] ${new Date().toISOString()} — выполняю реальные запросы к БД для org ${currentUser.organizationId}`,
+      );
 
-  let recent: OrderInfo[] = [];
-  let upcoming: OrderInfo[] = [];
+      const baseFilters: Prisma.OrderWhereInput = {
+        ...(currentUser.organizationType === "school" && {
+          schoolId: currentUser.organizationId,
+        }),
+        ...(currentUser.organizationType === "supplier" && {
+          supplierId: currentUser.organizationId,
+        }),
+      };
 
-  if (!hasDateFilter) {
-    const lastOrders = await prisma.order.findMany({
-      where: {
-        ...baseFilters,
-        orderStatus: { in: allowedStatuses },
-        deliveryDate: { lte: new Date() },
-      },
-      select: {
-        id: true,
-        deliveryDate: true,
-        orderStatus: true,
-        paymentStatus: true,
-        totalPrice: true,
-        createdAt: true,
-        publishedAt: true,
-        comment: true,
-        school: { select: { id: true, name: true } },
-        supplier: { select: { id: true, name: true } },
-      },
-      orderBy: [{ deliveryDate: "desc" }],
-      take: 5,
-    });
+      const allowedStatuses = validated.statuses ?? [
+        "accepted",
+        "in_progress",
+        "completed",
+        "cancelled",
+      ];
 
-    recent = lastOrders.map((o) => ({
-      ...o,
-      totalPrice: Number(o.totalPrice),
-    })) as OrderInfo[];
+      const hasDateFilter = !!validated.from || !!validated.to;
 
-    const futureOrders = await prisma.order.findMany({
-      where: {
-        ...baseFilters,
-        orderStatus: { in: allowedStatuses },
-        deliveryDate: { gte: new Date() },
-      },
-      select: {
-        id: true,
-        deliveryDate: true,
-        orderStatus: true,
-        paymentStatus: true,
-        totalPrice: true,
-        createdAt: true,
-        publishedAt: true,
-        comment: true,
-        school: { select: { id: true, name: true } },
-        supplier: { select: { id: true, name: true } },
-      },
-      orderBy: { deliveryDate: "asc" },
-      take: 5,
-    });
+      let recent: OrderInfo[] = [];
+      let upcoming: OrderInfo[] = [];
 
-    upcoming = futureOrders.map((o) => ({
-      ...o,
-      totalPrice: Number(o.totalPrice),
-    })) as OrderInfo[];
-  }
+      if (!hasDateFilter) {
+        const lastOrders = await prisma.order.findMany({
+          where: {
+            ...baseFilters,
+            orderStatus: { in: allowedStatuses },
+            deliveryDate: { lte: new Date() },
+          },
+          select: {
+            id: true,
+            deliveryDate: true,
+            orderStatus: true,
+            paymentStatus: true,
+            totalPrice: true,
+            createdAt: true,
+            publishedAt: true,
+            comment: true,
+            school: { select: { id: true, name: true } },
+            supplier: { select: { id: true, name: true } },
+          },
+          orderBy: [{ deliveryDate: "desc" }],
+          take: 5,
+        });
 
-  const countWhere: Prisma.OrderWhereInput = {
-    ...baseFilters,
-    orderStatus: { in: allowedStatuses },
-    ...(hasDateFilter && {
-      deliveryDate: {
-        ...(validated.from && { gte: validated.from }),
-        ...(validated.to && { lte: validated.to }),
-      },
-    }),
-  };
+        recent = lastOrders.map((o) => ({
+          ...o,
+          totalPrice: Number(o.totalPrice),
+        })) as OrderInfo[];
 
-  const totalOrders = await prisma.order.count({ where: countWhere });
+        const futureOrders = await prisma.order.findMany({
+          where: {
+            ...baseFilters,
+            orderStatus: { in: allowedStatuses },
+            deliveryDate: { gte: new Date() },
+          },
+          select: {
+            id: true,
+            deliveryDate: true,
+            orderStatus: true,
+            paymentStatus: true,
+            totalPrice: true,
+            createdAt: true,
+            publishedAt: true,
+            comment: true,
+            school: { select: { id: true, name: true } },
+            supplier: { select: { id: true, name: true } },
+          },
+          orderBy: { deliveryDate: "asc" },
+          take: 5,
+        });
 
-  const activeCountWhere: Prisma.OrderWhereInput = {
-    ...baseFilters,
-    orderStatus: { in: ["accepted", "in_progress"] },
-    ...(hasDateFilter && {
-      deliveryDate: {
-        ...(validated.from && { gte: validated.from }),
-        ...(validated.to && { lte: validated.to }),
-      },
-    }),
-  };
-
-  const activeOrders = await prisma.order.count({ where: activeCountWhere });
-
-  const upcomingDeliveryRecord = await prisma.order.findFirst({
-    where: {
-      ...baseFilters,
-      deliveryDate: { gte: new Date() },
-      orderStatus: { in: ["accepted", "in_progress"] },
-    },
-    orderBy: { deliveryDate: "asc" },
-    select: {
-      deliveryDate: true,
-      comment: true,
-      totalPrice: true,
-      school: { select: { name: true } },
-      supplier: { select: { name: true } },
-    },
-  });
-
-  const upcomingDelivery = upcomingDeliveryRecord
-    ? {
-        deliveryDate: upcomingDeliveryRecord.deliveryDate ?? null,
-        organizationName:
-          currentUser.organizationType === "supplier"
-            ? (upcomingDeliveryRecord.school?.name ?? null)
-            : (upcomingDeliveryRecord.supplier?.name ?? null),
-        comment: upcomingDeliveryRecord.comment ?? null,
+        upcoming = futureOrders.map((o) => ({
+          ...o,
+          totalPrice: Number(o.totalPrice),
+        })) as OrderInfo[];
       }
-    : null;
 
-  const unpaidWhere: Prisma.OrderWhereInput = {
-    ...baseFilters,
-    paymentStatus: "unpaid",
-    orderStatus: { not: "cancelled" },
-    ...(hasDateFilter && {
-      deliveryDate: {
-        ...(validated.from && { gte: validated.from }),
-        ...(validated.to && { lte: validated.to }),
-      },
-    }),
-  };
+      const countWhere: Prisma.OrderWhereInput = {
+        ...baseFilters,
+        orderStatus: { in: allowedStatuses },
+        ...(hasDateFilter && {
+          deliveryDate: {
+            ...(validated.from && { gte: validated.from }),
+            ...(validated.to && { lte: validated.to }),
+          },
+        }),
+      };
 
-  const unpaidAgg = await prisma.order.aggregate({
-    _sum: { totalPrice: true },
-    where: unpaidWhere,
-  });
-  const totalUnpaid = Number(unpaidAgg._sum.totalPrice ?? 0);
+      const totalOrders = await prisma.order.count({ where: countWhere });
 
-  return {
-    recent,
-    upcoming,
-    stats: {
-      totalOrders,
-      activeOrders,
-      upcomingDelivery,
-      totalUnpaid,
+      const activeCountWhere: Prisma.OrderWhereInput = {
+        ...baseFilters,
+        orderStatus: { in: ["accepted", "in_progress"] },
+        ...(hasDateFilter && {
+          deliveryDate: {
+            ...(validated.from && { gte: validated.from }),
+            ...(validated.to && { lte: validated.to }),
+          },
+        }),
+      };
+
+      const activeOrders = await prisma.order.count({
+        where: activeCountWhere,
+      });
+
+      const upcomingDeliveryRecord = await prisma.order.findFirst({
+        where: {
+          ...baseFilters,
+          deliveryDate: { gte: new Date() },
+          orderStatus: { in: ["accepted", "in_progress"] },
+        },
+        orderBy: { deliveryDate: "asc" },
+        select: {
+          deliveryDate: true,
+          comment: true,
+          totalPrice: true,
+          school: { select: { name: true } },
+          supplier: { select: { name: true } },
+        },
+      });
+
+      const upcomingDelivery = upcomingDeliveryRecord
+        ? {
+            deliveryDate: upcomingDeliveryRecord.deliveryDate ?? null,
+            organizationName:
+              currentUser.organizationType === "supplier"
+                ? (upcomingDeliveryRecord.school?.name ?? null)
+                : (upcomingDeliveryRecord.supplier?.name ?? null),
+            comment: upcomingDeliveryRecord.comment ?? null,
+          }
+        : null;
+
+      const unpaidWhere: Prisma.OrderWhereInput = {
+        ...baseFilters,
+        paymentStatus: "unpaid",
+        orderStatus: { not: "cancelled" },
+        ...(hasDateFilter && {
+          deliveryDate: {
+            ...(validated.from && { gte: validated.from }),
+            ...(validated.to && { lte: validated.to }),
+          },
+        }),
+      };
+
+      const unpaidAgg = await prisma.order.aggregate({
+        _sum: { totalPrice: true },
+        where: unpaidWhere,
+      });
+      const totalUnpaid = Number(unpaidAgg._sum.totalPrice ?? 0);
+
+      return {
+        recent,
+        upcoming,
+        stats: {
+          totalOrders,
+          activeOrders,
+          upcomingDelivery,
+          totalUnpaid,
+        },
+      };
     },
-  };
+    cacheKeyParts,
+    {
+      revalidate: 300,
+      tags: [`org-stats-${currentUser.organizationId}`],
+    },
+  )();
 }
 
 export async function getOrderById(

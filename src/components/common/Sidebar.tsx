@@ -2,16 +2,22 @@
 
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   UtensilsCrossed,
   ShoppingCart,
   Users,
   Building2,
-  FileText,
   Settings,
   LogOut,
+  PlusCircle,
+  FileEdit,
+  Package,
+  CheckCircle,
+  Tags,
+  ListOrdered,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
@@ -19,6 +25,9 @@ import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { ScrollArea } from "../ui/scroll-area";
 import useSidebarStore from "@/store/useSidebarStore";
+import { useTransition } from "react";
+import { createOrder } from "@/features/order/api/actions";
+import { toast } from "sonner";
 
 type NavItem = {
   label: string;
@@ -50,29 +59,22 @@ const navItems: NavItem[] = [
   },
   {
     label: "Чорновики",
-    href: "/school/orders/new",
-    icon: ShoppingCart,
-    roles: ["employee"],
-    orgTypes: ["school"],
-  },
-  {
-    label: "Створити замовлення",
-    href: "/school/orders/create",
-    icon: UtensilsCrossed,
+    href: "/school/orders/drafts",
+    icon: FileEdit,
     roles: ["employee"],
     orgTypes: ["school"],
   },
   {
     label: "Замовлення",
     href: "/supplier/orders",
-    icon: ShoppingCart,
+    icon: Package,
     roles: ["employee"],
     orgTypes: ["supplier"],
   },
   {
     label: "Опубліковані",
     href: "/supplier/orders/published",
-    icon: ShoppingCart,
+    icon: CheckCircle,
     roles: ["employee"],
     orgTypes: ["supplier"],
   },
@@ -91,19 +93,19 @@ const navItems: NavItem[] = [
   {
     label: "Категорії",
     href: "/admin/categories",
-    icon: UtensilsCrossed,
+    icon: Tags,
     roles: ["admin"],
   },
   {
     label: "Позиції меню",
     href: "/admin/menu-items",
-    icon: UtensilsCrossed,
+    icon: ListOrdered,
     roles: ["admin"],
   },
   {
     label: "Всі замовлення",
     href: "/admin/orders",
-    icon: FileText,
+    icon: ClipboardList,
     roles: ["admin"],
   },
   {
@@ -114,16 +116,20 @@ const navItems: NavItem[] = [
 ];
 
 export default function Sidebar() {
+  const router = useRouter();
   const { data: session } = useSession();
   const pathname = usePathname();
   const open = useSidebarStore((s) => s.open);
   const setOpen = useSidebarStore((s) => s.setOpen);
+  const [isCreating, startCreate] = useTransition();
 
   const userRole = session?.user?.role as "employee" | "admin";
   const orgType = session?.user?.organizationType as
     | "school"
     | "supplier"
     | null;
+
+  const canCreateOrder = userRole === "employee" && orgType === "school";
 
   const getDashboardHref = () => {
     if (userRole === "admin") return "/admin/dashboard";
@@ -153,6 +159,18 @@ export default function Sidebar() {
         .toUpperCase()
     : "U";
 
+  const handleCreateOrder = () => {
+    startCreate(async () => {
+      const result = await createOrder();
+      if (result?.success && result.data) {
+        router.push(`/school/orders/${result.data.id}/edit`);
+        router.refresh();
+      } else if (!result?.success) {
+        toast.error(result?.error ?? "Не вдалося створити замовлення");
+      }
+    });
+  };
+
   return (
     <>
       <Sheet open={open} onOpenChange={setOpen}>
@@ -178,7 +196,7 @@ export default function Sidebar() {
           </SheetHeader>
 
           <ScrollArea className="flex-1 px-3">
-            <nav className="space-y-1">
+            <nav className="space-y-1 pb-2">
               {visibleItems.map((item) => {
                 const isActive = pathname === item.href;
                 return (
@@ -199,21 +217,34 @@ export default function Sidebar() {
                 );
               })}
             </nav>
+            <div className="flex flex-col gap-2 py-2 border-y">
+              {canCreateOrder && (
+                <Button
+                  variant="default"
+                  className="w-full justify-start"
+                  onClick={() => {
+                    setOpen(false);
+                    handleCreateOrder();
+                  }}
+                  disabled={isCreating}
+                >
+                  <PlusCircle className="mr-3 h-5 w-5" />
+                  {isCreating ? "Створюємо..." : "Створити замовлення"}
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={() => {
+                  setOpen(false);
+                  signOut({ callbackUrl: "/auth/login" });
+                }}
+              >
+                <LogOut className="mr-3 h-5 w-5" />
+                Вийти
+              </Button>
+            </div>
           </ScrollArea>
-
-          <div className="p-4 border-t mt-auto">
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-              onClick={() => {
-                setOpen(false);
-                signOut({ callbackUrl: "/auth/login" });
-              }}
-            >
-              <LogOut className="mr-3 h-5 w-5" />
-              Вийти
-            </Button>
-          </div>
         </SheetContent>
       </Sheet>
 
@@ -253,14 +284,28 @@ export default function Sidebar() {
           })}
         </nav>
 
+        {canCreateOrder && (
+          <div className="p-4 border-t">
+            <Button
+              variant="default"
+              className="w-full justify-start"
+              onClick={handleCreateOrder}
+              disabled={isCreating}
+            >
+              <PlusCircle className="mr-3 h-5 w-5" />
+              {isCreating ? "Створюємо..." : "Створити замовлення"}
+            </Button>
+          </div>
+        )}
         <div className="p-4 border-t">
-          <button
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50/80"
             onClick={() => signOut({ callbackUrl: "/auth/login" })}
-            className="flex w-full items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
           >
-            <LogOut className="h-5 w-5" />
+            <LogOut className="mr-3 h-5 w-5" />
             Вийти
-          </button>
+          </Button>
         </div>
       </aside>
     </>

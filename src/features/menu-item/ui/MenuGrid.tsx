@@ -14,10 +14,10 @@ export default function MenuGrid({ items }: Props) {
         return (
           <Card
             key={item.id}
-            className="flex-col gap-4 overflow-hidden hover:shadow-lg transition-shadow"
+            className="pt-0 flex-col gap-4 overflow-hidden hover:shadow-lg transition-shadow"
           >
             {item.imageUrl ? (
-              <div className="aspect-4/3 relative">
+              <div className="relative aspect-video md:aspect-4/3">
                 <Image
                   src={item.imageUrl}
                   alt={item.name}

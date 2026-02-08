@@ -246,6 +246,16 @@ export const OrderService = {
           },
         },
       });
+
+      await tx.paymentStatusHistory.create({
+        data: {
+          orderId: data.id,
+          previousStatus: order.paymentStatus,
+          newStatus: data.status,
+          actorId: user.id,
+        },
+      });
+
       return updated;
     });
 

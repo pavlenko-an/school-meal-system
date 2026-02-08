@@ -77,7 +77,7 @@ export default function OrganizationForm({ defaultValues }: Props) {
           )}
         />
 
-        <div className="grid gap-6 sm:grid-cols-2">
+        <div className="flex flex-col gap-6">
           <FormField
             control={form.control}
             name="name"

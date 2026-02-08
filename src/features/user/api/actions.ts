@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/shared/auth/current-user";
 import { updateUserSchema } from "../model/schemas";
 import { UserService } from "../model/services";
 import z from "zod";
+import { updateTag } from "next/cache";
 
 export async function updateUser(
   prevState: ActionResult<UserInfo> | null = null,
@@ -14,12 +15,18 @@ export async function updateUser(
   try {
     const currentUser = await getCurrentUser();
     const isAdmin = currentUser?.role === "admin";
-    const isSelfUpdate = currentUser?.id === formData.get("id");
-    if (!isAdmin && !isSelfUpdate) {
-      return {
-        success: false,
-        error: "Ви не маєте прав оновлювати цього користувача",
-      };
+    const targetIdFromForm = formData.get("id")?.toString();
+    let targetUserId: string;
+    if (targetIdFromForm) {
+      targetUserId = targetIdFromForm;
+      if (!isAdmin) {
+        return {
+          success: false,
+          error: "Ви не маєте прав оновлювати цього користувача",
+        };
+      }
+    } else {
+      targetUserId = currentUser.id;
     }
     const avatarFile = formData.get("avatar");
     let avatar: File | undefined;
@@ -27,7 +34,11 @@ export async function updateUser(
       avatar = avatarFile;
     }
     const rawData = Object.fromEntries(formData);
-    const result = updateUserSchema.safeParse({ ...rawData, avatar });
+    const result = updateUserSchema.safeParse({
+      ...rawData,
+      avatar,
+      id: targetUserId,
+    });
     if (!result.success) {
       const flattened = z.flattenError(result.error);
       return {
@@ -39,6 +50,7 @@ export async function updateUser(
     const updatedUser = await UserService.update({
       ...result.data,
     });
+    updateTag("all-users");
     return { success: true, data: updatedUser };
   } catch (error: unknown) {
     return {
@@ -73,6 +85,7 @@ export async function deleteUser(
       };
     }
     await UserService.delete({ id: targetUserId });
+    updateTag("all-users");
     return {
       success: true,
       message: "Користувача успішно видалено",

@@ -3,7 +3,6 @@ import Pagination from "@/components/common/Pagination";
 import { Button } from "@/components/ui/button";
 import { OrganizationInfo } from "@/features/organization/model/types";
 import { getAllUsers } from "@/features/user/model/queries";
-import { getAllUsersSchema } from "@/features/user/model/schemas";
 import { UsersList } from "@/features/user/model/types";
 import UsersFilters from "@/features/user/ui/UsersFilters";
 import UsersTable from "@/features/user/ui/UsersTable";
@@ -31,8 +30,6 @@ export default async function AdminUsersPage({ searchParams }: Props) {
     limit: paramsResolved.limit ? Number(paramsResolved.limit) : 10,
   };
 
-  const parsedQuery = getAllUsersSchema.parse(query);
-
   const params = new URLSearchParams();
   Object.entries(query).forEach(([key, value]) => {
     if (value !== undefined) params.set(key, String(value));
@@ -40,7 +37,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
 
   const user = await getCurrentUser();
 
-  const data: UsersList = await getAllUsers(parsedQuery, user);
+  const data: UsersList = await getAllUsers(query, user);
   const organizations: OrganizationInfo[] = Array.from(
     new Map(
       data.users
@@ -72,7 +69,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
       <Suspense
         fallback={<LoadingSpinner size="md" text="Завантаження фільтрів..." />}
       >
-        <div className="max-w-3xl flex flex-row space-x-4 justify-between items-center">
+        <div className="max-w-3xl w-full flex flex-col sm:flex-row sm:space-x-4 sm:justify-between items-center gap-4">
           <Button
             asChild
             className="w-full sm:w-auto"

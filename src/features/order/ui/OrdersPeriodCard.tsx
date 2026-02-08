@@ -59,7 +59,9 @@ export default function OrdersPeriodCard({
                 <div className="flex-1">
                   <p className="font-medium">
                     Поставка{" "}
-                    {order.deliveryDate?.toLocaleDateString("uk-UA") || "—"}
+                    {order.deliveryDate
+                      ? new Date(order.deliveryDate).toLocaleDateString("uk-UA")
+                      : "—"}
                   </p>
                   <p className="text-sm text-muted-foreground capitalize">
                     Статус: {order.orderStatus}

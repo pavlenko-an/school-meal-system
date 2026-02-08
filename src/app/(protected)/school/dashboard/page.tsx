@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { getCurrentUser } from "@/shared/auth/current-user";
 import { getMyOrganizationStats } from "@/features/order/model/queries";
-import { cache, Suspense } from "react";
+import { Suspense } from "react";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import DateRangeFilters from "@/features/order/ui/DateRangeFilter";
 import OrdersPeriodCard from "@/features/order/ui/OrdersPeriodCard";
+import { OrderStatus } from "@/generated/prisma/client";
 
 interface Props {
   searchParams: Promise<{
@@ -19,16 +20,17 @@ export default async function SchoolDashboard({ searchParams }: Props) {
   const paramsResolved = await searchParams;
 
   const query = {
-    from: paramsResolved.dateFrom,
-    to: paramsResolved.dateTo,
+    from: paramsResolved.dateFrom
+      ? new Date(paramsResolved.dateFrom)
+      : undefined,
+    to: paramsResolved.dateTo ? new Date(paramsResolved.dateTo) : undefined,
     statuses: [
-      "new",
       "published",
       "accepted",
       "in_progress",
       "completed",
       "cancelled",
-    ],
+    ] as (keyof typeof OrderStatus)[],
   };
 
   const params = new URLSearchParams();
@@ -38,11 +40,7 @@ export default async function SchoolDashboard({ searchParams }: Props) {
 
   const currentUser = await getCurrentUser();
 
-  const getMyOrganizationStatsCached = cache(async () => {
-    return await getMyOrganizationStats(query, currentUser);
-  });
-
-  const data = await getMyOrganizationStatsCached();
+  const data = await getMyOrganizationStats(query, currentUser);
   const stats = {
     totalOrders: data?.stats?.totalOrders ?? 0,
     activeOrders: data?.stats?.activeOrders ?? 0,

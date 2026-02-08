@@ -15,6 +15,7 @@ import {
 } from "../model/schemas";
 import z from "zod";
 import { CategoryService } from "../model/services";
+import { updateTag } from "next/cache";
 
 export async function createCategory(
   prevState: ActionResult<CategoryInfo> | null = null,
@@ -40,6 +41,7 @@ export async function createCategory(
       };
     }
     const category = await CategoryService.create(result.data);
+    updateTag("all-categories");
     return { success: true, data: category };
   } catch (error: unknown) {
     return {
@@ -76,6 +78,8 @@ export async function updateCategory(
       };
     }
     const updatedCategory = await CategoryService.update(result.data);
+    updateTag("all-categories");
+    updateTag("menu-items");
     return {
       success: true,
       data: updatedCategory,
@@ -113,6 +117,8 @@ export async function deleteCategory(
       };
     }
     await CategoryService.delete(result.data);
+    updateTag("all-categories");
+    updateTag("menu-items");
     return {
       success: true,
       message: "Категорія успішно видалена",
