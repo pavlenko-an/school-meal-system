@@ -63,8 +63,6 @@ export const getMyOrganizationOrdersSchema = z.object({
 });
 
 export const getMyOrganizationStatsSchema = z.object({
-  from: z.coerce.date().optional(),
-  to: z.coerce.date().optional(),
   statuses: z
     .array(
       z.enum([

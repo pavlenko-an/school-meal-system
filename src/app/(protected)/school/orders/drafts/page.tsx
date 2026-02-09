@@ -35,15 +35,15 @@ export default async function DraftOrdersPage({ searchParams }: Props) {
     <div className="container max-w-6xl mx-auto py-8 px-4 space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Нові замовлення</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Чорновики</h1>
           <p className="text-muted-foreground mt-1">
-            Усі замовлення зі статусом «Новий», створені сьогодні або раніше
+            Усі замовлення зі статусом «Чернетка», створені сьогодні або раніше
           </p>
         </div>
       </div>
       {data.orders.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground border rounded-lg bg-muted/30">
-          Нових замовлень не знайдено
+          Чернеток не знайдено
         </div>
       ) : (
         <OrderRows

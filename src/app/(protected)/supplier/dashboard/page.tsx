@@ -4,27 +4,11 @@ import Link from "next/link";
 import { getCurrentUser } from "@/shared/auth/current-user";
 import { getMyOrganizationStats } from "@/features/order/model/queries";
 import { OrdersStats } from "@/features/order/model/types";
-import { Suspense } from "react";
-import LoadingSpinner from "@/components/common/LoadingSpinner";
-import DateRangeFilters from "@/features/order/ui/DateRangeFilter";
 import OrdersPeriodCard from "@/features/order/ui/OrdersPeriodCard";
 import { OrderStatus } from "@/generated/prisma/client";
 
-interface Props {
-  searchParams: Promise<{
-    dateFrom?: string;
-    dateTo?: string;
-  }>;
-}
-
-export default async function SupplierDashboard({ searchParams }: Props) {
-  const paramsResolved = await searchParams;
-
+export default async function SupplierDashboard() {
   const query = {
-    from: paramsResolved.dateFrom
-      ? new Date(paramsResolved.dateFrom)
-      : undefined,
-    to: paramsResolved.dateTo ? new Date(paramsResolved.dateTo) : undefined,
     statuses: [
       "accepted",
       "in_progress",
@@ -50,11 +34,6 @@ export default async function SupplierDashboard({ searchParams }: Props) {
 
   return (
     <div>
-      <Suspense
-        fallback={<LoadingSpinner size="md" text="Завантаження фільтрів..." />}
-      >
-        <DateRangeFilters currentParams={paramsResolved} />
-      </Suspense>
       <StatsCards
         totalOrders={stats.totalOrders}
         activeOrders={stats.activeOrders}

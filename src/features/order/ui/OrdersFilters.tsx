@@ -58,7 +58,7 @@ export default function OrdersFilters({ currentParams, allowedOrderStatuses }: P
     ];
 
   return (
-    <div className="space-y-4 flex flex-wrap md:flex-nowrap md:items-center md:justify-center md:space-y-0 gap-2 md:gap-4">
+    <div className="space-y-4 flex flex-wrap md:flex-nowrap items-center justify-center md:space-y-0 gap-2 md:gap-4">
       <Select
         value={currentParams.orderStatus || "all"}
         onValueChange={(value) =>
