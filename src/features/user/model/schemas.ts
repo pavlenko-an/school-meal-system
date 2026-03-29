@@ -22,19 +22,18 @@ export const updateUserSchema = z.object({
     }),
   password: z
     .string()
-    .optional()
-    .refine((val) => val === undefined || val.length === 0 || val.length >= 8, {
-      message: "Пароль повинен бути щонайменше 8 символів",
-    })
-    .refine(
-      (val) =>
-        val === undefined ||
-        val.length === 0 ||
-        /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(val),
-      {
-        message: "Пароль повинен містити великі та малі літери та цифру",
-      },
-    ),
+    .transform((val) => (val === "" ? undefined : val))
+    .pipe(
+      z
+        .string()
+        .min(8, "Пароль повинен бути щонайменше 8 символів")
+        .regex(
+          /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+          "Пароль повинен містити великі та малі літери та цифру",
+        )
+        .optional(),
+    )
+    .optional(),
   firstName: z
     .string()
     .trim()

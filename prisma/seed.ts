@@ -126,8 +126,8 @@ async function main() {
   } else {
     const additionalOrders = [
       {
-        comment: "New draft order - April",
-        deliveryDate: new Date("2026-04-10"),
+        comment: "New draft order - June",
+        deliveryDate: new Date("2026-06-10"),
         status: "draft" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         orderHistory: [],
@@ -138,8 +138,8 @@ async function main() {
       },
 
       {
-        comment: "New draft order - April",
-        deliveryDate: new Date("2026-04-20"),
+        comment: "New draft order - June",
+        deliveryDate: new Date("2026-06-20"),
         status: "draft" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         orderHistory: [],
@@ -151,7 +151,7 @@ async function main() {
 
       {
         comment: "Published for bidding",
-        deliveryDate: new Date("2026-03-10"),
+        deliveryDate: new Date("2026-05-10"),
         status: "published" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         orderHistory: [{ from: "draft", to: "published" }],
@@ -164,7 +164,7 @@ async function main() {
 
       {
         comment: "Published for bidding",
-        deliveryDate: new Date("2026-03-20"),
+        deliveryDate: new Date("2026-05-20"),
         status: "published" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         orderHistory: [{ from: "draft", to: "published" }],
@@ -177,7 +177,7 @@ async function main() {
 
       {
         comment: "Accepted by supplier",
-        deliveryDate: new Date("2026-02-10"),
+        deliveryDate: new Date("2026-04-10"),
         status: "accepted" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         orderHistory: [
@@ -196,7 +196,7 @@ async function main() {
 
       {
         comment: "Accepted by supplier",
-        deliveryDate: new Date("2026-02-20"),
+        deliveryDate: new Date("2026-04-20"),
         status: "accepted" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         orderHistory: [
@@ -215,7 +215,7 @@ async function main() {
 
       {
         comment: "In progress - being prepared",
-        deliveryDate: new Date("2026-01-10"),
+        deliveryDate: new Date("2026-03-10"),
         status: "in_progress" as OrderStatus,
         payment: "verified" as PaymentStatus,
         orderHistory: [
@@ -235,7 +235,7 @@ async function main() {
 
       {
         comment: "In progress - being prepared",
-        deliveryDate: new Date("2026-01-20"),
+        deliveryDate: new Date("2026-03-20"),
         status: "in_progress" as OrderStatus,
         payment: "verified" as PaymentStatus,
         orderHistory: [
@@ -255,7 +255,7 @@ async function main() {
 
       {
         comment: "Completed & delivered",
-        deliveryDate: new Date("2025-12-10"),
+        deliveryDate: new Date("2026-02-10"),
         status: "completed" as OrderStatus,
         payment: "verified" as PaymentStatus,
         orderHistory: [
@@ -276,7 +276,7 @@ async function main() {
 
       {
         comment: "Completed & delivered",
-        deliveryDate: new Date("2025-12-20"),
+        deliveryDate: new Date("2026-02-20"),
         status: "completed" as OrderStatus,
         payment: "verified" as PaymentStatus,
         orderHistory: [
@@ -297,7 +297,7 @@ async function main() {
 
       {
         comment: "Cancelled by school - no longer needed",
-        deliveryDate: new Date("2025-11-10"),
+        deliveryDate: new Date("2026-01-10"),
         status: "cancelled" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         orderHistory: [
@@ -313,7 +313,7 @@ async function main() {
 
       {
         comment: "Cancelled by school - no longer needed",
-        deliveryDate: new Date("2025-11-20"),
+        deliveryDate: new Date("2026-01-20"),
         status: "cancelled" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         orderHistory: [
@@ -329,7 +329,7 @@ async function main() {
 
       {
         comment: "Cancelled by supplier - out of stock",
-        deliveryDate: new Date("2025-10-10"),
+        deliveryDate: new Date("2025-12-10"),
         status: "cancelled" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         orderHistory: [
@@ -346,7 +346,7 @@ async function main() {
 
       {
         comment: "Cancelled by supplier - out of stock",
-        deliveryDate: new Date("2025-10-20"),
+        deliveryDate: new Date("2025-12-20"),
         status: "cancelled" as OrderStatus,
         payment: "unpaid" as PaymentStatus,
         orderHistory: [
