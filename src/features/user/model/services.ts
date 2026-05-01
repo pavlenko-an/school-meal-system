@@ -27,7 +27,7 @@ export const UserService = {
       }
       updateData.email = data.email;
     }
-    if (data.password !== undefined) {
+    if (data.password !== undefined && data.password.length > 0) {
       updateData.passwordHash = await bcrypt.hash(data.password, 10);
     }
     if (data.firstName !== undefined) updateData.firstName = data.firstName;
