@@ -6,6 +6,7 @@ export function canTransitionOrderStatus(
   to: OrderStatus,
   isSchool: boolean,
   isSupplier: boolean,
+  supplierId?: string,
 ): { allowed: boolean; reason?: string; newSupplierId?: string } {
   let allowed = false;
   let reason = "";
@@ -33,7 +34,7 @@ export function canTransitionOrderStatus(
     case "published":
       if (to === "accepted" && isSupplier) {
         allowed = true;
-        newSupplierId = isSupplier ? undefined : newSupplierId;
+        newSupplierId = supplierId;
       } else if (to === "cancelled" && isSchool) allowed = true;
       else
         reason =

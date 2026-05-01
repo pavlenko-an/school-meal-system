@@ -1,7 +1,7 @@
 import { format, startOfDay } from "date-fns";
 import { uk } from "date-fns/locale";
 import { getCurrentUser } from "@/shared/auth/current-user";
-import { getMyOrganizationOrders } from "@/features/order/model/queries";
+import { getPublishedOrders } from "@/features/order/model/queries";
 import { OrdersList } from "@/features/order/model/types";
 import DateRangeFilters from "@/features/order/ui/DateRangeFilter";
 import Pagination from "@/components/common/Pagination";
@@ -21,11 +21,10 @@ export default async function PublishedOrdersPage({ searchParams }: Props) {
   const today = startOfDay(new Date());
 
   const query = {
-    orderStatus: "published",
     from: paramsResolved.dateFrom
-      ? paramsResolved.dateFrom
-      : today.toISOString().split("T")[0],
-    to: paramsResolved.dateTo ? paramsResolved.dateTo : undefined,
+      ? new Date(paramsResolved.dateFrom)
+      : today,
+    to: paramsResolved.dateTo ? new Date(paramsResolved.dateTo) : undefined,
     page: paramsResolved.page ? Number(paramsResolved.page) : 1,
     limit: paramsResolved.limit ? Number(paramsResolved.limit) : 10,
   };
@@ -37,7 +36,7 @@ export default async function PublishedOrdersPage({ searchParams }: Props) {
 
   const currentUser = await getCurrentUser();
 
-  const data: OrdersList = await getMyOrganizationOrders(query, currentUser);
+  const data: OrdersList = await getPublishedOrders(query, currentUser);
 
   return (
     <div className="container max-w-6xl mx-auto py-8 px-4 space-y-8">
@@ -48,14 +47,14 @@ export default async function PublishedOrdersPage({ searchParams }: Props) {
           </h1>
           <p className="text-muted-foreground mt-1">
             Замовлення зі статусом «Опубліковано» з датою поставки від{" "}
-            {format(new Date(query.from), "dd.MM.yyyy", { locale: uk })}
+            {format(query.from, "dd.MM.yyyy", { locale: uk })}
           </p>
         </div>
 
         <DateRangeFilters
           currentParams={{
-            dateFrom: query.from,
-            dateTo: query.to,
+            dateFrom: query.from.toISOString().split("T")[0],
+            dateTo: query.to?.toISOString().split("T")[0],
           }}
         />
       </div>

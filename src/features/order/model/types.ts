@@ -5,6 +5,7 @@ import {
   getMyOrganizationStatsSchema,
   getOrderByIdSchema,
   getOrderHistorySchema,
+  getPublishedOrdersSchema,
 } from "./params.schemas";
 import {
   createOrderSchema,
@@ -23,6 +24,7 @@ export type getMyOrganizationStatsInput = z.infer<
   typeof getMyOrganizationStatsSchema
 >;
 export type getOrderHistoryInput = z.infer<typeof getOrderHistorySchema>;
+export type getPublishedOrdersInput = z.infer<typeof getPublishedOrdersSchema>;
 export type createOrderInput = z.infer<typeof createOrderSchema>;
 export type updateOrderInput = z.infer<typeof updateOrderSchema>;
 export type updateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;

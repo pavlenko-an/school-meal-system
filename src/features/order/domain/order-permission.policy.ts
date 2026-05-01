@@ -19,11 +19,29 @@ export class OrderPermissionPolicy {
     const isSupplierMember =
       user.organizationType === "supplier" &&
       order.supplierId === user.organizationId;
+    const isPublishedOrderForSupplier =
+      user.organizationType === "supplier" &&
+      order.orderStatus === "published" &&
+      !order.supplierId;
     const isAdmin = user.role === "admin";
-    if (!isSchoolMember && !isSupplierMember && !isAdmin) {
+    if (!isSchoolMember && !isSupplierMember && !isPublishedOrderForSupplier && !isAdmin) {
       return {
         allowed: false,
         reason: "Відмовлено в доступі",
+      };
+    }
+    return { allowed: true };
+  }
+
+  static canViewPublishedOrders(user: CurrentUser) {
+    if (
+      user.role !== "employee" ||
+      user.organizationType !== "supplier" ||
+      !user.organizationId
+    ) {
+      return {
+        allowed: false,
+        reason: "Тільки постачальники можуть переглядати опубліковані замовлення",
       };
     }
     return { allowed: true };
@@ -89,14 +107,18 @@ export class OrderPermissionPolicy {
     const isSupplier =
       user.organizationType === "supplier" &&
       user.organizationId === order.supplierId;
-    if (!isSchool && !isSupplier) {
+    const isSupplierViewingPublished =
+      user.organizationType === "supplier" &&
+      order.orderStatus === "published" &&
+      !order.supplierId;
+    if (!isSchool && !isSupplier && !isSupplierViewingPublished) {
       return {
         allowed: false,
         reason: "Ви не маєте права змінювати статус цього замовлення",
       };
     }
 
-    return { allowed: true, isSchool, isSupplier };
+    return { allowed: true, isSchool, isSupplier: isSupplier || isSupplierViewingPublished };
   }
 
   static canDeleteOrder(user: CurrentUser, order: Order) {

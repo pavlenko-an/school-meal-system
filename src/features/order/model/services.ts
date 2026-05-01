@@ -147,6 +147,7 @@ export const OrderService = {
       data.status,
       isSchool,
       isSupplier,
+      isSupplier ? user.organizationId : undefined,
     );
     if (!allowed) {
       throw new Error(reason || "Недопустима зміна статусу замовлення");

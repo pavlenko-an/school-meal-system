@@ -6,6 +6,7 @@ import {
   getMyOrganizationStatsInput,
   getOrderByIdInput,
   getOrderHistoryInput,
+  getPublishedOrdersInput,
   OrderHistory,
   OrderInfo,
   OrdersList,
@@ -19,6 +20,7 @@ import {
   getMyOrganizationStatsSchema,
   getOrderByIdSchema,
   getOrderHistorySchema,
+  getPublishedOrdersSchema,
 } from "./params.schemas";
 import { notFound } from "next/navigation";
 import { unstable_cache } from "next/cache";
@@ -270,6 +272,11 @@ export async function getMyOrganizationOrders(
         }),
         await prisma.order.count({ where: filters }),
       ]);
+
+      console.log(
+        `Получено ${orders.length} заказов из ${total} по фильтру для org ${currentUser.organizationId}`,
+      );
+      console.log(orders);
 
       const totalPages = Math.ceil(total / limit);
       return {
@@ -537,4 +544,85 @@ export async function getOrderHistory(
     },
   });
   return history;
+}
+
+export async function getPublishedOrders(
+  data: getPublishedOrdersInput,
+  currentUser: CurrentUser,
+): Promise<OrdersList> {
+  const permission = OrderPermissionPolicy.canViewPublishedOrders(currentUser);
+  if (!permission.allowed) {
+    throw new AccessDeniedError(permission.reason || "Відмовлено в доступі");
+  }
+  const validated = getPublishedOrdersSchema.parse(data);
+
+  const cacheKeyParts = [
+    "published-orders",
+    validated.from ? validated.from.toISOString() : "no-from",
+    validated.to ? validated.to.toISOString() : "no-to",
+    validated.page ? String(validated.page) : "1",
+    validated.limit ? String(validated.limit) : "10",
+  ];
+
+  return unstable_cache(
+    async () => {
+      const page = validated.page && validated.page > 0 ? validated.page : 1;
+      const limit =
+        validated.limit && validated.limit > 0 ? validated.limit : 10;
+      const skip = (page - 1) * limit;
+
+      const filters: Prisma.OrderWhereInput = {
+        orderStatus: "published",
+      };
+
+      if (validated.from || validated.to) {
+        filters.deliveryDate = {};
+        if (validated.from) filters.deliveryDate.gte = validated.from;
+        if (validated.to) filters.deliveryDate.lte = validated.to;
+      }
+
+      const [orders, total] = await Promise.all([
+        prisma.order.findMany({
+          where: filters,
+          take: limit,
+          skip,
+          select: {
+            id: true,
+            deliveryDate: true,
+            orderStatus: true,
+            paymentStatus: true,
+            totalPrice: true,
+            createdAt: true,
+            publishedAt: true,
+            comment: true,
+            school: { select: { id: true, name: true } },
+            supplier: { select: { id: true, name: true } },
+          },
+          orderBy: { deliveryDate: "asc" },
+        }),
+        prisma.order.count({ where: filters }),
+      ]);
+
+      console.log(
+        `Получено ${orders.length} опубликованных заказов из ${total} по фильтру от ${validated.from} до ${validated.to}`,
+      );
+      console.log(orders);
+
+      const totalPages = Math.ceil(total / limit);
+      return {
+        orders: orders.map((order) => ({
+          ...order,
+          totalPrice: Number(order.totalPrice),
+        })),
+        total,
+        page,
+        totalPages,
+      };
+    },
+    cacheKeyParts,
+    {
+      revalidate: 300,
+      tags: ["published-orders"],
+    },
+  )();
 }

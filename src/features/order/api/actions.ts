@@ -100,7 +100,9 @@ export async function updateOrderStatus(
     updateTag(`org-orders-${currentUser.organizationId}`);
     revalidateTag("org-overview", "max");
     revalidateTag("all-orders-stats", "max");
-    return {
+    revalidateTag("published-orders", "max");
+    console.log("Order status updated:", order);
+    return { 
       success: true,
       data: order,
     };
